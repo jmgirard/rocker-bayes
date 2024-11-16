@@ -19,7 +19,7 @@ RUN apt-get update \
     && cd ${CMDSTAN} \
     && make build -j$(nproc) \
     && rm -rf /var/lib/apt/lists/* ${CMDSTAN}/test \
-	&& chown -R rstudio:rstudio ${CMDSTAN} \
+    && chown -R rstudio:rstudio ${CMDSTAN} \
     && Rscript -e 'install.packages(c("rstan", "cmdstanr"), repos = c("https://stan-dev.r-universe.dev", getOption("repos")))' \
     && install2.r --error --skipinstalled \
     rstanarm brms tidybayes bayesplot Matrix projpred loo dagitty future easystats ggeffects
