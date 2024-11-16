@@ -9,17 +9,16 @@ docker pull jmgirard/docker-cmdstanr
 docker run -e PASSWORD=pass -p 8787:8787 jmgirard/docker-cmdstanr
 ```
 
-## R code to test within-chain parallelization
+## R code to test between-and-within-chain parallelization
 ```r
-library(cmdstanr)
-file <- file.path(cmdstan_path(), "examples", "bernoulli", "bernoulli.stan")
-mod <- cmdstan_model(file)
-data_list <- list(N = 10, y = c(0,1,0,0,0,0,0,0,0,1))
-fit <- mod$sample(
-  data = data_list,
-  seed = 123,
-  chains = 4,
-  parallel_chains = 4,
-  refresh = 500
+library(brms)
+fit_serial <- brm(
+  count ~ zAge + zBase * Trt + (1|patient),
+  data = epilepsy, family = poisson(),
+  chains = 4, cores = 4, backend = "cmdstanr"
+)
+fit_parallel <- update(
+  fit_serial, chains = 2, cores = 2,
+  backend = "cmdstanr", threads = threading(2)
 )
 ```
