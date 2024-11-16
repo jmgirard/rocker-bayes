@@ -7,8 +7,8 @@ Dockerfile for rocker-bayes
 
 ## Docker code to pull and run image
 ```
-docker pull jmgirard/docker-cmdstanr
-docker run -e PASSWORD=pass -p 8787:8787 jmgirard/docker-cmdstanr
+docker pull jmgirard/rocker-bayes
+docker run -e PASSWORD=pass -p 8787:8787 jmgirard/rocker-bayes
 ```
 
 ## R code to test between-and-within-chain parallelization
