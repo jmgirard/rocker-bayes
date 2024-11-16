@@ -1,6 +1,6 @@
 # docker-cmdstanr
 Dockerfile for docker-cmdstanr
-- Built on top of rocker/tidyverse:4.4.1
+- Built on top of rocker/tidyverse:4.4.1 (ubuntu 22.04)
 - Installs CmdStan 2.35.0, rstan, cmdstanr, brms, rstanarm, daggity, future, tidybayes, bayesplot, Matrix, projpred, loo, and easystats
 
 ## Docker code to pull and run image
