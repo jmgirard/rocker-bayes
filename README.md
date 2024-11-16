@@ -2,8 +2,8 @@
 Dockerfile for rocker-bayes
 - Built on top of rocker/tidyverse:4.4.1 (ubuntu 22.04)
 - Installs CmdStan 2.35.0
-- Installs engines: rstan cmdstanr brms rstanarm
-- Installs support: tidybayes bayesplot Matrix projpred loo dagitty future easystats ggeffects
+- Installs engines: brms cmdstanr rstan rstanarm
+- Installs supports: bayesplot easystats future ggeffects Matrix projpred rstanarm shinystan tidybayes
 
 ## Docker code to pull and run image
 ```
