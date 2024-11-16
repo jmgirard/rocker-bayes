@@ -15,7 +15,7 @@ ARG CMDSTAN_VERSION=2.35.0
 # Install dependencies and CmdStan
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-	   build-essential curl libv8-dev \
+       build-essential curl libv8-dev \
     && apt-get clean \
     && mkdir -p ${CMDSTAN} \ 
     && curl -fSL https://github.com/stan-dev/cmdstan/releases/download/v${CMDSTAN_VERSION}/cmdstan-${CMDSTAN_VERSION}.tar.gz -o /tmp/cmdstan.tar.gz \
