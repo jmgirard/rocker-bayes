@@ -1,5 +1,5 @@
 # rocker-bayes
-Dockerfile for rocker-bayes
+Dockerfile for rocker-bayes (v1.0)
 - Built on top of rocker/tidyverse:4.4.1 (ubuntu 22.04)
 - Installs CmdStan 2.35.0
 - Installs engines: brms cmdstanr rstan rstanarm
