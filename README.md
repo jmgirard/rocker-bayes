@@ -5,6 +5,8 @@ Dockerfile for rocker-bayes (v2.0)
 - Installs engines: brms cmdstanr rstan rstanarm
 - Installs supports: bayesplot easystats future ggeffects Matrix projpred rstanarm shinystan tidybayes
 
+*Note that this image currently only supports AMD64 architectures; I am working on ARM64 support (e.g., for Apple Silicon).*
+
 ## Build image locally
 ```
 # git clone https://github.com/jmgirard/rocker-bayes.git
