@@ -4,8 +4,10 @@ FROM rocker/rstudio:${R_VERSION}
 
 COPY install_bayes.sh /rocker_scripts/install_bayes.sh
 
-RUN chmod +x /rocker_scripts/install_bayes.sh && /rocker_scripts/install_bayes.sh
+ENV CMDSTAN_VERSION=2.35.0
 
-ENV CMDSTAN="/opt/cmdstan"
+RUN chmod +x /rocker_scripts/install_bayes.sh && /rocker_scripts/install_bayes.sh 
+
+ENV CMDSTAN=/opt/cmdstan
 
 CMD ["/init"]
