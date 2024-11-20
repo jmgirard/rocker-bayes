@@ -1,11 +1,10 @@
 # rocker-bayes
-Dockerfile for rocker-bayes (v2.0)
-- Built on top of rocker/tidyverse:4.4.1 (ubuntu 22.04)
+Dockerfile for rocker-bayes (v3.0)
+- Built on top of rocker/rstudio:4.4.1 (ubuntu 22.04)
 - Installs CmdStan 2.35.0
-- Installs engines: brms cmdstanr rstan rstanarm
-- Installs supports: bayesplot easystats future ggeffects Matrix projpred rstanarm shinystan tidybayes
+- Installs packages: brms cmdstanr easystats effects ggeffects patchwork rstan tidyverse
 
-*Note that this image currently only supports AMD64 architectures; I am working on ARM64 support (e.g., for Apple Silicon).*
+*Note that this image supports both AMD64 and ARM64 architectures.*
 
 ## Build image locally
 ```
