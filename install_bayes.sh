@@ -3,28 +3,25 @@
 
 set -e
 
-## Build ARGs
+# Build ARGs
 NCPUS=$(nproc || echo 1)
+CMDSTAN=${1:-${CMDSTAN:-"/opt/cmdstan"}}
 
 # Install R packages and cleanup
-Rscript -e 'install.packages(c("rstan", "cmdstanr"), repos = c("https://stan-dev.r-universe.dev", getOption("repos")))'
+R -q -e '
+    options(mc.cores = '${NCPUS}')
+    install.packages("pak", repos = sprintf("https://r-lib.github.io/p/pak/stable/%s/%s/%s", .Platform$pkgType, R.Version()$os, R.Version()$arch))
+    pak::repo_add("https://stan-dev.r-universe.dev")
+    pak::pkg_install(c("brms", "cmdstanr", "easystats", "effects", "ggeffects", "patchwork", "rstan", "tidyverse"))
+    pak::cache_clean()
+    pak::meta_clean(TRUE)
+'
 
-install2.r --error --skipinstalled -n "$NCPUS" \
-    bayesplot \
-    brms \
-    easystats \
-    future \
-    ggeffects \
-    Matrix \
-    projpred \
-    rstanarm \
-    shinystan \
-    tidybayes
+# Install CmdStan
+mkdir -p ${CMDSTAN}
+R -q -e 'cmdstanr::install_cmdstan(dir = "'${CMDSTAN}'")'
+chmod -R 777 ${CMDSTAN}
 
 # Clean up
-rm -rf /var/lib/apt/lists/*
-rm -rf /tmp/downloaded_packages
-
-## Strip binary installed libraries from RSPM
-## https://github.com/rocker-org/rocker-versioned2/issues/340
-strip /usr/local/lib/R/site-library/*/libs/*.so
+apt-get clean
+rm -rf /tmp/*
