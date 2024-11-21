@@ -50,7 +50,7 @@ These notes are more for me, but perhaps others can learn from them.
 ```
 # git clone https://github.com/jmgirard/rocker-bayes.git
 # cd rocker-bayes
-docker buildx build --platform linux/amd64 --load --push \
+docker buildx build --platform linux/arm64 --load --push \
   -f bayes_4.4.1.Dockerfile -t jmgirard/rocker-bayes:arm64 .
 ```
 
