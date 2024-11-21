@@ -1,10 +1,9 @@
 # rocker-bayes
-Dockerfile for rocker-bayes (v3.0)
-- Built on top of rocker/rstudio:4.4.1 (ubuntu 22.04)
+- Dockerfile for rocker-bayes (v3.0)
+- Built on top of [rocker/rstudio:4.4.1](https://github.com/rocker-org/rocker-versioned2/blob/master/dockerfiles/rstudio_4.4.1.Dockerfile) (Ubuntu 22.04)
+- Multi-architecture support for AMD64 and ARM64
 - Installs CmdStan 2.35.0
 - Installs packages: brms cmdstanr easystats effects ggeffects patchwork rstan tidyverse
-
-*Note that this image supports both AMD64 and ARM64 architectures.*
 
 # How to use
 
@@ -46,7 +45,7 @@ fit_parallel <- update(
 
 These notes are more for me, but perhaps others can learn from them.
 
-## Build on Mac for linux/arm64
+## Build on Mac (Apple Silicon) for linux/arm64
 
 ```
 # git clone https://github.com/jmgirard/rocker-bayes.git
@@ -69,10 +68,13 @@ docker build -f bayes_4.4.1.Dockerfile -t jmgirard/rocker-bayes:amd64 --push .
 docker manifest create jmgirard/rocker-bayes:latest \
   --amend jmgirard/rocker-bayes:amd64 \
   --amend jmgirard/rocker-bayes:arm64
+
 docker manifest annotate jmgirard/rocker-bayes:latest \
   jmgirard/rocker-bayes:amd64 --arch amd64
+
 docker manifest annotate jmgirard/rocker-bayes:latest \
   jmgirard/rocker-bayes:arm64 --arch arm64
+
 docker manifest push jmgirard/rocker-bayes:latest
 ```
 
