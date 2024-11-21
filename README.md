@@ -41,7 +41,7 @@ fit_parallel <- update(
 )
 ```
 
-# How to build multi-architecture image
+# How to build multi-architecture manifest
 
 These notes are more for me, but perhaps others can learn from them.
 
