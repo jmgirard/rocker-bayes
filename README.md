@@ -45,6 +45,15 @@ fit_parallel <- update(
 
 These notes are more for me, but perhaps others can learn from them.
 
+## Build on Windows for linux/amd64
+
+```
+# git clone https://github.com/jmgirard/rocker-bayes.git
+# cd rocker-bayes
+docker buildx build --platform linux/amd64 --load --push \
+  -f bayes_4.4.1.Dockerfile -t jmgirard/rocker-bayes:amd64 .
+```
+
 ## Build on Mac (Apple Silicon) for linux/arm64
 
 ```
@@ -52,14 +61,6 @@ These notes are more for me, but perhaps others can learn from them.
 # cd rocker-bayes
 docker buildx build --platform linux/arm64 --load --push \
   -f bayes_4.4.1.Dockerfile -t jmgirard/rocker-bayes:arm64 .
-```
-
-## Build on Windows for linux/amd64
-
-```
-# git clone https://github.com/jmgirard/rocker-bayes.git
-# cd rocker-bayes
-docker build -f bayes_4.4.1.Dockerfile -t jmgirard/rocker-bayes:amd64 --push .
 ```
 
 ## Create multi-architecture manifest list
