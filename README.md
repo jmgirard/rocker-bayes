@@ -22,6 +22,7 @@ You could also download the Dockerfile from GitHub and build it yourself. Then n
 # git clone https://github.com/jmgirard/rocker-bayes.git
 # cd rocker-bayes
 docker build . -f bayes_4.4.1.Dockerfile -t rocker-bayes
+docker-compose up -d
 ```
 
 # Test between-and-within-chain parallelization
