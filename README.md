@@ -1,5 +1,5 @@
 # rocker-bayes
-- Dockerfile for rocker-bayes (v3.1)
+- Dockerfile for rocker-bayes (v3.2)
 - Built on top of [rocker/rstudio:4.4.1](https://github.com/rocker-org/rocker-versioned2/blob/master/dockerfiles/rstudio_4.4.1.Dockerfile) (Ubuntu 22.04)
 - Multi-architecture support for AMD64 and ARM64
 - Installs CmdStan 2.35.0
