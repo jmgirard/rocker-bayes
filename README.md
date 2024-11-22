@@ -8,7 +8,8 @@
 # How to use
 
 ## Option 1: Pull and run image
-Most users will want to just install Docker Desktop, pull the image, and run it. Then navigate to <http://localhost:8787> and enter "rstudio" and "pass".
+Most users will want to just install Docker Desktop, pull the image, and run it. 
+Then navigate to <http://localhost:8787> and enter "rstudio" and "pass".
 
 ```
 docker pull jmgirard/rocker-bayes
@@ -16,7 +17,8 @@ docker run -e PASSWORD=pass -p 8787:8787 jmgirard/rocker-bayes
 ```
 
 ## Option 2: Build image locally
-You could also download the Dockerfile from GitHub and build it yourself. Then navigate to <http://localhost:8787> and enter "rstudio" and "pass".
+You could also download the Dockerfile from GitHub and build it yourself.
+Then navigate to <http://localhost:8787> and enter "rstudio" and "pass".
 
 ```
 # git clone https://github.com/jmgirard/rocker-bayes.git
@@ -27,7 +29,8 @@ docker-compose up -d
 
 # Test between-and-within-chain parallelization
 
-Note that this small model won't get much benefit from within-chain parallelization. It's just used to test that everything is working.
+Note that this small model won't get much benefit from within-chain parallelization. 
+It's just used to quickly test that everything is working.
 
 ```r
 library(brms)
