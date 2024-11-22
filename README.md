@@ -23,7 +23,7 @@ Then navigate to <http://localhost:8787> and enter "rstudio" and "pass".
 ```
 git clone https://github.com/jmgirard/rocker-bayes.git
 cd rocker-bayes
-docker build . -f bayes_4.4.1.Dockerfile -t rocker-bayes
+docker build . -f bayes_4.4.1.Dockerfile -t jmgirard/rocker-bayes
 docker-compose up -d
 ```
 
