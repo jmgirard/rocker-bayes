@@ -1,6 +1,6 @@
 services:
   whisper:
-    image: jmgirard/rocker-bayes:latest
+    image: jmgirard/rocker-bayes
     ports:
       - "8787:8787"
     environment:
