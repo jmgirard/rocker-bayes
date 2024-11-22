@@ -1,0 +1,7 @@
+services:
+  whisper:
+    image: jmgirard/rocker-bayes:latest
+    ports:
+      - "8787:8787"
+    environment:
+      - PASSWORD=pass
