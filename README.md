@@ -8,8 +8,7 @@
 # How to use
 
 ## Option 1: Pull and run image
-Most users will want to just install Docker Desktop, pull the image, and run it. 
-
+Most users will want to just install Docker Desktop, pull the image, and run it. <br />
 Then navigate to <http://localhost:8787> and enter "rstudio" and "pass".
 
 ```
@@ -18,8 +17,7 @@ docker run -e PASSWORD=pass -p 8787:8787 jmgirard/rocker-bayes
 ```
 
 ## Option 2: Build image locally
-You could also download the Dockerfile from GitHub and build it yourself.
-
+You could also download the Dockerfile from GitHub and build it yourself. <br />
 Then navigate to <http://localhost:8787> and enter "rstudio" and "pass".
 
 ```
@@ -30,8 +28,7 @@ docker-compose up -d
 ```
 
 # Test between-and-within-chain parallelization
-Note that this small model won't get much benefit from within-chain parallelization. 
-
+Note that this small model won't get much benefit from within-chain parallelization. <br />
 It's just used to quickly test that everything is working.
 
 ```r
