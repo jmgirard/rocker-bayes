@@ -25,7 +25,6 @@ You can also customize the rstudio port and password in `.env`.
 ```
 git clone https://github.com/jmgirard/rocker-bayes.git
 cd rocker-bayes
-docker build -f bayes_4.4.1.Dockerfile -t jmgirard/rocker-bayes .
 docker-compose up -d
 ```
 
