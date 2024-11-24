@@ -10,4 +10,4 @@ RUN chmod +x /rocker_scripts/install_bayes.sh && /rocker_scripts/install_bayes.s
 
 ENV CMDSTAN=/opt/cmdstan
 
-CMD ["/init"]
+ENTRYPOINT ["/init"]
