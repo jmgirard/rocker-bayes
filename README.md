@@ -1,5 +1,5 @@
 # rocker-bayes
-- Dockerfile for rocker-bayes (v3.2)
+- Dockerfile for rocker-bayes (v3.3)
 - Built on top of [rocker/rstudio:4.4.1](https://github.com/rocker-org/rocker-versioned2/blob/master/dockerfiles/rstudio_4.4.1.Dockerfile) (Ubuntu 22.04)
 - Multi-architecture support for AMD64 and ARM64
 - Installs CmdStan 2.35.0
@@ -19,12 +19,12 @@ docker run -e PASSWORD=pass -p 8787:8787 jmgirard/rocker-bayes
 ## Option 2: Build image locally
 You could also download the Dockerfile from GitHub and build it yourself.<br />
 Note that rstanarm is slow to build, so skip that if you don't plan to use it.<br />
-Then navigate to <http://localhost:8787> and enter "rstudio" and "pass".
+Then navigate to <http://localhost:8787> and enter "rstudio" and "pass".<br />
+You can also customize the rstudio port and password in `.env`.
 
 ```
 git clone https://github.com/jmgirard/rocker-bayes.git
 cd rocker-bayes
-docker build -f bayes_4.4.1.Dockerfile -t jmgirard/rocker-bayes .
 docker-compose up -d
 ```
 
