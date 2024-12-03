@@ -1,9 +1,11 @@
 # rocker-bayes
-- Dockerfile for rocker-bayes (v3.3)
-- Built on top of [rocker/rstudio:4.4.1](https://github.com/rocker-org/rocker-versioned2/blob/master/dockerfiles/rstudio_4.4.1.Dockerfile) (Ubuntu 22.04)
-- Multi-architecture support for AMD64 and ARM64
-- Installs CmdStan 2.35.0
-- Installs packages: brms cmdstanr easystats effects ggeffects patchwork rstan rstanarm tidyverse
+
+| Tag   | Base Image     | Operating System | R ver | CMDStan |
+|-------|----------------|------------------|-------|---------|
+| 4.4.1 | rocker/rstudio | Ubuntu 22.04 LTS | 4.4.1 | 2.35.0  |
+| 4.4.2 | rocker/rstudio | Ubuntu 24.04 LTS | 4.4.2 | 2.35.0  |
+
+- brms cmdstanr easystats effects ggeffects patchwork rstan rstanarm tidyverse
 
 # How to use
 
@@ -53,8 +55,7 @@ These notes are more for me, but perhaps others can learn from them.
 ```
 # git clone https://github.com/jmgirard/rocker-bayes.git
 # cd rocker-bayes
-docker buildx build --platform linux/amd64 --load --push \
-  -f bayes_4.4.1.Dockerfile -t jmgirard/rocker-bayes:amd64 .
+docker build --push -f bayes_4.4.2.Dockerfile -t jmgirard/rocker-bayes:4.4.2-amd64 .
 ```
 
 ## Build on Mac (Apple Silicon) for linux/arm64
@@ -62,23 +63,18 @@ docker buildx build --platform linux/amd64 --load --push \
 ```
 # git clone https://github.com/jmgirard/rocker-bayes.git
 # cd rocker-bayes
-docker buildx build --platform linux/arm64 --load --push \
-  -f bayes_4.4.1.Dockerfile -t jmgirard/rocker-bayes:arm64 .
+docker build --push -f bayes_4.4.2.Dockerfile -t jmgirard/rocker-bayes:4.4.2-arm64 .
 ```
 
 ## Create multi-architecture manifest list
 
 ```
-docker manifest create jmgirard/rocker-bayes:latest \
-  --amend jmgirard/rocker-bayes:amd64 \
-  --amend jmgirard/rocker-bayes:arm64
+docker manifest create jmgirard/rocker-bayes:4.4.2 --amend jmgirard/rocker-bayes:4.4.2-amd64 --amend jmgirard/rocker-bayes:4.4.2-arm64
 
-docker manifest annotate jmgirard/rocker-bayes:latest \
-  jmgirard/rocker-bayes:amd64 --arch amd64
+docker manifest annotate jmgirard/rocker-bayes:4.4.2 jmgirard/rocker-bayes:4.4.2-amd64 --arch amd64
 
-docker manifest annotate jmgirard/rocker-bayes:latest \
-  jmgirard/rocker-bayes:arm64 --arch arm64
+docker manifest annotate jmgirard/rocker-bayes:4.4.2 jmgirard/rocker-bayes:4.4.2-arm64 --arch arm64
 
-docker manifest push jmgirard/rocker-bayes:latest
+docker manifest push jmgirard/rocker-bayes:4.4.2
 ```
 
