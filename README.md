@@ -2,7 +2,7 @@
 
 ## Image Tags/Versions
 
-| Tag    | Base Image     | Operating System | R ver | CMDStan |
+| Tag    | Base Image     | Operating System | R ver | CmdStan |
 |--------|----------------|------------------|-------|---------|
 | 4.4.1  | rocker/rstudio | Ubuntu 22.04 LTS | 4.4.1 | 2.35.0  |
 | 4.4.2  | rocker/rstudio | Ubuntu 24.04 LTS | 4.4.2 | 2.35.0  |
