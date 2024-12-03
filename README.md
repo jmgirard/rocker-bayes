@@ -1,11 +1,33 @@
 # rocker-bayes
 
-| Tag   | Base Image     | Operating System | R ver | CMDStan |
-|-------|----------------|------------------|-------|---------|
-| 4.4.1 | rocker/rstudio | Ubuntu 22.04 LTS | 4.4.1 | 2.35.0  |
-| 4.4.2 | rocker/rstudio | Ubuntu 24.04 LTS | 4.4.2 | 2.35.0  |
+## Image Tags/Versions
 
-- brms cmdstanr easystats effects ggeffects patchwork rstan rstanarm tidyverse
+| Tag    | Base Image     | Operating System | R ver | CMDStan |
+|--------|----------------|------------------|-------|---------|
+| 4.4.1  | rocker/rstudio | Ubuntu 22.04 LTS | 4.4.1 | 2.35.0  |
+| 4.4.2  | rocker/rstudio | Ubuntu 24.04 LTS | 4.4.2 | 2.35.0  |
+| latest | rocker/rstudio | Ubuntu 24.04 LTS | 4.4.2 | 2.35.0  |
+
+## Included R packages
+
+### Interfaces
+- [brms](https://paulbuerkner.com/brms/)
+- [rstanarm](https://mc-stan.org/rstanarm/)
+
+### Backends
+- [cmdstanr](https://mc-stan.org/cmdstanr/)
+- [rstan](https://mc-stan.org/rstan/)
+
+### Data Preparation
+- [data.table](https://rdatatable.gitlab.io/data.table/)
+- [tidyverse](https://www.tidyverse.org/)
+
+### Model Interrogation
+- [bayesplot](https://mc-stan.org/bayesplot/)
+- [easystats](https://easystats.github.io/easystats/)
+- [ggeffects](https://strengejacke.github.io/ggeffects/)
+- [shinystan](https://mc-stan.org/shinystan/)
+- [tidybayes](https://mjskay.github.io/tidybayes/)
 
 # How to use
 
