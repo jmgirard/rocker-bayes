@@ -85,7 +85,8 @@ docker build --push -f bayes_4.4.2.Dockerfile -t jmgirard/rocker-bayes:4.4.2-amd
 ```
 # git clone https://github.com/jmgirard/rocker-bayes.git
 # cd rocker-bayes
-docker build --push -f bayes_4.4.2.Dockerfile -t jmgirard/rocker-bayes:4.4.2-arm64 .
+docker buildx build --platform linux/arm64 --load -f bayes_4.4.2.Dockerfile -t jmgirard/rocker-bayes:4.4.2-arm64 .
+docker push jmgirard/rocker-bayes:4.4.2-arm64
 ```
 
 ## Create multi-architecture manifest list
