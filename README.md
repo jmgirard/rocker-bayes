@@ -93,11 +93,11 @@ docker push jmgirard/rocker-bayes:4.4.2-arm64
 
 ```
 docker manifest create jmgirard/rocker-bayes:4.4.2 --amend jmgirard/rocker-bayes:4.4.2-amd64 --amend jmgirard/rocker-bayes:4.4.2-arm64
-
 docker manifest annotate jmgirard/rocker-bayes:4.4.2 jmgirard/rocker-bayes:4.4.2-amd64 --arch amd64
-
 docker manifest annotate jmgirard/rocker-bayes:4.4.2 jmgirard/rocker-bayes:4.4.2-arm64 --arch arm64
-
 docker manifest push jmgirard/rocker-bayes:4.4.2
+
+docker manifest create jmgirard/rocker-bayes:latest jmgirard/rocker-bayes:4.4.2-amd64 jmgirard/rocker-bayes:4.4.2-arm64
+docker manifest push jmgirard/rocker-bayes:latest
 ```
 
