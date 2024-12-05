@@ -40,8 +40,8 @@ docker pull jmgirard/rocker-bayes
 docker run -e PASSWORD=pass -p 8787:8787 jmgirard/rocker-bayes
 ```
 
-Then navigate to <http://localhost:8787> in your web browser and enter "rstudio" and "pass".
-Note that you can also use volumes or bind mounts to grant the container access to persistent storage.
+Then navigate to <http://localhost:8787> in your web browser and enter "rstudio" and "pass".<br />
+Use volumes or bind mounts to grant the container access to persistent storage or host directories.
 
 ## Option 2: Build image locally
 You could also download the Dockerfile from GitHub and build it yourself.
