@@ -33,25 +33,27 @@
 # How to use
 
 ## Option 1: Pull and run image
-Most users will want to just install Docker Desktop, pull the image, and run it.<br />
-Then navigate to <http://localhost:8787> and enter "rstudio" and "pass".
+Most users will want to just install Docker Desktop, pull the image, and run it.
 
 ```
 docker pull jmgirard/rocker-bayes
 docker run -e PASSWORD=pass -p 8787:8787 jmgirard/rocker-bayes
 ```
 
+Then navigate to <http://localhost:8787> in your web browser and enter "rstudio" and "pass".
+Note that you can also use volumes or bind mounts to grant the container access to persistent storage.
+
 ## Option 2: Build image locally
-You could also download the Dockerfile from GitHub and build it yourself.<br />
-Note that rstanarm is slow to build, so skip that if you don't plan to use it.<br />
-Then navigate to <http://localhost:8787> and enter "rstudio" and "pass".<br />
-You can also customize the rstudio port and password in `.env`.
+You could also download the Dockerfile from GitHub and build it yourself.
 
 ```
 git clone https://github.com/jmgirard/rocker-bayes.git
 cd rocker-bayes
-docker-compose up -d
+docker-compose up --build -d
 ```
+
+Then navigate to <http://localhost:8787> in your web browser and enter "rstudio" and "pass".<br />
+You can also customize the port and password by editing `.env` in a text editor.
 
 # Test between-and-within-chain parallelization
 Note that this small model won't get much benefit from within-chain parallelization. <br />
