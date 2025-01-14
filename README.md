@@ -13,7 +13,7 @@
 
 ### Interfaces
 - [brms](https://paulbuerkner.com/brms/) (newest on CRAN)
-- [rstanarm](https://mc-stan.org/rstanarm/) (2.32.1)
+- [rstanarm](https://mc-stan.org/rstanarm/) (2.32.1 due to 2.35.0.9000 failing)
 
 ### Backends
 - [cmdstanr](https://mc-stan.org/cmdstanr/) (newest on <https://stan-dev.r-universe.dev/builds>)
