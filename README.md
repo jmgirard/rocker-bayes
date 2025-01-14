@@ -12,23 +12,23 @@
 ## Included R packages
 
 ### Interfaces
-- [brms](https://paulbuerkner.com/brms/)
-- [rstanarm](https://mc-stan.org/rstanarm/)
+- [brms](https://paulbuerkner.com/brms/) (newest on CRAN)
+- [rstanarm](https://mc-stan.org/rstanarm/) (2.32.1)
 
 ### Backends
-- [cmdstanr](https://mc-stan.org/cmdstanr/)
-- [rstan](https://mc-stan.org/rstan/)
+- [cmdstanr](https://mc-stan.org/cmdstanr/) (newest on <https://stan-dev.r-universe.dev/builds>)
+- [rstan](https://mc-stan.org/rstan/) (newest on <https://stan-dev.r-universe.dev/builds>)
 
 ### Data Preparation
-- [data.table](https://rdatatable.gitlab.io/data.table/)
-- [tidyverse](https://www.tidyverse.org/)
+- [data.table](https://rdatatable.gitlab.io/data.table/) (newest on CRAN)
+- [tidyverse](https://www.tidyverse.org/) (newest on CRAN)
 
 ### Model Interrogation
-- [bayesplot](https://mc-stan.org/bayesplot/)
-- [easystats](https://easystats.github.io/easystats/)
-- [ggeffects](https://strengejacke.github.io/ggeffects/)
-- [shinystan](https://mc-stan.org/shinystan/)
-- [tidybayes](https://mjskay.github.io/tidybayes/)
+- [bayesplot](https://mc-stan.org/bayesplot/) (newest on <https://stan-dev.r-universe.dev/builds>)
+- [easystats](https://easystats.github.io/easystats/) (newest on CRAN)
+- [ggeffects](https://strengejacke.github.io/ggeffects/) (newest on CRAN)
+- [shinystan](https://mc-stan.org/shinystan/) (newest on <https://stan-dev.r-universe.dev/builds>)
+- [tidybayes](https://mjskay.github.io/tidybayes/) (newest on CRAN)
 
 # How to use
 
