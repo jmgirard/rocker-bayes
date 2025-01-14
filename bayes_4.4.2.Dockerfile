@@ -4,7 +4,7 @@ FROM rocker/rstudio:${R_VERSION}
 
 COPY install_bayes.sh /rocker_scripts/install_bayes.sh
 
-ENV CMDSTAN_VERSION=2.35.0
+ENV CMDSTAN_VERSION=2.36.0
 
 RUN chmod +x /rocker_scripts/install_bayes.sh && /rocker_scripts/install_bayes.sh 
 
