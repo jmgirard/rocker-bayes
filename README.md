@@ -2,11 +2,11 @@
 
 ## Image Tags/Versions
 
-| Tag    | Base Image     | Operating System | R ver | CmdStan |
-|--------|----------------|------------------|-------|---------|
-| latest | rocker/rstudio | Ubuntu 24.04 LTS | 4.4.2 | 2.36.0  |
-| 4.4.2  | rocker/rstudio | Ubuntu 24.04 LTS | 4.4.2 | 2.36.0  |
-| 4.4.1  | rocker/rstudio | Ubuntu 22.04 LTS | 4.4.1 | 2.35.0  |
+| Tag    | Base Image     | Operating System       | R ver | CmdStan |
+|--------|----------------|------------------------|-------|---------|
+| latest | rocker/rstudio | "noble" (Ubuntu 24.04) | 4.4.2 | 2.36.0  |
+| 4.4.2  | rocker/rstudio | "noble" (Ubuntu 24.04) | 4.4.2 | 2.36.0  |
+| 4.4.1  | rocker/rstudio | "jammy" (Ubuntu 22.04) | 4.4.1 | 2.35.0  |
 
 
 ## Included R packages
