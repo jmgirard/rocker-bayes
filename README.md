@@ -33,25 +33,27 @@
 # How to use
 
 ## Option 1: Pull and run image
-Most users will want to just install Docker Desktop, pull the image, and run it.<br />
-Then navigate to <http://localhost:8787> and enter "rstudio" and "pass".
+Most users will want to just install Docker Desktop, pull the image, and run it.
 
 ```
 docker pull jmgirard/rocker-bayes
 docker run -e PASSWORD=pass -p 8787:8787 jmgirard/rocker-bayes
 ```
 
+Then navigate to <http://localhost:8787> in your web browser and enter "rstudio" and "pass".<br />
+Use volumes or bind mounts to grant the container access to persistent storage or host directories.
+
 ## Option 2: Build image locally
-You could also download the Dockerfile from GitHub and build it yourself.<br />
-Note that rstanarm is slow to build, so skip that if you don't plan to use it.<br />
-Then navigate to <http://localhost:8787> and enter "rstudio" and "pass".<br />
-You can also customize the rstudio port and password in `.env`.
+You could also download the Dockerfile from GitHub and build it yourself.
 
 ```
 git clone https://github.com/jmgirard/rocker-bayes.git
 cd rocker-bayes
-docker-compose up -d
+docker-compose up --build -d
 ```
+
+Then navigate to <http://localhost:8787> in your web browser and enter "rstudio" and "pass".<br />
+You can also customize the port and password by editing `.env` in a text editor.
 
 # Test between-and-within-chain parallelization
 Note that this small model won't get much benefit from within-chain parallelization. <br />
@@ -69,36 +71,3 @@ fit_parallel <- update(
   backend = "cmdstanr", threads = threading(2)
 )
 ```
-
-# How to build multi-architecture manifest
-These notes are more for me, but perhaps others can learn from them.
-
-## Build on Windows for linux/amd64
-
-```
-# git clone https://github.com/jmgirard/rocker-bayes.git
-# cd rocker-bayes
-docker build --push -f bayes_4.4.2.Dockerfile -t jmgirard/rocker-bayes:4.4.2-amd64 .
-```
-
-## Build on Mac (Apple Silicon) for linux/arm64
-
-```
-# git clone https://github.com/jmgirard/rocker-bayes.git
-# cd rocker-bayes
-docker buildx build --platform linux/arm64 --load -f bayes_4.4.2.Dockerfile -t jmgirard/rocker-bayes:4.4.2-arm64 .
-docker push jmgirard/rocker-bayes:4.4.2-arm64
-```
-
-## Create multi-architecture manifest list
-
-```
-docker manifest create jmgirard/rocker-bayes:4.4.2 --amend jmgirard/rocker-bayes:4.4.2-amd64 --amend jmgirard/rocker-bayes:4.4.2-arm64
-docker manifest annotate jmgirard/rocker-bayes:4.4.2 jmgirard/rocker-bayes:4.4.2-amd64 --arch amd64
-docker manifest annotate jmgirard/rocker-bayes:4.4.2 jmgirard/rocker-bayes:4.4.2-arm64 --arch arm64
-docker manifest push jmgirard/rocker-bayes:4.4.2
-
-docker manifest create jmgirard/rocker-bayes:latest jmgirard/rocker-bayes:4.4.2-amd64 jmgirard/rocker-bayes:4.4.2-arm64
-docker manifest push jmgirard/rocker-bayes:latest
-```
-
