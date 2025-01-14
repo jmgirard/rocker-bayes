@@ -12,7 +12,7 @@ R -q -e '
     options(mc.cores = '${NCPUS}')
     install.packages("pak", repos = sprintf("https://r-lib.github.io/p/pak/stable/%s/%s/%s", .Platform$pkgType, R.Version()$os, R.Version()$arch))
     pak::repo_add("https://stan-dev.r-universe.dev")
-    pak::pkg_install(c("brms", "cmdstanr", "easystats", "effects", "ggeffects", "patchwork", "rstan", "rstanarm", "tidyverse"))
+    pak::pkg_install(c("brms", "cmdstanr", "easystats", "effects", "ggeffects", "patchwork", "rstan", "rstanarm@2.32.1", "tidyverse"))
     pak::cache_clean()
     pak::meta_clean(TRUE)
 '
