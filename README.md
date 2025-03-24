@@ -1,5 +1,7 @@
 # rocker-bayes
 
+This docker image provides everything you need for Bayesian data analysis in R. It comes with RStudio Server and Quarto on Ubuntu. Binary packages are accessed via [bspm](https://cloud.r-project.org/package=bspm) using `install.packages()`. 
+
 ## Image Tags/Versions
 
 | Tag    | Base Image         | Operating System       | R ver | CmdStan |
@@ -8,7 +10,7 @@
 | noble  | jmgirard/rstudio2u | "noble" (Ubuntu 24.04) | 4.4.3 | 2.36.0  |
 
 
-## Included R packages
+## Included R packages 
 
 ### Interfaces
 - [brms](https://paulbuerkner.com/brms/) (newest on CRAN)
