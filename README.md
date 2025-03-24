@@ -2,39 +2,37 @@
 
 ## Image Tags/Versions
 
-| Tag    | Base Image     | Operating System       | R ver | CmdStan |
-|--------|----------------|------------------------|-------|---------|
-| latest | rocker/rstudio | "noble" (Ubuntu 24.04) | 4.4.3 | 2.36.0  |
-| 4.4.3  | rocker/rstudio | "noble" (Ubuntu 24.04) | 4.4.3 | 2.36.0  |
-| 4.4.2  | rocker/rstudio | "noble" (Ubuntu 24.04) | 4.4.2 | 2.36.0  |
-| 4.4.1  | rocker/rstudio | "jammy" (Ubuntu 22.04) | 4.4.1 | 2.35.0  |
+| Tag    | Base Image         | Operating System       | R ver | CmdStan |
+|--------|--------------------|------------------------|-------|---------|
+| latest | jmgirard/rstudio2u | "noble" (Ubuntu 24.04) | 4.4.3 | 2.36.0  |
+| noble  | jmgirard/rstudio2u | "noble" (Ubuntu 24.04) | 4.4.3 | 2.36.0  |
 
 
 ## Included R packages
 
 ### Interfaces
 - [brms](https://paulbuerkner.com/brms/) (newest on CRAN)
-- [rstanarm](https://mc-stan.org/rstanarm/) (2.32.1 due to 2.35.0.9000 failing)
+- [rstanarm](https://mc-stan.org/rstanarm/) (newest on CRAN)
 
 ### Backends
 - [cmdstanr](https://mc-stan.org/cmdstanr/) (newest on <https://stan-dev.r-universe.dev/builds>)
-- [rstan](https://mc-stan.org/rstan/) (newest on <https://stan-dev.r-universe.dev/builds>)
+- [rstan](https://mc-stan.org/rstan/) (newest on CRAN)
 
 ### Data Preparation
 - [data.table](https://rdatatable.gitlab.io/data.table/) (newest on CRAN)
 - [tidyverse](https://www.tidyverse.org/) (newest on CRAN)
 
 ### Model Interrogation
-- [bayesplot](https://mc-stan.org/bayesplot/) (newest on <https://stan-dev.r-universe.dev/builds>)
+- [bayesplot](https://mc-stan.org/bayesplot/) (newest on CRAN)
 - [easystats](https://easystats.github.io/easystats/) (newest on CRAN)
 - [ggeffects](https://strengejacke.github.io/ggeffects/) (newest on CRAN)
-- [shinystan](https://mc-stan.org/shinystan/) (newest on <https://stan-dev.r-universe.dev/builds>)
+- [shinystan](https://mc-stan.org/shinystan/) (newest on CRAN)
 - [tidybayes](https://mjskay.github.io/tidybayes/) (newest on CRAN)
 
 # How to use
 
 ## Option 1: Pull and run image
-Most users will want to just install Docker Desktop, pull the image, and run it.
+Some users will want to just install Docker Desktop, pull the image, and run it.
 
 ```
 docker pull jmgirard/rocker-bayes
