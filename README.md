@@ -6,8 +6,8 @@ This docker image provides everything you need for Bayesian data analysis in R. 
 
 | Tag    | Base Image         | Operating System       | R ver | CmdStan |
 |--------|--------------------|------------------------|-------|---------|
-| latest | jmgirard/rstudio2u | "noble" (Ubuntu 24.04) | 4.4.3 | 2.36.0  |
-| noble  | jmgirard/rstudio2u | "noble" (Ubuntu 24.04) | 4.4.3 | 2.36.0  |
+| latest | jmgirard/rstudio2u | "noble" (Ubuntu 24.04) | 4.5.0 | 2.36.0  |
+| noble  | jmgirard/rstudio2u | "noble" (Ubuntu 24.04) | 4.5.0 | 2.36.0  |
 
 
 ## Included R packages 
