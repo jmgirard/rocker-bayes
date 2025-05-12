@@ -2,6 +2,8 @@
 
 This docker image provides everything you need for Bayesian data analysis in R. It comes with RStudio Server and Quarto on Ubuntu. Binary packages are accessed via [bspm](https://cloud.r-project.org/package=bspm) using `install.packages()`. 
 
+Note, on a Windows host, you may want to increase the number of CPUs available to WSL via `%UserProfile%\.wslconfig`
+
 ## Image Tags/Versions
 
 | Tag    | Base Image         | Operating System       | R ver | CmdStan |
