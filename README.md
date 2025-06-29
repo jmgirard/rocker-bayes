@@ -6,10 +6,10 @@ Note, on a Windows host, you may want to increase the number of CPUs available t
 
 ## Image Tags/Versions
 
-| Tag    | Base Image         | Operating System       | R ver | CmdStan |
-|--------|--------------------|------------------------|-------|---------|
-| latest | jmgirard/rstudio2u | "noble" (Ubuntu 24.04) | 4.5.0 | 2.36.0  |
-| noble  | jmgirard/rstudio2u | "noble" (Ubuntu 24.04) | 4.5.0 | 2.36.0  |
+| Tag    | Base Image         | Operating System       | R     | RStudio       | CmdStan |
+|--------|--------------------|------------------------|-------|---------------|---------|
+| latest | jmgirard/rstudio2u | "noble" (Ubuntu 24.04) | 4.5.1 | 2025.05.1+513 | 2.36.0  |
+| noble  | jmgirard/rstudio2u | "noble" (Ubuntu 24.04) | 4.5.1 | 2025.05.1+513 | 2.36.0  |
 
 
 ## Included R packages 
