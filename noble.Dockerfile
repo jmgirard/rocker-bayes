@@ -6,7 +6,7 @@ LABEL org.label-schema.license="MIT" \
       maintainer="Jeffrey Girard <me@jmgirard.com>"
 
 # Install Bayes
-ENV CMDSTAN_VERSION=2.36.0
+ENV CMDSTAN_VERSION=2.37.0
 
 COPY scripts /rocker_scripts
 RUN chmod -R +x /rocker_scripts/
