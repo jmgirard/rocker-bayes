@@ -55,8 +55,7 @@ cd rocker-bayes
 docker-compose up --build -d
 ```
 
-Then navigate to <http://localhost:8787> in your web browser and enter "rstudio" and "pass".<br />
-You can also customize the port and password by editing `.env` in a text editor.
+Then navigate to <http://localhost:8787> in your web browser (no username or password required).<br />
 
 # Test between-and-within-chain parallelization
 Note that this small model won't get much benefit from within-chain parallelization. <br />
