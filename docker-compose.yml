@@ -2,6 +2,9 @@ services:
   bayes:
     image: jmgirard/rocker-bayes:latest
     ports:
-      - "${RS_PORT}:8787"
+      - "127.0.0.1:${RS_PORT:-8787}:8787"
+      - "127.0.0.1:${SSH_PORT:-2222}:22"
     environment:
-      - PASSWORD=${RS_PASS}
+      - PASSWORD=${SUDO_PASS:-rstudio}
+      - ROOT=true
+      - DISABLE_AUTH=true
