@@ -11,6 +11,7 @@ R -q -e '
     pkgs = c(
       "brms",
       "easystats",
+      "marginaleffects",
       "effects",
       "ggeffects",
       "patchwork",
