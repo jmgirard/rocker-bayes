@@ -29,14 +29,14 @@ R -q -e '
   )
 '
 
-# Install CmdStan (adding flag to suppress ignorable warnings on ARM64)
+# Install CmdStan (adding flags for ARM64 warnings and O3 optimization)
 # https://discourse.mc-stan.org/t/warnings-when-compiling-cmdstan-code-on-linux-arm64/37320/2
 mkdir -p /home/rstudio/.cmdstan
 R -q -e '
   cmdstanr::install_cmdstan(
     dir = "/home/rstudio/.cmdstan",
     version = "'${CMDSTAN_VERSION}'",
-    cpp_options = list("CXXFLAGS+= -Wno-psabi")
+    cpp_options = list("CXXFLAGS+= -Wno-psabi -O3")
   )
   cmdstanr::set_cmdstan_path("/home/rstudio/.cmdstan")
 '
