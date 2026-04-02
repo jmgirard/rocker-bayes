@@ -45,3 +45,7 @@ chown -R rstudio /home/rstudio/.cmdstan
 # Clean up
 apt-get clean
 rm -rf /tmp/*
+
+# Fix permissions for all newly installed packages
+chown -R root:staff /usr/local/lib/R/site-library /usr/lib/R/site-library
+chmod -R g+ws /usr/local/lib/R/site-library /usr/lib/R/site-library
