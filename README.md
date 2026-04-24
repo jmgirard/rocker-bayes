@@ -4,14 +4,6 @@ This docker image provides everything you need for Bayesian data analysis in R. 
 
 Note, on a Windows host, you may want to increase the number of CPUs available to WSL via `%UserProfile%\.wslconfig`
 
-## Image Tags/Versions
-
-| Tag    | Base Image         | Operating System       | R     | RStudio       | CmdStan |
-|--------|--------------------|------------------------|-------|---------------|---------|
-| latest | jmgirard/rstudio2u | "noble" (Ubuntu 24.04) | 4.5.3 | 2026.01.2-418 | 2.38.0  |
-| noble  | jmgirard/rstudio2u | "noble" (Ubuntu 24.04) | 4.5.3 | 2026.01.2-418 | 2.38.0  |
-
-
 ## Included R packages 
 
 ### Interfaces
