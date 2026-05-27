@@ -1,4 +1,4 @@
-FROM jmgirard/rstudio2u:noble
+FROM jmgirard/rstudio2u:resolute
 
 LABEL org.label-schema.license="MIT" \
       org.label-schema.vcs-url="https://github.com/jmgirard/rocker-bayes" \
