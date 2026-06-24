@@ -14,6 +14,7 @@ R -q -e '
       "marginaleffects",
       "effects",
       "ggeffects",
+      "ordbetareg",
       "patchwork",
       "rstan",
       "rstanarm",
