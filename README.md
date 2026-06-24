@@ -8,6 +8,7 @@ Note, on a Windows host, you may want to increase the number of CPUs available t
 
 ### Interfaces
 - [brms](https://paulbuerkner.com/brms/) (newest on CRAN)
+- [ordbetareg](https://www.robertkubinec.com/ordbetareg) (newest on CRAN)
 - [rstanarm](https://mc-stan.org/rstanarm/) (newest on CRAN)
 
 ### Backends
