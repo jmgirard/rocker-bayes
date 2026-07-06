@@ -1,7 +1,15 @@
-# .dockerignore
-.dockerfile
+# Only the scripts/ directory is needed in the build context.
+start_*
+stop_*
+.env
 .git
+.github
 .gitattributes
 .gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
 LICENSE
 README.md
+CITATION.cff
+.DS_Store

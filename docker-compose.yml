@@ -1,10 +1,22 @@
 services:
   bayes:
     image: jmgirard/rocker-bayes:latest
+    build:
+      context: .
+      args:
+        BASE_TAG: "noble"
     ports:
       - "127.0.0.1:${RS_PORT:-8787}:8787"
-      - "127.0.0.1:${SSH_PORT:-2222}:22"
     environment:
       - PASSWORD=${SUDO_PASS:-rstudio}
       - ROOT=true
       - DISABLE_AUTH=true
+    volumes:
+      # Persist the user's home directory (files, settings, installed R
+      # packages, and the compiled CmdStan toolchain) so work survives
+      # `docker compose down`, image updates, and pruning. The named volume is
+      # pre-populated from the image on first run.
+      - rstudio_home:/home/rstudio
+
+volumes:
+  rstudio_home:

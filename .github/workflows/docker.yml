@@ -1,0 +1,179 @@
+name: Build and push Docker images
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Dockerfile"
+      - "scripts/**"
+      - ".github/workflows/docker.yml"
+  # Weekly rebuild to pick up base-image (jmgirard/rstudio2u) updates
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+env:
+  IMAGE: jmgirard/rocker-bayes
+
+jobs:
+  # Build each architecture on its own native runner (no QEMU emulation, so the
+  # CmdStan compile runs at native speed) and push each as an untagged image
+  # addressed only by digest. The merge job stitches the digests into the tags.
+  build:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: noble
+            base_tag: noble
+            platform: linux/amd64
+            runner: ubuntu-latest
+          - variant: noble
+            base_tag: noble
+            platform: linux/arm64
+            runner: ubuntu-24.04-arm
+          - variant: resolute
+            base_tag: resolute
+            platform: linux/amd64
+            runner: ubuntu-latest
+          - variant: resolute
+            base_tag: resolute
+            platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - name: Sanitize platform name
+        run: echo "PLATFORM_PAIR=${platform//\//-}" >> "$GITHUB_ENV"
+        env:
+          platform: ${{ matrix.platform }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Only needed to push (by digest); the base image is public so the build
+      # itself pulls fine without auth. Skipped on branch dry runs.
+      - name: Log in to Docker Hub
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          username: jmgirard
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Resolve CmdStan version
+        id: meta
+        run: |
+          CMDSTAN=$(grep -oP '(?<=^ARG CMDSTAN_VERSION=")[^"]+' Dockerfile)
+          echo "cmdstan=$CMDSTAN" >> "$GITHUB_OUTPUT"
+
+      - name: Build ${{ matrix.variant }} (${{ matrix.platform }})
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          build-args: |
+            BASE_TAG=${{ matrix.base_tag }}
+            CMDSTAN_VERSION=${{ steps.meta.outputs.cmdstan }}
+          provenance: false
+          # Always re-pull the rstudio2u base so builds pick up newer R/RStudio
+          pull: true
+          # Scheduled/manual runs rebuild from scratch so they actually pull in
+          # the updated base and recompile CmdStan; push (code change) builds use
+          # the cache. On branch dry runs nothing is pushed (push-by-digest off).
+          no-cache: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+          cache-from: type=gha,scope=${{ matrix.variant }}-${{ env.PLATFORM_PAIR }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.variant }}-${{ env.PLATFORM_PAIR }}
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Export digest
+        if: github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.variant }}-${{ env.PLATFORM_PAIR }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # Combine the per-arch digests into multi-arch manifest lists and tag them:
+  # mutable tags (latest/noble/resolute) plus immutable tags pinning the date and
+  # the CmdStan version, so a course can pin a reproducible image.
+  merge:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: noble
+            mutable: latest noble
+          - variant: resolute
+            mutable: resolute
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-${{ matrix.variant }}-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: jmgirard
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Compute tags
+        id: meta
+        run: |
+          set -e
+          DATE=$(date -u +%Y-%m-%d)
+          CMDSTAN=$(grep -oP '(?<=^ARG CMDSTAN_VERSION=")[^"]+' Dockerfile)
+          TAGS=""
+          for t in ${{ matrix.mutable }}; do TAGS="$TAGS -t $IMAGE:$t"; done
+          TAGS="$TAGS -t $IMAGE:${{ matrix.variant }}-$DATE -t $IMAGE:${{ matrix.variant }}-cmdstan$CMDSTAN"
+          echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push manifest list
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create ${{ steps.meta.outputs.tags }} \
+            $(printf "$IMAGE@sha256:%s " *)
+
+      - name: Inspect
+        run: docker buildx imagetools inspect "$IMAGE:${{ matrix.variant }}"
+
+  # If any build leg failed, it is almost always an amd64 runner that could not
+  # reach the single r2u mirror on its egress IP (arm64 native runners are
+  # reliable). Re-running the whole workflow puts each leg on a fresh runner with
+  # a new IP; unchanged legs restore from the build cache, so only the failed one
+  # actually rebuilds and re-contacts the mirror. Capped at 3 total attempts.
+  retry-on-failure:
+    needs: build
+    if: failure() && github.run_attempt < 3
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Re-run on fresh runners
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sleep 30
+          gh run rerun "${{ github.run_id }}" --repo "${{ github.repository }}"

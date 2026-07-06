@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+title: "rocker-bayes: A Docker image for Bayesian data analysis in R"
+abstract: >-
+  A Docker image for Bayesian data analysis in R, building on rstudio2u
+  (r2u + RStudio Server + Quarto) with CmdStan and a curated set of R
+  packages (brms, rstan, rstanarm, cmdstanr, easystats, tidybayes, and more),
+  for AMD64 and ARM64.
+type: software
+authors:
+  - family-names: Girard
+    given-names: Jeffrey M.
+    orcid: "https://orcid.org/0000-0002-7359-3746"
+repository-code: "https://github.com/jmgirard/rocker-bayes"
+url: "https://github.com/jmgirard/rocker-bayes"
+license: MIT
+keywords:
+  - R
+  - RStudio
+  - Docker
+  - Bayesian
+  - Stan
+  - brms
+  - reproducibility
+  - bspm
