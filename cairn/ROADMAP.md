@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-03 (design interview complete: principles adopted, D-001, candidates revised)_
+_Last hygiene check: 2026-09-03 (status audit clean; no change since design interview)_
 
 ## Milestones
 
