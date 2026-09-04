@@ -1,2 +1,5 @@
 .DS_Store
 .env
+cairn/references/sources/
+cairn/.merge-approved
+cairn/.merge-approved.pending
