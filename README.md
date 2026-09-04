@@ -193,6 +193,10 @@ Use one in `docker run`, in `docker-compose.yml`, or as the `FROM` line of a
 derivative image and it will not change under you. Browse the
 [available tags](https://hub.docker.com/r/jmgirard/rocker-bayes/tags) on Docker Hub.
 
+The image is rebuilt weekly by CI. The GitHub releases (`v1.0` through `v8.0`)
+are historical; versioning moved to Docker tags after `v8.0`, so the release
+date there does not reflect when the image was last updated.
+
 For project-level reproducibility, [renv](https://rstudio.github.io/renv/) works
 well inside the container: `renv::init()` records exact package versions in a
 lockfile you can commit, and `renv::restore()` rebuilds them — quickly, since
