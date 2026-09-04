@@ -72,31 +72,54 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
 
 ## Design Principles
 
-<!-- IP<n> = Inviolable (hard constraint) block first, then GP<n> = Guiding
-     (tradeable with justification). Numbers are never reused. -->
+<!-- IP<n> = Inviolable (hard constraint; changing one takes a D-entry) first,
+     then GP<n> = Guiding (tradeable with stated justification). Numbers are
+     never reused or renumbered. Adopted in the 2026-09-03 design interview. -->
 
 ### Inviolable
 
-_(none yet)_
+- IP1: **The base contract is inherited, never overridden.** rstudio2u's
+  runtime interface and shipped defaults (port 8787, user `rstudio`,
+  `/home/rstudio`, `PASSWORD` / `ROOT` / `DISABLE_AUTH` / `USERID`, s6 `/init`,
+  bspm) are the base's to define; base-level bugs go upstream first. The base's
+  own scoping rules (what it chooses to ship) are not inherited: this repo adds
+  a layer on top.
+- IP2: **No default pairs disabled auth with a bind beyond `127.0.0.1`.** No
+  compose file, launcher, or documented example ever publishes the port on a
+  non-localhost interface while `DISABLE_AUTH` is set.
+- IP3: **User work in the home volume is sacrosanct.** Stopping, restarting,
+  and updating never destroy `/home/rstudio`; no launcher or documented flow
+  wipes it implicitly. Only an explicit, warned command may.
+- IP4: **This repo's user-facing surface is frozen.** `RS_PORT`, `RS_PASS`, the
+  compose service name `bayes`, the launcher file names, and the immutable tag
+  patterns change only through a deprecation period and a README notice.
+  Adding is free; renaming or removing is not.
 
 ### Guiding
 
-_(none yet)_
-
-### Banked candidates (interview 2026-09-03, Phase 1 complete; Phase 2 pending)
-
-<!-- Proto-principles heard in Phase 1. Not commitments. Phase 2 classifies
-     each as IP / GP / skip and removes this ledger. -->
-
-- B1 Base contract inherited, never overridden here; base fixes go upstream first.
-- B2 Launchers synced from rstudio2u; divergence is stated and triggers porting its tests.
-- B3 Roster: mainstream Bayesian-R; each add justifies itself in one line; pruning is licensed work.
-- B4 Upstream-bug pins are temporary and tracked to removal.
-- B5 CmdStan version moves only by a reviewed manual bump, never by the weekly rebuild.
-- B6 All four build legs (noble/resolute x amd64/arm64) are commitments.
-- B7 This repo's own user-facing surface changes only via deprecation + README notice.
-- B8 Docker tags are the only versioning; git tags retired (a decision, not a principle).
-- Inherited from rstudio2u for Phase 2 to confirm or fence: no-auth only on a localhost bind; student work in the home volume is never wiped implicitly; never knowingly ship a broken moving tag.
+- GP1: **The README package list is the roster of record.** A package is baked
+  in when it is mainstream in the Bayesian-R ecosystem and listed in the README
+  under a category that says what it adds; a baked package with no README entry
+  is drift. Pruning packages that fell out of use is licensed work.
+- GP2: **Always fresh, always an escape hatch.** Moving tags track newest
+  stable R packages and base image automatically; every build also publishes
+  immutable date and CmdStan-version tags, and the README keeps teaching users
+  to pin. CmdStan is the stated exception (GP3).
+- GP3: **CmdStan moves only by a reviewed manual bump.** The Dockerfile `ARG`
+  is the single pin; the weekly rebuild never changes it.
+- GP4: **All four build legs are commitments.** noble and resolute, each on
+  amd64 and arm64, are supported surfaces; a broken leg is ship-blocking or
+  hotfix-tier, with documented temporary asymmetry only when an upstream
+  forces it.
+- GP5: **One Dockerfile.** Every variant builds from the single Dockerfile via
+  build args, never a per-variant fork.
+- GP6: **Pins are temporary.** A version pin added to dodge an upstream bug is
+  recorded when added, tracked to removal, and removed when upstream heals.
+- GP7: **Launchers are synced from rstudio2u.** Its test suite verifies them; a
+  launcher file that diverges here states why and gets its tests ported.
+- GP8: **Never knowingly ship a broken moving tag.** An unattended rebuild must
+  not publish an image whose server fails to come up or whose CmdStan cannot
+  compile a model (a CI smoke test is a ROADMAP candidate).
 
 ## Architecture
 

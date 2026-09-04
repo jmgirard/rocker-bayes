@@ -111,4 +111,5 @@ universal layer, so they are not repeated here.
 
 ## changelog
 The repo's changelog file, read by `/hotfix`, the release-walk, and the
-consistency-gate: **`CHANGELOG.md`**.
+consistency-gate: **none** (D-001: Docker tags are the release record; the
+README package list is the roster of record).
