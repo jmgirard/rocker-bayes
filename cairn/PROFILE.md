@@ -111,5 +111,7 @@ universal layer, so they are not repeated here.
 
 ## changelog
 The repo's changelog file, read by `/hotfix`, the release-walk, and the
-consistency-gate: **none** (D-001: Docker tags are the release record; the
-README package list is the roster of record).
+consistency-gate: **none** as a file. Release notes live in the GitHub release
+body for each `v<major>.<minor>.<patch>` tag (D-002); the README package list
+is the roster of record. The release-walk writes the release notes from the
+milestone's user-visible changes instead of consolidating a changelog file.

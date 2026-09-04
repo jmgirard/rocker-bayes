@@ -27,10 +27,11 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   from one Dockerfile via `BASE_TAG`, each on amd64 and arm64; a broken leg is
   ship-blocking or hotfix-tier, with documented temporary asymmetry only when
   an upstream forces it.
-- **Versioning is the Docker tag set.** Moving `latest` / `noble` / `resolute`
-  plus immutable `<variant>-<date>` and `<variant>-cmdstan<v>` tags, published
-  by CI on every build. Git tags (`v4.2` … `v8.0`) are retired; there is no
-  hand release.
+- **Two version records.** Docker tags record *builds*: moving `latest` /
+  `noble` / `resolute` plus immutable `<variant>-<date>` and
+  `<variant>-cmdstan<v>` tags, published by CI on every build. Git tags and
+  GitHub releases (`v1.0.0` …) record *recipe changes* under semver (D-002);
+  release notes live in the GitHub release, not in a changelog file.
 - Out of scope: R and RStudio versions (whatever rstudio2u ships), a
   locked-down or non-root mode, and any language package shipped to a
   registry.

@@ -193,9 +193,12 @@ Use one in `docker run`, in `docker-compose.yml`, or as the `FROM` line of a
 derivative image and it will not change under you. Browse the
 [available tags](https://hub.docker.com/r/jmgirard/rocker-bayes/tags) on Docker Hub.
 
-The image is rebuilt weekly by CI. The GitHub releases (`v1.0` through `v8.0`)
-are historical; versioning moved to Docker tags after `v8.0`, so the release
-date there does not reflect when the image was last updated.
+The image is rebuilt weekly by CI, so the Docker date tags are the record of
+*builds*. The [GitHub releases](https://github.com/jmgirard/rocker-bayes/releases)
+are the record of changes to the *recipe*: a new base image or tag scheme is a
+major version, a new R or CmdStan version, package, variant, or launch tool is a
+minor version, and a fix is a patch. A weekly rebuild with no recipe change gets
+no release.
 
 For project-level reproducibility, [renv](https://rstudio.github.io/renv/) works
 well inside the container: `renv::init()` records exact package versions in a
