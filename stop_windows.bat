@@ -1,5 +1,4 @@
 @echo off
-:: Set console to UTF-8
 chcp 65001 >nul
 cd /d "%~dp0"
 

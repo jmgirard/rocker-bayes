@@ -1,46 +1,218 @@
 @echo off
+setlocal EnableDelayedExpansion
 :: Set console to UTF-8
 chcp 65001 >nul
 cd /d "%~dp0"
 
 echo Starting rocker-bayes...
 
-:: Resolve the host port the same way docker compose does: shell environment
-:: first, then .env, then the default.
-set "PORT=8787"
-if exist .env for /f "usebackq tokens=1,* delims==" %%a in (".env") do if /i "%%a"=="RS_PORT" set "PORT=%%b"
-if defined RS_PORT set "PORT=%RS_PORT%"
-
-:: Make sure Docker is running before doing anything else
-docker info >nul 2>&1
-if %errorlevel% neq 0 (
+:: Is Docker installed at all? Distinguish "not installed" from "not running"
+:: so a student who never installed Docker Desktop is not told to "wait for it
+:: to finish starting".
+where docker >nul 2>&1
+if errorlevel 1 (
     echo.
-    echo [X] Docker does not appear to be running.
-    echo     Please open Docker Desktop, wait for it to finish starting,
+    echo [X] Docker Desktop does not appear to be installed.
+    echo     Install it from https://www.docker.com/products/docker-desktop/
     echo     then double-click this file again.
     echo.
-    pause
+    call :wait
     exit /b 1
 )
 
-:: Get the latest image, then start the server and wait until it is healthy
+:: Installed, but is the engine actually running?
+docker info >nul 2>&1
+if errorlevel 1 (
+    echo.
+    echo [X] Docker Desktop is installed but not running.
+    echo     Open Docker Desktop, wait for it to finish starting,
+    echo     then double-click this file again.
+    echo.
+    call :wait
+    exit /b 1
+)
+
+:: Resolve the port the user asked for, the way Compose resolves it: RS_PORT
+:: from the environment wins, else a RS_PORT line in .env, else the 8787
+:: default. This mirrors launcher_common.sh for the POSIX launchers, which
+:: batch cannot source.
+:: Note: comments inside a parenthesised block must use `rem`, not `::` -- a
+:: `::` label inside ( ) is a cmd.exe parse error.
+set "RS_PORT_REQUESTED=%RS_PORT%"
+if not defined RS_PORT_REQUESTED (
+    if exist ".env" (
+        for /f "usebackq eol=# tokens=1,* delims==" %%A in (".env") do (
+            set "ENVKEY=%%A"
+            rem trim leading whitespace from the key
+            for /f "tokens=* delims= " %%K in ("!ENVKEY!") do set "ENVKEY=%%K"
+            rem %%~B strips surrounding quotes; last assignment wins, as in Compose
+            if /i "!ENVKEY!"=="RS_PORT" set "RS_PORT_REQUESTED=%%~B"
+        )
+    )
+)
+call :clean_value
+
+:: Catch a bad value before Compose does, so the student gets a plain message
+:: instead of a port-binding error -- and so a value like 0.0.0.0:8888 can never
+:: be interpolated into the 127.0.0.1 mapping and publish the port beyond
+:: localhost while auth is disabled.
+call :check_port
+if errorlevel 1 (
+    echo.
+    echo [X] RS_PORT is set to '!RS_PORT_REQUESTED!', which is not a usable port number.
+    echo     Use a whole number between 1 and 65535, for example 8888.
+    echo     Check the RS_PORT line in your .env file, or unset RS_PORT to
+    echo     use the default port 8787.
+    echo.
+    call :wait
+    exit /b 1
+)
+
+:: Get the latest image. A pull failure is a different problem from a slow or
+:: unhealthy start, so report it as its own thing instead of blaming a timeout.
+:: If a copy is already downloaded, start it with a warning rather than refuse.
 docker compose pull
+if errorlevel 1 (
+    call :images_present
+    if errorlevel 1 (
+        echo.
+        echo [X] Could not download the latest image.
+        echo     Check your internet connection and that you can reach Docker Hub,
+        echo     then try again.
+        echo.
+        call :wait
+        exit /b 1
+    )
+    echo.
+    echo [i] Could not download the latest image, so the update was skipped.
+    echo     Starting the copy already on this computer instead. To get the
+    echo     latest version, connect to the internet and run this again later.
+    echo.
+)
+
+:: Start the server and wait until it reports healthy.
 docker compose up -d --wait --wait-timeout 180
-if %errorlevel% neq 0 (
+if errorlevel 1 (
     echo.
-    echo [X] The server did not become ready in time. Please try again,
-    echo     or check Docker Desktop for errors.
+    echo [X] The server did not become ready in time.
+    echo     If the port is already in use, pick another one by putting
+    echo         RS_PORT=8888
+    echo     in a file named .env next to this launcher, then run it again.
+    echo     Otherwise, open Docker Desktop and check the container for errors.
     echo.
-    pause
+    call :wait
     exit /b 1
 )
 
+:: Ask Compose what it actually bound. Trusting this over the value we parsed
+:: means the URL we print can never disagree with reality, whatever set it.
+set "RS_URL_PORT="
+for /f "usebackq tokens=2 delims=:" %%P in (`docker compose port bayes 8787 2^>nul`) do set "RS_URL_PORT=%%P"
+:: A :0 binding (an override that drops `ports`) is not something to announce,
+:: so range-check before trusting it, then fall back the same way POSIX does.
+call :port_ok "!RS_URL_PORT!"
+if errorlevel 1 set "RS_URL_PORT=!RS_PORT_REQUESTED!"
+call :port_ok "!RS_URL_PORT!"
+if errorlevel 1 set "RS_URL_PORT=8787"
+set "RS_URL=http://localhost:!RS_URL_PORT!"
+
 echo.
 echo ============================================================
-echo [OK] RStudio Server is running at http://localhost:%PORT%
-echo Opening your web browser...
+echo [OK] RStudio Server is running at !RS_URL!
+echo      If your browser does not open, go to that address manually.
 echo ============================================================
 echo.
 
-start http://localhost:%PORT%
+:: Under the non-interactive test seam, stop before opening a browser or
+:: pausing so CI can drive every branch unattended.
+if defined RS_LAUNCHER_NONINTERACTIVE goto :done
+
+echo Opening your web browser...
+start "" "!RS_URL!"
 timeout /t 3 >nul
+
+:done
+endlocal
+exit /b 0
+
+:: Is RS_PORT_REQUESTED a usable port? Anything containing interpolation is left
+:: to Compose, which supports syntax this reader does not -- refusing a config
+:: that would have worked is worse than a late, clearer error.
+:check_port
+if not defined RS_PORT_REQUESTED exit /b 0
+echo !RS_PORT_REQUESTED!| findstr /c:"$" /c:"{" >nul
+if not errorlevel 1 exit /b 0
+call :port_ok "!RS_PORT_REQUESTED!"
+if errorlevel 1 exit /b 1
+exit /b 0
+
+:: Is %~1 a decimal port number in the usable range? The length guard keeps a
+:: very long digit string from overflowing batch's numeric comparison.
+:port_ok
+set "PORTCAND=%~1"
+if not defined PORTCAND exit /b 1
+if not "!PORTCAND:~5!"=="" exit /b 1
+echo !PORTCAND!| findstr /r "^[0-9][0-9]*$" >nul
+if errorlevel 1 exit /b 1
+if !PORTCAND! LSS 1 exit /b 1
+if !PORTCAND! GTR 65535 exit /b 1
+exit /b 0
+
+:: Strip an inline comment and surrounding spaces, matching launcher_common.sh
+:: and Compose. The previous `for /f "tokens=* delims= "` was trim-LEFT only, so
+:: a trailing space rejected on Windows while POSIX and Compose accepted it.
+:clean_value
+if not defined RS_PORT_REQUESTED goto :eof
+if "!RS_PORT_REQUESTED:~0,1!"=="#" (
+    set "RS_PORT_REQUESTED="
+    goto :eof
+)
+for /f "tokens=1 delims=#" %%C in ("!RS_PORT_REQUESTED!") do set "RS_PORT_REQUESTED=%%C"
+:clean_trim
+if not defined RS_PORT_REQUESTED goto :eof
+if "!RS_PORT_REQUESTED:~0,1!"==" " (
+    set "RS_PORT_REQUESTED=!RS_PORT_REQUESTED:~1!"
+    goto :clean_trim
+)
+if "!RS_PORT_REQUESTED:~-1!"==" " (
+    set "RS_PORT_REQUESTED=!RS_PORT_REQUESTED:~0,-1!"
+    goto :clean_trim
+)
+goto :eof
+
+:: Is every image the Compose file references already on this machine? Mirrors
+:: launcher_images_present in launcher_common.sh: ask Compose for the list, then
+:: inspect each. Any failure -- an unsupported `config --images` (empty loop),
+:: a missing image -- exits non-zero so the caller keeps its hard error.
+:images_present
+set "IMAGES_FOUND="
+for /f "usebackq delims=" %%I in (`docker compose config --images 2^>nul`) do (
+    set "IMAGE=%%I"
+    call :trim_image
+    if defined IMAGE (
+        docker image inspect "!IMAGE!" >nul 2>&1
+        if errorlevel 1 exit /b 1
+        set "IMAGES_FOUND=1"
+    )
+)
+if not defined IMAGES_FOUND exit /b 1
+exit /b 0
+
+:: Trim spaces from both ends of IMAGE (`for /f` trims the left only).
+:trim_image
+if not defined IMAGE goto :eof
+if "!IMAGE:~0,1!"==" " (
+    set "IMAGE=!IMAGE:~1!"
+    goto :trim_image
+)
+if "!IMAGE:~-1!"==" " (
+    set "IMAGE=!IMAGE:~0,-1!"
+    goto :trim_image
+)
+goto :eof
+
+:: Interactive pause, suppressed under the test seam.
+:wait
+if defined RS_LAUNCHER_NONINTERACTIVE goto :eof
+pause
+goto :eof

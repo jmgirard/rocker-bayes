@@ -238,8 +238,16 @@ and it is the whole point of the image. Run it safely:
 Open Docker Desktop, wait until it reports *Running*, then try again.
 
 **Port 8787 is already in use.**
-Use a different host port. With the launcher or Compose, set `RS_PORT`, e.g.
-`RS_PORT=8888 docker compose up -d`, then browse to <http://localhost:8888>. With
+Use a different host port. Create a file named `.env` next to the launcher
+containing one line:
+
+```
+RS_PORT=8888
+```
+
+then double-click the launcher again and browse to <http://localhost:8888>. (The
+`.env` file works for double-clicking, which is why it is the recommended way;
+from a terminal, `RS_PORT=8888 docker compose up -d` also does the job.) With
 `docker run`, change the mapping to `-p 8888:8787`.
 
 **How do I update to the latest version?**

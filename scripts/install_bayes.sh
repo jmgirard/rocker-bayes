@@ -5,13 +5,8 @@ set -e
 # Build ARGs
 CMDSTAN_VERSION=${1:-${CMDSTAN_VERSION}}
 
-# The r2u binary mirror is a single host that occasionally becomes unreachable
-# from a given CI runner's IP for minutes at a time. Tell apt to retry failed
-# downloads so a brief blip doesn't abort a whole bspm install (this config also
-# benefits the end user's later installs).
-cat > /etc/apt/apt.conf.d/80-retries <<'EOF'
-Acquire::Retries "3";
-EOF
+# apt retry/timeout settings for the r2u mirror come from the base image
+# (/etc/apt/apt.conf.d/80-retries); do not overwrite them here.
 
 # Retry a command to ride out a *brief* r2u/apt blip. When bspm's underlying apt
 # fetch fails, R aborts with an empty error and the whole build fails; installs
