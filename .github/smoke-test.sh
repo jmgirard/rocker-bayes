@@ -141,7 +141,7 @@ if ! docker exec -u rstudio -e HOME=/home/rstudio "$NAME" Rscript -e '
   cat("cmdstan path:", path, "\n")
   cat("cmdstan version:", cmdstanr::cmdstan_version(), "\n")
 '; then
-  echo "FAIL: phase 3 (cmdstan) - cmdstanr reported no CmdStan path or version"
+  echo "FAIL: phase 3 (cmdstan) - cmdstanr is missing, or reports no CmdStan path or version"
   exit 1
 fi
 

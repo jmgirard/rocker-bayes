@@ -93,7 +93,7 @@ Docker Hub description sync becomes a candidate row.
       always removes the container. The port bind stays on localhost under
       IP2. The phases are the ones AC1 lists. The shape follows
       `rstudio2u/.github/smoke-test.sh:1-124`, without its mirror phase.
-- [ ] T3: Run the pass case and the six controls of AC2 against a freshly
+- [x] T3: Run the pass case and the six controls of AC2 against a freshly
       built image. Record the FAIL line from each transcript.
 - [x] T4: In `docker.yml`, remove the `refs/heads/main` guard on the digest
       push so every ref pushes an untagged image by digest. Add the pull-back
@@ -131,6 +131,8 @@ Docker Hub description sync becomes a candidate row.
 - 2026-09-11: T8 updated the DESIGN CI/publish family and added a Conventions bullet for the gate and the all-or-nothing publish rule. GP8's parenthetical said a CI smoke test was a candidate. It is corrected in place to name the gate.
 - 2026-09-11: tasks were worked T1, T2, T7, T4 to T6, T8, then T3. T3 needs a locally built image, and that build ran for most of the session. No task content changed.
 - 2026-09-11: T3 control (d) failed at the data-file check rather than the compile, because that check ran first. Compiling needs no data, so the compile now runs before it. Re-run in progress at this commit.
+- 2026-09-11: T3 ran the AC1 pass case and the six AC2 controls against `rocker-bayes:dev`, built from this branch on arm64. Pass case exit 0 with three PASS lines, theta mean 0.3988 against reference 0.4020. Controls exit 1 with these lines. (a) `phase 1 (server up) - container exited before becoming healthy`. (b) `phase 1 (server up) - not healthy within 1s (last status: starting)`. (c) `phase 2 (bspm binary) - oolong did not install as an apt binary (r-cran-oolong absent)`. (d) `phase 3 (cmdstan) - does-not-compile.stan did not compile`. (e) `phase 3 (cmdstan) - the posterior mean is not within 0.05 of 0.9`. (f) `phase 3 (cmdstan) - cmdstanr is missing, or reports no CmdStan path or version`.
+- 2026-09-11: T3 checked the failure identity behind each control, not the FAIL line alone. Control (d) failed on a stanc parse error at the `no_such_type` declaration. Control (f) failed because `cmdstanr` is not installed in the base image at all. The (f) message was widened to say so rather than claim a missing path.
 - 2026-09-11: criteria audit ([O], full mode) flagged the goal and all five drafted criteria. It found an unenumerable goal domain and a smoke test never wired per leg. It also found single-exemplar controls, an unreachable branch-run evidence state, digest count standing in for a passing smoke test, and a single-form manifest probe. All were fixed above before the gate. The GP4 tension went to the gate as a question.
 
 ## Decisions
