@@ -54,9 +54,16 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   `.github/smoke-fixtures/` holds the Stan program the smoke test compiles.
   `.github/tests/test_publish_guard.sh` drives the guard through its failing
   cases without a CI run.
+- **Unattended-rebuild alerts**: `docker.yml`'s `keepalive` job
+  (`.github/keepalive.sh`), its `notify` job (`.github/ci-failure-issue.sh`),
+  and its `retry-on-failure` job share `.github/retry-decision.sh`.
+  `.github/workflows/rebuild-gap.yml` runs `.github/rebuild-gap.sh`. Both date
+  scripts source `.github/date-lib.sh`. Each script has a suite in
+  `.github/tests/`.
 - **Pre-merge checks**: `.github/workflows/pr-ci.yml` lints the Dockerfile,
   then builds and boots noble amd64 with the same `smoke-test.sh` the publish
-  gate runs. It never logs in and never publishes.
+  gate runs. It never logs in and never publishes. Its `script-tests` job runs
+  the four alert and keepalive suites.
   `.github/workflows/lint.yml` runs a pinned shellcheck over every tracked
   `*.sh` and `*.command` file. `.github/dependabot.yml` keeps the action pins
   current.
@@ -94,6 +101,20 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   build, by design. The lane reads the publish lane's build cache and never
   writes it, so a pull request cannot poison what the publish lane builds
   from. Shell files are linted by a pinned shellcheck at `-S info`.
+- **The weekly rebuild keeps itself scheduled.** GitHub disables a public
+  repository's scheduled workflows after 60 days without repository activity.
+  If the default branch's newest commit is 50 or more days old, `docker.yml`'s
+  `keepalive` job pushes an empty commit to that branch. The rule is in
+  `.github/keepalive.sh`. The push uses a write-enabled deploy key held in the
+  `KEEPALIVE_DEPLOY_KEY` secret, so no job needs a token that can write.
+- **A failed or missing rebuild opens an issue.** If a job in a scheduled run
+  fails, the `notify` job in `docker.yml` opens or comments on a `ci-failure`
+  issue. A fully green scheduled run closes it. If a failed build or publish
+  is below `RETRY_CAP` attempts, the run reruns and notify leaves the report to
+  the rerun. `.github/retry-decision.sh` holds that rule for both `notify` and
+  `retry-on-failure`. `rebuild-gap.yml` runs each Tuesday. If the last successful
+  scheduled rebuild is more than 8 days old, it raises the same issue. The suites in
+  `.github/tests/` test these scripts offline, and `pr-ci.yml` runs them.
 - Container is intentionally root-capable (passwordless sudo); safety comes
   from the localhost-only bind, documented in README "Security".
 
