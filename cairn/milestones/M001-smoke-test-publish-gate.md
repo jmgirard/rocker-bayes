@@ -86,7 +86,7 @@ Docker Hub description sync becomes a candidate row.
 - [x] T1: Add the Stan fixture that the smoke test compiles. Use a Bernoulli
       model with fixed data and a conjugate posterior, so the expected mean is
       analytic. Decide whether the fixture ships in the image or in the repo.
-- [ ] T2: Write `.github/smoke-test.sh`. It takes the image reference as its
+- [x] T2: Write `.github/smoke-test.sh`. It takes the image reference as its
       one argument. It reads `SMOKE_TIMEOUT`, `SMOKE_PORT`, `SMOKE_PKG`,
       `SMOKE_STAN_FILE`, and `SMOKE_THETA_REF`. It runs under
       `set -euo pipefail`. An EXIT trap dumps container logs on failure and
@@ -122,6 +122,7 @@ Docker Hub description sync becomes a candidate row.
 - 2026-09-11: implement gate left `retry-on-failure` unchanged (the user expressed no preference, so the recommendation was taken). Reason: cached layers make a repeated smoke failure cheap, and the mirror flakiness the job exists for is unchanged.
 - 2026-09-11: T1 added `.github/smoke-fixtures/` with `bernoulli.stan`, `bernoulli.data.json` (N=100, sum(y)=40, analytic posterior mean 41/102 = 0.4019608) and `does-not-compile.stan` for AC2 control (d).
 - 2026-09-11: `hadolint Dockerfile` reported DL3025 on the pre-existing shell-form HEALTHCHECK. Rewrote it in exec form. hadolint is now clean. AC6 needs this.
+- 2026-09-11: T2 wrote `.github/smoke-test.sh`. Three phases, each printing one PASS line and every failure path naming its phase. `SMOKE_PKG` defaults to `praise`, which is not in the roster, so the install exercises a fresh bspm fetch. Phase 3 runs as the `rstudio` user with `HOME=/home/rstudio`, because CmdStan lives under that home and root finds nothing. `bash -n` and shellcheck are clean.
 - 2026-09-11: criteria audit ([O], full mode) flagged the goal and all five drafted criteria. It found an unenumerable goal domain and a smoke test never wired per leg. It also found single-exemplar controls, an unreachable branch-run evidence state, digest count standing in for a passing smoke test, and a single-form manifest probe. All were fixed above before the gate. The GP4 tension went to the gate as a question.
 
 ## Decisions
