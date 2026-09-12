@@ -1,6 +1,6 @@
 # M003: Unattended-rebuild alerts and schedule keepalive
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** M001, M002
 - **Driving RR:** —
@@ -8,7 +8,7 @@
 - **Resolves:** —
 - **Surface tier:** user-facing. It protects the weekly rebuild that publishes
   the moving tags.
-- **Branch/PR:** —
+- **Branch/PR:** m003-unattended-rebuild-alerts
 
 ## Goal
 
