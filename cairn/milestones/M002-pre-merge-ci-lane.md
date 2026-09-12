@@ -1,6 +1,6 @@
 # M002: Pre-merge CI lane and lint
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** M001
 - **Driving RR:** —
@@ -73,7 +73,7 @@ before merge, because M001's publish lane boots all four.
       versions behind, so the first batch of update pull requests is expected.
 - [x] T5: Run the planted-defect branches for AC3 and AC4 and record the red
       and green runs.
-- [ ] T6: Note the pre-merge lane in the CI/publish family of
+- [x] T6: Note the pre-merge lane in the CI/publish family of
       `cairn/DESIGN.md`. Run the verify slot.
 
 ## Work log
@@ -99,7 +99,10 @@ before merge, because M001's publish lane boots all four.
 - 2026-09-12: PR #4's lane supplied the AC1 evidence. It built and loaded noble amd64 and printed the three phase PASS lines plus the summary line, with theta 0.3988 against reference 0.4020, in 5m51s.
 - 2026-09-12: both control branches and their pull requests are closed and deleted. Neither merged.
 
-- 2026-09-12: T6 added the pre-merge lane to the DESIGN CI family and a Conventions bullet. T6 is not yet checked off: the clean-context `docker build` that AC5 needs is still running. hadolint exit 0, actionlint exit 0, shellcheck exit 0 over nine files, the M001 guard suite 14 of 14, and `cairn_validate` all passing.
+- 2026-09-12: T6 added the pre-merge lane to the DESIGN CI family and a Conventions bullet. hadolint exit 0, actionlint exit 0, shellcheck exit 0 over nine files, the M001 guard suite 14 of 14, and `cairn_validate` all passing.
+- 2026-09-12: AC5 verified. `docker build --no-cache` exit 0 from a clean context, and the resulting image reports CmdStan 2.39.0. This is the second clean build of the edited `install_bayes.sh`, so the quoting fix holds with no cached layer behind it.
+- 2026-09-12: claim audit: not owed — internal tier.
+- 2026-09-12: all six tasks done and the verify slot clean. Status set to review.
 
 ## Decisions
 
