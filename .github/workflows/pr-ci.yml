@@ -1,0 +1,86 @@
+name: PR CI (build + smoke)
+
+# Pre-merge gate: lint the Dockerfile, build the noble amd64 image, and boot it
+# before a branch merges. docker.yml runs only on push-to-main, on a schedule,
+# and on dispatch, so without this lane a broken image is caught only after the
+# merge, when the publish gate is already the thing standing between it and a
+# moving tag.
+#
+# This lane never logs in and never publishes. It loads the image into the local
+# daemon and tests it there. The arm64 and resolute legs stay unbuilt here on
+# purpose: docker.yml boots all four at publish time, and a full matrix on every
+# pull request costs minutes for little added signal.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "Dockerfile"
+      - ".dockerignore"
+      - "scripts/**"
+      - ".github/workflows/**"
+      - ".github/*.sh"
+      # The fixtures the smoke test reads. docker.yml watches them too, and a
+      # change to bernoulli.data.json moves the posterior mean the test
+      # compares against, so a PR that edits them must be booted here.
+      - ".github/smoke-fixtures/**"
+
+# The lane runs the pull request's own copy of .github/smoke-test.sh, so it
+# must not hand that script a writable token. The repository default is
+# currently read-only, but that is a setting rather than a promise.
+permissions:
+  contents: read
+
+jobs:
+  build-smoke:
+    name: build and smoke-test noble (amd64)
+    runs-on: ubuntu-latest
+    # A cold CmdStan compile is the long pole. The cache below usually covers
+    # it, but a Dockerfile change invalidates the layer and the build runs in
+    # full, so the ceiling is set well above the observed warm time.
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Before the build, so a lint violation reports in seconds instead of
+      # after a CmdStan compile.
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.5.0
+        with:
+          dockerfile: Dockerfile
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # No build-args: the Dockerfile already defaults BASE_TAG to noble and
+      # pins CMDSTAN_VERSION, and this lane produces no tag that has to carry
+      # the version, so there is nothing to scrape out of the Dockerfile here.
+      #
+      # cache-from without cache-to: the lane reads the scope docker.yml's
+      # noble amd64 leg writes, and never writes back. A pull request must not
+      # be able to poison the cache the publish lane builds from.
+      - name: Build noble (amd64) and load it
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          tags: rocker-bayes:pr-smoke-noble
+          provenance: false
+          # Re-resolve the base tag rather than trusting a cached FROM layer,
+          # matching docker.yml. Without it the lane can certify an image built
+          # on a stale base while the publish build pulls a newer one.
+          pull: true
+          cache-from: type=gha,scope=noble-amd64
+
+      # The same script the publish gate runs against every leg. A non-zero
+      # exit fails the job and blocks the merge. The script always tears its
+      # container down.
+      # SMOKE_TIMEOUT bounds phase 1 only. The step timeout bounds the whole
+      # script, so a wedged CmdStan compile is cut here rather than running out
+      # the job budget, where the build's share of it would be lost too.
+      - name: Smoke-test noble (amd64)
+        timeout-minutes: 25
+        env:
+          SMOKE_TIMEOUT: "300"
+        run: bash ./.github/smoke-test.sh rocker-bayes:pr-smoke-noble

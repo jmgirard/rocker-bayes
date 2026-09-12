@@ -1,0 +1,23 @@
+version: 2
+
+# Keeps the pinned action versions in .github/workflows/ current. The pins here
+# are several major versions behind, so the first batch of pull requests will
+# be larger than the steady state.
+#
+# Monthly rather than weekly: these actions change slowly, and the publish lane
+# already rebuilds every week against a fresh base image, so a faster cadence
+# would add review load without catching anything sooner.
+#
+# Grouped into one pull request per run, so a batch of major bumps arrives as a
+# single reviewable change that the pre-merge lane builds and boots once.
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "ci"
