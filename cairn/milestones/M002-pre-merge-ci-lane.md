@@ -59,7 +59,7 @@ before merge, because M001's publish lane boots all four.
 
 ## Tasks
 
-- [ ] T1: Write `.github/workflows/pr-ci.yml` with the paths filter AC1
+- [x] T1: Write `.github/workflows/pr-ci.yml` with the paths filter AC1
       names. Build noble amd64 with `load: true` and no registry login. Reuse
       the build cache scope that M001's publish lane writes.
 - [ ] T2: Add the smoke-test step and the hadolint step to that lane. Give the
@@ -81,6 +81,10 @@ before merge, because M001's publish lane boots all four.
 - 2026-09-11: plan chose one amd64 noble build before merge over all four legs. Reason: the publish lane already boots all four, and a full matrix on every pull request costs minutes for little added signal. Falsified by a breakage that reaches the publish lane and that an arm64 or resolute pre-merge build catches first.
 - 2026-09-11: plan chose Dependabot over a one-time hand bump of the pinned actions. Reason: the bumps recur, and the pins here are already several versions behind. Falsified by Dependabot pull requests going unreviewed and piling up.
 - 2026-09-11: criteria audit ([O], reduced mode) flagged three drafted criteria. The no-push promise was unbounded. The trigger paths left out the lane's own scripts. The lint file list asserted only that it was non-empty. A fourth criterion bound a property of Dependabot's own status page rather than of this repo. The first three were reworded above and the fourth became a task with no criterion.
+
+- 2026-09-12: gate chose fixing the pre-existing SC2086 in `scripts/install_bayes.sh` over a disable directive. Reason: AC4 fixes the level at `-S info`, and adding a linter implies making the tree pass it. The quoting bug is real for a version string carrying a space.
+- 2026-09-12: gate chose pinning the new workflows at `docker.yml`'s existing action versions over current latest. Reason: one coherent Dependabot batch across all three workflows beats running two majors of the same action side by side.
+- 2026-09-12: T1 wrote `.github/workflows/pr-ci.yml`. It takes no build args, because the Dockerfile already defaults `BASE_TAG` to noble and pins `CMDSTAN_VERSION`. It reads the `noble-amd64` cache scope and never writes it, so a pull request cannot poison the cache the publish lane builds from. actionlint clean, and the AC2 grep finds nothing.
 
 ## Decisions
 
