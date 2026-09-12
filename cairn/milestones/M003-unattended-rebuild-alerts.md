@@ -1,6 +1,6 @@
 # M003: Unattended-rebuild alerts and schedule keepalive
 
-- **Status:** in-progress
+- **Status:** blocked
 - **Priority:** normal
 - **Depends on:** M001, M002
 - **Driving RR:** —
@@ -109,7 +109,7 @@ M002. The Docker Hub description sync stays a candidate row.
       the date committed alongside it. Make the three runs of AC4, one with an
       empty date so the lookup fills it. Record the issue URL and the run
       URLs, then remove the trigger.
-- [ ] T8: Write `.github/retry-decision.sh` and its suite. Add the `notify`
+- [x] T8: Write `.github/retry-decision.sh` and its suite. Add the `notify`
       job and the `notify` dispatch input to `docker.yml`, and rewire
       `retry-on-failure` to read the script. Drive one forced keepalive
       failure in test mode, and repeat the run if a build or publish job
@@ -120,7 +120,7 @@ M002. The Docker Hub description sync stays a candidate row.
       Keep the job's permissions read-only. Record the accepted exposure: a
       dispatch against a branch runs that branch's copy of the script while
       the deploy key is in scope.
-- [ ] T10: Record the alert lanes and the keepalive threshold in
+- [x] T10: Record the alert lanes and the keepalive threshold in
       `cairn/DESIGN.md` under Conventions. Run the verify slot.
 
 ## Work log
@@ -146,6 +146,11 @@ M002. The Docker Hub description sync stays a candidate row.
 - 2026-09-12: T5 done. `rebuild-gap.yml` runs Tuesdays 07:00 UTC, a day after the Monday rebuild, because recent scheduled runs were created up to 8 hours after their cron time. `LAST_SUCCESS` is the one date variable: the dispatch input sets it, and the lookup fills it when empty. Threshold 8.
 - 2026-09-12: T6 done. `pr-ci.yml` gains a `script-tests` job running the four suites, and `.github/tests/**` joins its paths filter. The four suites pass under bash 3.2. The two jq-free suites also pass under Linux bash 5.2.
 - 2026-09-12: T7 done. No ci-failure issue was open at the start. Run https://github.com/jmgirard/rocker-bayes/actions/runs/34717240302 (date 2026-08-01) opened https://github.com/jmgirard/rocker-bayes/issues/8 titled "No successful scheduled docker.yml rebuild in 42 days (since 2026-08-01)". Run https://github.com/jmgirard/rocker-bayes/actions/runs/34717259419 (empty date, lookup gave 2026-08-31) commented on #8 with a 12-day gap. Run https://github.com/jmgirard/rocker-bayes/actions/runs/34717295150 (date 2026-09-10) printed "within the 8-day bound; no alert", and #8's comment count stayed at 1. The trigger commit is reverted, and the file is identical to the T5 commit.
+- 2026-09-12: closed test issue #8 by hand so AC5's run starts with no ci-failure issue open. Its lookup comment reports a real gap: the last successful scheduled rebuild was 2026-08-31.
+- 2026-09-12: T8 done. Dispatch https://github.com/jmgirard/rocker-bayes/actions/runs/34717363489 on the branch (test_mode, notify, keepalive_threshold 0, no deploy key yet): all four build legs and publish succeeded, keepalive failed, retry-on-failure printed retry=false wait=false and did not rerun, and notify opened https://github.com/jmgirard/rocker-bayes/issues/9 titled "Weekly run failed: keepalive" with body "The scheduled run failed in: keepalive".
+- 2026-09-12: T9 (partial), AC6's no-key case: in that same run keepalive committed at age 0, then `git push` failed with "Permission to jmgirard/rocker-bayes.git denied to github-actions[bot]" and HTTP 403, exit 128. `grep -c 'contents: write' .github/workflows/docker.yml` prints 0, and the three `contents:` lines all read `read`.
+- 2026-09-12: T10 done. DESIGN gains a Function Families entry and two Conventions bullets. Verify slot: `hadolint Dockerfile` (hadolint 2.12.0) exits 0, and `docker build` from a `git archive HEAD` context succeeds.
+- 2026-09-12: blocked on T1, the user's task: create a write-enabled deploy key and store its private half as the `KEEPALIVE_DEPLOY_KEY` secret. AC6's landing dispatch (threshold 0) waits on it.
 
 ## Decisions
 
