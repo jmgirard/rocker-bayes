@@ -1,6 +1,6 @@
 # M001: Smoke-test gate before any tag moves
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -8,7 +8,7 @@
 - **Resolves:** —
 - **Surface tier:** user-facing. It decides which images reach the published
   Docker tags.
-- **Branch/PR:** —
+- **Branch/PR:** `m001-smoke-test-publish-gate`
 
 ## Goal
 
@@ -83,7 +83,7 @@ Docker Hub description sync becomes a candidate row.
 
 ## Tasks
 
-- [ ] T1: Add the Stan fixture that the smoke test compiles. Use a Bernoulli
+- [x] T1: Add the Stan fixture that the smoke test compiles. Use a Bernoulli
       model with fixed data and a conjugate posterior, so the expected mean is
       analytic. Decide whether the fixture ships in the image or in the repo.
 - [ ] T2: Write `.github/smoke-test.sh`. It takes the image reference as its
@@ -116,6 +116,12 @@ Docker Hub description sync becomes a candidate row.
 - 2026-09-11: gate chose all-four-legs-or-nothing publishing over per-variant independence. Reason: GP4 makes every leg a commitment. Falsified by evidence that one variant breaks often enough to cost users more than a stale tag.
 - 2026-09-11: plan chose pushing untagged digests on every ref over the main-only push guard. Reason: AC4 and AC5 are unreachable off main otherwise. Falsified by untagged digests costing storage or becoming visible to users.
 - 2026-09-11: plan chose a conjugate Bernoulli fixture over a richer model. Reason: a known answer keeps the sampling assertion stable. Falsified by the assertion proving flaky in CI at the stated tolerance.
+- 2026-09-11: implement gate chose an extracted `.github/publish-guard.sh` with a local test over inline workflow shell. Reason: AC5's four bad indexes run locally in seconds instead of costing four-leg CI builds. Falsified by the script drifting from what the workflow actually calls.
+- 2026-09-11: implement gate chose shipping the Stan fixture in the repo over baking it into the image. Reason: it is a CI artifact, and AC2 control (d) needs a second Stan file that no user needs.
+- 2026-09-11: implement gate chose verifying both variants' manifest lists before either variant's tags attach. Reason: the 2026-09-11 plan gate already made publishing all-or-nothing across the four legs under GP4.
+- 2026-09-11: implement gate left `retry-on-failure` unchanged (the user expressed no preference, so the recommendation was taken). Reason: cached layers make a repeated smoke failure cheap, and the mirror flakiness the job exists for is unchanged.
+- 2026-09-11: T1 added `.github/smoke-fixtures/` with `bernoulli.stan`, `bernoulli.data.json` (N=100, sum(y)=40, analytic posterior mean 41/102 = 0.4019608) and `does-not-compile.stan` for AC2 control (d).
+- 2026-09-11: `hadolint Dockerfile` reported DL3025 on the pre-existing shell-form HEALTHCHECK. Rewrote it in exec form. hadolint is now clean. AC6 needs this.
 - 2026-09-11: criteria audit ([O], full mode) flagged the goal and all five drafted criteria. It found an unenumerable goal domain and a smoke test never wired per leg. It also found single-exemplar controls, an unreachable branch-run evidence state, digest count standing in for a passing smoke test, and a single-form manifest probe. All were fixed above before the gate. The GP4 tension went to the gate as a question.
 
 ## Decisions
