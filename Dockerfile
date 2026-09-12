@@ -40,3 +40,6 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
 
 EXPOSE 8787
 CMD ["/init"]
+
+# THROWAWAY CONTROL for AC3: DL3003, a violation hadolint must flag.
+RUN cd /tmp
