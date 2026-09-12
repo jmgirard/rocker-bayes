@@ -93,11 +93,11 @@ M002. The Docker Hub description sync stays a candidate row.
 - [ ] T1: Create a write-enabled deploy key on the repository and store it as
       the `KEEPALIVE_DEPLOY_KEY` secret. This task is the user's to run, and
       the rest of the milestone does not wait on it.
-- [ ] T2: Port `.github/ci-failure-issue.sh` and its suite. Adjust the job-name
+- [x] T2: Port `.github/ci-failure-issue.sh` and its suite. Adjust the job-name
       pattern to this repo's job names.
 - [x] T3: Port `.github/date-lib.sh`, `.github/keepalive.sh`, and the keepalive
       suite.
-- [ ] T4: Port `.github/rebuild-gap.sh` and its suite.
+- [x] T4: Port `.github/rebuild-gap.sh` and its suite.
 - [ ] T5: Write `.github/workflows/rebuild-gap.yml`. Point it at this repo's
       `docker.yml` schedule. Set the threshold to 8 days: a weekly watchdog
       sees gaps in multiples of a week, so 8 alerts on the second missed
@@ -140,6 +140,8 @@ M002. The Docker Hub description sync stays a candidate row.
 - 2026-09-12: T2 port committed earlier. AC1's rule for a skipped job beside a cancelled one now opens the issue, as AC1 states, where rstudio2u ignored it. shellcheck 0.11.0 clean.
 - 2026-09-12: T3 done. `.github/date-lib.sh` now refuses a threshold wider than seven digits (exit 2), where rstudio2u read it as fresh, so AC2's over-wide case is a rejection. Keepalive suite 102 assertions pass. Planted defects (boundary, future date, width, calendar, dropped push) each turn it red, as do three plants in the ci-failure suite.
 - 2026-09-12: amendment (user decision after the second re-audit): AC4 and AC5 take the wording above, and Scope In adds `.github/retry-decision.sh` with its suite. AC5's retry rule moved out of `ci-failure-issue.sh` so AC1 stays true as written. Coverage AC5 gains T6. Minor task edits: T5 threshold 8 days, T6 four suites under `.github/tests/**`, T7 temporary push trigger, T8 retry script.
+- 2026-09-12: T2 done. The build-leg parse matches `build (` only, because `publish` is one job here and is named by itself. ci-failure suite 99 assertions pass.
+- 2026-09-12: T4 done. Issue subjects name `docker.yml`. The over-wide threshold is refused, as in keepalive. Suite 131 assertions pass at the 8-day bound, shellcheck clean. Plants (boundary, `none` into the measured branch, `unknown` wording, future date) each turn it red.
 
 ## Decisions
 
