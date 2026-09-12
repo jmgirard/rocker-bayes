@@ -11,8 +11,9 @@
 #                    whose posterior mean is known in closed form compiles,
 #                    samples, and returns that mean.
 #
-# Exit 0 only when all three phases pass. Every failure path prints a line
-# starting with "FAIL:" that names the phase, so CI triage reads one line.
+# Exit 0 only when all three phases pass. Each failure prints one line starting
+# with "FAIL:" that names the phase, so CI triage can read the reason off that
+# line. A failure is also followed by a tail of the container log.
 #
 # Usage: .github/smoke-test.sh <image-ref>
 #
@@ -65,10 +66,13 @@ trap cleanup EXIT
 # RStudio to another host (IP2). The fixture directory is mounted read-only,
 # so phase 3 copies the program somewhere writable before compiling it.
 echo "==> booting $IMAGE as $NAME (timeout ${TIMEOUT}s)"
-docker run -d --name "$NAME" \
+if ! docker run -d --name "$NAME" \
   -p "127.0.0.1:${PORT}:8787" \
   -v "${STAN_DIR}:/smoke-fixtures:ro" \
-  "$IMAGE" >/dev/null
+  "$IMAGE" >/dev/null; then
+  echo "FAIL: phase 1 (server up) - could not start a container from $IMAGE"
+  exit 1
+fi
 
 # .State.Health is null when the image declares no HEALTHCHECK; probe the
 # published port directly in that case.

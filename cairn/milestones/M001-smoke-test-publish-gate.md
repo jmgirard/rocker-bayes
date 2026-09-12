@@ -1,6 +1,6 @@
 # M001: Smoke-test gate before any tag moves
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -133,6 +133,8 @@ Docker Hub description sync becomes a candidate row.
 - 2026-09-11: T3 control (d) failed at the data-file check rather than the compile, because that check ran first. Compiling needs no data, so the compile now runs before it. Re-run in progress at this commit.
 - 2026-09-11: T3 ran the AC1 pass case and the six AC2 controls against `rocker-bayes:dev`, built from this branch on arm64. Pass case exit 0 with three PASS lines, theta mean 0.3988 against reference 0.4020. Controls exit 1 with these lines. (a) `phase 1 (server up) - container exited before becoming healthy`. (b) `phase 1 (server up) - not healthy within 1s (last status: starting)`. (c) `phase 2 (bspm binary) - oolong did not install as an apt binary (r-cran-oolong absent)`. (d) `phase 3 (cmdstan) - does-not-compile.stan did not compile`. (e) `phase 3 (cmdstan) - the posterior mean is not within 0.05 of 0.9`. (f) `phase 3 (cmdstan) - cmdstanr is missing, or reports no CmdStan path or version`.
 - 2026-09-11: T3 checked the failure identity behind each control, not the FAIL line alone. Control (d) failed on a stanc parse error at the `no_such_type` declaration. Control (f) failed because `cmdstanr` is not installed in the base image at all. The (f) message was widened to say so rather than claim a missing path.
+- 2026-09-11: claim audit: 67 claims read, 4 corrected — .github/smoke-test.sh, .github/publish-guard.sh, .github/workflows/docker.yml
+- 2026-09-11: the claim audit ([O], fresh context) found four comments describing behavior the code did not have. The digest guard named a failed leg on an over-count. A jq comment overstated what a non-index document does. The smoke test claimed every failure path prints a FAIL line, and a failed `docker run` printed none. A workflow comment claimed the publish job can see which legs produced a digest. All four are fixed and re-read by the same reader, which now marks each supported.
 - 2026-09-11: criteria audit ([O], full mode) flagged the goal and all five drafted criteria. It found an unenumerable goal domain and a smoke test never wired per leg. It also found single-exemplar controls, an unreachable branch-run evidence state, digest count standing in for a passing smoke test, and a single-form manifest probe. All were fixed above before the gate. The GP4 tension went to the gate as a question.
 
 ## Decisions

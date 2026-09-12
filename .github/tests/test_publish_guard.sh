@@ -115,6 +115,14 @@ JSON
 )"
 check "manifest: unreadable JSON is refused" 1 "not readable JSON" manifest "$notjson" noble
 
+# A top-level array is valid JSON that jq cannot index, so it takes the
+# unreadable path rather than the architecture check. Either way it is refused.
+arr="$(manifest arr <<'JSON'
+[{"platform": {"os": "linux", "architecture": "amd64"}}]
+JSON
+)"
+check "manifest: a top-level JSON array is refused" 1 "not readable JSON" manifest "$arr" noble
+
 # --- digests: the per-leg uploads the publish job requires -------------------
 
 mkdir -p "${WORK}/d4" && touch "${WORK}/d4/"a "${WORK}/d4/"b "${WORK}/d4/"c "${WORK}/d4/"d
@@ -124,10 +132,12 @@ mkdir -p "${WORK}/d0"
 
 # Silent case: all four legs uploaded.
 check "digests: four of four is accepted" 0 "found all 4" digests "${WORK}/d4" 4
-check "digests: three of four is refused" 1 "found 3" digests "${WORK}/d3" 4
-check "digests: five of four is refused" 1 "found 5" digests "${WORK}/d5" 4
-check "digests: an empty directory is refused" 1 "found 0" digests "${WORK}/d0" 4
-check "digests: a missing directory is refused" 1 "found 0" digests "${WORK}/absent" 4
+# A short count and an over-count must not share a message: only the short
+# count is a leg that failed or was skipped.
+check "digests: three of four names a failed leg" 1 "found 3 - a build leg failed or was skipped" digests "${WORK}/d3" 4
+check "digests: five of four does not name a failed leg" 1 "found 5 - more digests than there are build legs" digests "${WORK}/d5" 4
+check "digests: an empty directory is refused" 1 "found 0 - a build leg failed or was skipped" digests "${WORK}/d0" 4
+check "digests: a missing directory is refused" 1 "found 0 - a build leg failed or was skipped" digests "${WORK}/absent" 4
 
 # --- summary -----------------------------------------------------------------
 printf '\n%d passed, %d failed\n' "$pass" "$fail"

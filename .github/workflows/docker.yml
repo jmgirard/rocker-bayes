@@ -35,8 +35,9 @@ jobs:
     name: build (${{ matrix.variant }}, ${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
     strategy:
-      # A failure on one leg must not cancel the others mid-build: the publish
-      # job needs to see which legs produced a digest and which did not.
+      # A failure on one leg must not cancel the others mid-build: the legs that
+      # do pass must still upload their digests, so the publish job can count
+      # them and report the shortfall rather than being skipped in silence.
       fail-fast: false
       matrix:
         include:

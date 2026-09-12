@@ -39,8 +39,14 @@ cmd_digests() {
     got="$(find "$dir" -type f | wc -l | tr -d ' ')"
   fi
 
-  if [ "$got" -ne "$want" ]; then
+  # Report the two directions separately. A short count is a leg that failed or
+  # was skipped; an over-count is not, so one message covering both would name
+  # a cause the check cannot tell apart.
+  if [ "$got" -lt "$want" ]; then
     die "expected $want verified digests, found $got - a build leg failed or was skipped, so no tag was attached"
+  fi
+  if [ "$got" -gt "$want" ]; then
+    die "expected $want verified digests, found $got - more digests than there are build legs, so no tag was attached"
   fi
   echo "found all $got verified digests"
 }
@@ -52,8 +58,10 @@ cmd_manifest() {
   [ -f "$file" ] || die "the $label manifest list was not written to $file"
 
   # `.manifests[]?` yields an empty list rather than an error when the document
-  # is not an index, so a malformed or single-image result reaches the
-  # architecture check below instead of aborting jq under set -e.
+  # is a JSON object that is not an index, so a single-image result reaches the
+  # architecture check below instead of aborting jq under set -e. Input jq
+  # cannot index at all, such as a top-level array, exits non-zero and is
+  # refused by the message below it. Either way nothing is tagged.
   local got
   got="$(jq -r '
     [.manifests[]?.platform | select(.os == "linux") | .architecture]
