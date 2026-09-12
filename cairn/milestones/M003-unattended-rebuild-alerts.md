@@ -142,6 +142,7 @@ M002. The Docker Hub description sync stays a candidate row.
 - 2026-09-12: amendment (user decision after the second re-audit): AC4 and AC5 take the wording above, and Scope In adds `.github/retry-decision.sh` with its suite. AC5's retry rule moved out of `ci-failure-issue.sh` so AC1 stays true as written. Coverage AC5 gains T6. Minor task edits: T5 threshold 8 days, T6 four suites under `.github/tests/**`, T7 temporary push trigger, T8 retry script.
 - 2026-09-12: T2 done. The build-leg parse matches `build (` only, because `publish` is one job here and is named by itself. ci-failure suite 99 assertions pass.
 - 2026-09-12: T4 done. Issue subjects name `docker.yml`. The over-wide threshold is refused, as in keepalive. Suite 131 assertions pass at the 8-day bound, shellcheck clean. Plants (boundary, `none` into the measured branch, `unknown` wording, future date) each turn it red.
+- 2026-09-12: T8 and T9 (partial): `.github/retry-decision.sh` and its suite (35 assertions; plants on the cap, the attempt, publish, the wait rule, and a skipped job each turn it red). docker.yml gains the `keepalive_threshold` and `notify` inputs, workflow env `RETRY_CAP`, the `keepalive` and `notify` jobs, and `retry-on-failure` rewired to need notify and read the script. actionlint 1.7.7 clean. Live runs pending.
 
 ## Decisions
 
