@@ -106,6 +106,9 @@ before merge, because M001's publish lane boots all four.
 
 - 2026-09-12: correction, superseding the 2026-09-12 cross-check line above. That line said PR #5 "touched only the Dockerfile" and PR #4 "touched only shell files". Both are false. Each control branch also carried the three new workflow files, and `git diff --name-only origin/main <sha>` confirms it. That is why `pr-ci.yml` triggered on both, through `.github/workflows/**`, rather than through the paths the line named. The conclusion stands: each linter passed on a branch where its own domain was clean, so neither fails everything. The `Dockerfile` and `scripts/**` trigger arms were never exercised in isolation.
 
+- 2026-09-12: gate accepted the AC1, AC3 and AC4 evidence as it stands, rather than re-running both controls against the edited workflows. Reason: the steps those criteria assert are textually unchanged, and this milestone's own pull request runs both lanes on the merging head.
+- 2026-09-12: step-7 approval: m002-pre-merge-ci-lane approved for merge.
+
 ## Decisions
 
 ## Review
