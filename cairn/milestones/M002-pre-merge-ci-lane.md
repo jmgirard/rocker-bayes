@@ -67,7 +67,7 @@ before merge, because M001's publish lane boots all four.
 - [ ] T3: Write `.github/workflows/lint.yml`. Pin the shellcheck release by
       version and SHA256 rather than taking the runner's package. Follow
       `rstudio2u/.github/workflows/lint.yml:21-46`.
-- [ ] T4: Add `.github/dependabot.yml` for the github-actions ecosystem on a
+- [x] T4: Add `.github/dependabot.yml` for the github-actions ecosystem on a
       monthly schedule. The current pins in `docker.yml` are several major
       versions behind, so the first batch of update pull requests is expected.
 - [ ] T5: Run the planted-defect branches for AC3 and AC4 and record the red
@@ -88,6 +88,8 @@ before merge, because M001's publish lane boots all four.
 
 - 2026-09-12: T2 added the hadolint step and the smoke step. hadolint runs before the build, so a lint violation reports in seconds rather than after a CmdStan compile. The job takes `timeout-minutes: 45`, which covers a cold compile when a Dockerfile change invalidates the cached layer. There is no hadolint pin in `docker.yml` to match, so the action takes the current v3.5.0, which is also what rstudio2u runs.
 - 2026-09-12: AC1 asks for a pull request run showing the build step and the smoke PASS lines. This milestone's own pull request supplies it, because the paths filter includes `.github/workflows/**`. No early push is needed.
+
+- 2026-09-12: T4 added `.github/dependabot.yml`. It groups every action into one pull request per run, so a batch of major bumps arrives as a single change the pre-merge lane builds and boots once. Parsed with PyYAML.
 
 ## Decisions
 
