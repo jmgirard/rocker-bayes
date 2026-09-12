@@ -14,11 +14,6 @@ name: Check the weekly rebuild is not stale
 # a threshold.
 
 on:
-  # TEMPORARY (M003 T7): GitHub refuses to dispatch a workflow that is not on
-  # the default branch, so the branch's runs come from this trigger. Removed
-  # before review.
-  push:
-    branches: [m003-unattended-rebuild-alerts]
   # Tuesdays at 07:00 UTC, a day after docker.yml's Monday 07:00 rebuild. Weekly
   # runs have started hours after their cron time, and a failed rebuild can
   # rerun twice, so a day's margin lets the run being measured finish first.
@@ -53,7 +48,7 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           # The one variable the last-success date is read from. The dispatch
           # input sets it. Empty, the lookup below fills it.
-          LAST_SUCCESS: ${{ inputs.last_success_date || '2026-09-10' }}
+          LAST_SUCCESS: ${{ inputs.last_success_date }}
           # Empty on a scheduled run, so the 8 here is the scheduled policy.
           # The dispatch input's default states the same 8.
           THRESHOLD: ${{ inputs.threshold_days || '8' }}

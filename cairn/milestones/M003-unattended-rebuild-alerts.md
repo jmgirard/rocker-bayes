@@ -105,7 +105,7 @@ M002. The Docker Hub description sync stays a candidate row.
       dispatch input that AC4 drives.
 - [x] T6: Add a step to M002's pre-merge lane that runs the four suites, and
       add `.github/tests/**` to that lane's paths filter.
-- [ ] T7: Add a temporary `push` trigger scoped to the milestone branch, with
+- [x] T7: Add a temporary `push` trigger scoped to the milestone branch, with
       the date committed alongside it. Make the three runs of AC4, one with an
       empty date so the lookup fills it. Record the issue URL and the run
       URLs, then remove the trigger.
@@ -145,6 +145,7 @@ M002. The Docker Hub description sync stays a candidate row.
 - 2026-09-12: T8 and T9 (partial): `.github/retry-decision.sh` and its suite (35 assertions; plants on the cap, the attempt, publish, the wait rule, and a skipped job each turn it red). docker.yml gains the `keepalive_threshold` and `notify` inputs, workflow env `RETRY_CAP`, the `keepalive` and `notify` jobs, and `retry-on-failure` rewired to need notify and read the script. actionlint 1.7.7 clean. Live runs pending.
 - 2026-09-12: T5 done. `rebuild-gap.yml` runs Tuesdays 07:00 UTC, a day after the Monday rebuild, because recent scheduled runs were created up to 8 hours after their cron time. `LAST_SUCCESS` is the one date variable: the dispatch input sets it, and the lookup fills it when empty. Threshold 8.
 - 2026-09-12: T6 done. `pr-ci.yml` gains a `script-tests` job running the four suites, and `.github/tests/**` joins its paths filter. The four suites pass under bash 3.2. The two jq-free suites also pass under Linux bash 5.2.
+- 2026-09-12: T7 done. No ci-failure issue was open at the start. Run https://github.com/jmgirard/rocker-bayes/actions/runs/34717240302 (date 2026-08-01) opened https://github.com/jmgirard/rocker-bayes/issues/8 titled "No successful scheduled docker.yml rebuild in 42 days (since 2026-08-01)". Run https://github.com/jmgirard/rocker-bayes/actions/runs/34717259419 (empty date, lookup gave 2026-08-31) commented on #8 with a 12-day gap. Run https://github.com/jmgirard/rocker-bayes/actions/runs/34717295150 (date 2026-09-10) printed "within the 8-day bound; no alert", and #8's comment count stayed at 1. The trigger commit is reverted, and the file is identical to the T5 commit.
 
 ## Decisions
 
