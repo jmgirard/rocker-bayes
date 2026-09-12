@@ -52,13 +52,13 @@ Docker Hub description sync becomes a candidate row.
       `jmgirard/rstudio2u:noble`, which serves 8787 and has no CmdStan. If the
       base image ever ships CmdStan, control (f) turns green and fails its own
       assertion instead of passing for the wrong reason.
-- [ ] AC3: Every build leg pulls back the digest it pushed. The leg fails when
+- [x] AC3: Every build leg pulls back the digest it pushed. The leg fails when
       the image's recorded architecture or the container's `uname -m` does not
       match the architecture that leg declares. The leg then runs
       `smoke-test.sh` against that same pulled digest. One CI run shows the
       assertion line and the smoke PASS on all four legs. A second run with one
       leg's expected architecture inverted shows that leg red at the assertion.
-- [ ] AC4: The publish job attaches no tag unless it receives four digest
+- [x] AC4: The publish job attaches no tag unless it receives four digest
       files. With fewer it errors and names the count it got. Each leg uploads
       its digest only in a step that runs after that leg's smoke-test step. A
       `test_mode` run with one leg's smoke test forced to fail shows the
@@ -139,6 +139,8 @@ Docker Hub description sync becomes a candidate row.
 - 2026-09-12: review ran three fresh-context lenses. 29 findings reported, 0 meeting the return floor. 4 proposed fix-now, 11 proposed as candidate rows, the rest rejected with reason.
 - 2026-09-12: gate took all four fix-now findings. F1 changed the publish job's `always()` to `!cancelled()`. F5 guarded the health-status read. F6 added `set -euo pipefail` and an empty check to the leg's CmdStan grep. F20 moved `SMOKE_PKG` out of interpolated R source.
 - 2026-09-12: gate authorized pushing the branch and running CI to gather the AC3 and AC4 evidence, ahead of step 2's usual hold. The workflow's push filter is main-only, so the push starts nothing by itself.
+- 2026-09-12: three `test_mode` runs gathered the AC3 and AC4 evidence. 34704706994 green on four legs, 34704708302 red at the arch assertion on one leg, 34704709637 red at the smoke test on one leg. AC3 and AC4 ticked. No Docker Hub tag moved, confirmed after the runs.
+- 2026-09-12: the CI runs found that `retry-on-failure` is inert. It takes `needs: build` alone, so it fires while the publish job still runs, and the rerun is refused. The new publish condition created that overlap. Raised at the gate.
 - 2026-09-11: criteria audit ([O], full mode) flagged the goal and all five drafted criteria. It found an unenumerable goal domain and a smoke test never wired per leg. It also found single-exemplar controls, an unreachable branch-run evidence state, digest count standing in for a passing smoke test, and a single-form manifest probe. All were fixed above before the gate. The GP4 tension went to the gate as a question.
 
 ## Decisions
@@ -214,7 +216,58 @@ this branch with `docker build --no-cache`.
   present and excludes `.git`, `.github`, and `cairn`. The changelog slot is
   `none`, so this milestone owes no changelog entry.
 
-### AC3 and AC4: the parts that need a CI run
+### AC3 and AC4: verified by CI on 2026-09-12
+
+The maintainer authorized the branch push and the CI runs at the gate. Three
+`workflow_dispatch` runs went out with `test_mode=true`, which attaches no tag
+on any run. Two ran on throwaway control branches that never merge.
+
+- **AC3 verified.** Run 34704706994 on the milestone branch went green on all
+  four legs. Each leg printed its assertion line and its smoke PASS lines.
+  `image is amd64 (amd64 / x86_64)` on both amd64 legs, and `image is arm64
+  (arm64 / aarch64)` on both arm64 legs. Every leg then printed the three phase
+  PASS lines against that same pulled digest.
+  Run 34704708302 on `m001-ci-control-arch` carried one throwaway change. The
+  noble arm64 leg declared it expected amd64, with the build itself untouched.
+  That leg alone went red, at the assertion, with `image architecture is
+  'arm64', expected 'amd64'`. The other three legs stayed green.
+- **AC4 verified.** Run 34704709637 on `m001-ci-control-smoke` carried one
+  throwaway change. The resolute amd64 leg compared theta against 0.9. That leg
+  printed `theta posterior mean 0.3988, reference 0.9000, tolerance 0.05`. It
+  then printed `FAIL: phase 3 (cmdstan) - the posterior mean is not within 0.05
+  of 0.9`. The other three legs used the default reference 0.4020 and passed.
+  The failed leg uploaded no digest. The publish job reported `expected 4
+  verified digests, found 3 - a build leg failed or was skipped, so no tag was
+  attached`. Its `Assemble and check both manifest lists` and `Attach the tags`
+  steps both show `skipped`.
+  Run 34704708302 produced the same publish-job shortfall by a second route,
+  where the leg died at the assertion rather than at the smoke test.
+  On the green run the publish job reported `found all 4 verified digests`. It
+  then reported `the noble manifest list names both architectures: amd64 arm64`
+  and the same line for resolute. Its last line was `test mode: both manifest
+  lists were assembled and checked, and no tag was attached`.
+
+No tag moved during any of the three runs. Every tag in the Docker Hub
+repository still reports `tag_last_pushed` of 2026-09-04, read after the runs
+finished. That covers the two runs that carried a failing leg.
+
+### A regression the CI runs found
+
+`retry-on-failure` is inert on this branch. In both control runs it failed with
+`run <id> cannot be rerun; This workflow is already running`. The job takes
+`needs: build` only, so it starts as soon as the legs finish. The publish job
+is still running at that moment, and GitHub refuses to rerun a workflow that
+has a job in flight.
+
+This branch caused it. Before the change, a failed leg skipped the publish job,
+so nothing else was running when the retry fired. The new publish condition
+runs the job on a failed leg, because reporting the digest shortfall is the
+point. That overlap is what blocks the rerun.
+
+The effect is safe in direction. A flaky r2u mirror now leaves the run red and
+the moving tags stale, rather than retrying. Stale tags are what GP8 asks for.
+The mechanism named in the workflow comment does not work, so the comment
+describes behavior the code lacks.
 
 AC3 and AC4 each end in a clause that only a CI run can satisfy. AC3 wants one
 run showing the assertion line and the smoke PASS on all four legs. It wants a
