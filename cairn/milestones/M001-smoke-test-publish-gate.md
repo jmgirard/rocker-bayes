@@ -137,6 +137,8 @@ Docker Hub description sync becomes a candidate row.
 - 2026-09-11: the claim audit ([O], fresh context) found four comments describing behavior the code did not have. The digest guard named a failed leg on an over-count. A jq comment overstated what a non-index document does. The smoke test claimed every failure path prints a FAIL line, and a failed `docker run` printed none. A workflow comment claimed the publish job can see which legs produced a digest. All four are fixed and re-read by the same reader, which now marks each supported.
 - 2026-09-12: review gathered fresh evidence for AC1, AC2, AC5 and AC6 and ticked those four. AC3 and AC4 stay unticked: each ends in a clause only a CI run can satisfy, and no CI run exists for this branch.
 - 2026-09-12: review ran three fresh-context lenses. 29 findings reported, 0 meeting the return floor. 4 proposed fix-now, 11 proposed as candidate rows, the rest rejected with reason.
+- 2026-09-12: gate took all four fix-now findings. F1 changed the publish job's `always()` to `!cancelled()`. F5 guarded the health-status read. F6 added `set -euo pipefail` and an empty check to the leg's CmdStan grep. F20 moved `SMOKE_PKG` out of interpolated R source.
+- 2026-09-12: gate authorized pushing the branch and running CI to gather the AC3 and AC4 evidence, ahead of step 2's usual hold. The workflow's push filter is main-only, so the push starts nothing by itself.
 - 2026-09-11: criteria audit ([O], full mode) flagged the goal and all five drafted criteria. It found an unenumerable goal domain and a smoke test never wired per leg. It also found single-exemplar controls, an unreachable branch-run evidence state, digest count standing in for a passing smoke test, and a single-form manifest probe. All were fixed above before the gate. The GP4 tension went to the gate as a question.
 
 ## Decisions
@@ -248,23 +250,27 @@ The diff-bug lens reported 25 findings and the blame-history lens reported 4,
 of which 3 were self-declared non-defects. Every finding and its disposition
 follows.
 
-**Proposed for fixing before merge.** These four go to the gate as the fix-now
-set. None of them returns the milestone under the return floor, because none
-demonstrates an acceptance criterion failing.
+**Fixed on the branch at the gate.** The maintainer took all four at the
+2026-09-12 gate. None of them returns the milestone under the return floor,
+because none demonstrates an acceptance criterion failing. After the fixes,
+`bash -n`, shellcheck and actionlint are clean. The AC1 pass case still exits 0
+with the same three PASS lines and the same theta mean of 0.3988. Control (c)
+still fails phase 2 on the source-installed `oolong`, which is the
+discriminating case for the phase-2 code that changed.
 
 - F1: the publish job's `if` uses `always()`, which stays true when the run is
   cancelled. Four green legs followed by a cancel still attach every tag.
-  Proposed change: `!cancelled()`.
+  Changed to `!cancelled()`.
 - F5: `.github/smoke-test.sh:95` reads `.State.Health.Status` without the guard
   line 88 uses. Under `set -e` a container that disappears mid-poll aborts the
   script with no `FAIL:` line, which contradicts the header comment this branch
-  added. Reproduced directly. Proposed: guard the call as line 88 does.
+  added. Reproduced directly. Guarded the call as line 88 does.
 - F6: the build leg's `Resolve CmdStan version` step lacks two guards. The
   publish job's copy of the same grep carries `set -euo pipefail` and an empty
   check. A reformatted `ARG` line therefore passes an empty override and burns
-  four builds before the publish job catches it. Proposed: add both guards.
+  four builds before the publish job catches it. Added both guards.
 - F20: `SMOKE_PKG` is interpolated into R source unquoted, so a value holding a
-  quote runs arbitrary R in the container. Proposed: pass it through the
+  quote runs arbitrary R in the container. It now passes through the
   environment instead.
 
 **Rejected, with reason.**

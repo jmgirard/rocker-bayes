@@ -77,7 +77,15 @@ jobs:
       - name: Resolve CmdStan version
         id: meta
         run: |
+          set -euo pipefail
           CMDSTAN=$(grep -oP '(?<=^ARG CMDSTAN_VERSION=")[^"]+' Dockerfile)
+          # Without this check a reformatted ARG line yields an empty CMDSTAN,
+          # the step still exits 0 on the echo, and every leg builds with an
+          # empty --build-arg override before the publish job catches it.
+          if [ -z "$CMDSTAN" ]; then
+            echo "::error::could not read CMDSTAN_VERSION from the Dockerfile ARG line"
+            exit 1
+          fi
           echo "cmdstan=$CMDSTAN" >> "$GITHUB_OUTPUT"
 
       - name: Build ${{ matrix.variant }} (${{ matrix.arch }}) and push by digest
@@ -160,14 +168,16 @@ jobs:
   # both manifest lists are assembled and checked before either variant's tags
   # are attached (GP4).
   #
-  # always() is required so a run with a failed leg still reaches the digest
-  # guard, which is what reports the shortfall. 'skipped' and 'cancelled' are
-  # excluded: nothing was built, so there is nothing to assemble.
+  # !cancelled() is required so a run with a failed leg still reaches the digest
+  # guard, which is what reports the shortfall. always() would do that too, but
+  # it also stays true when the run itself is cancelled, so four green legs
+  # followed by a cancel would still attach every tag. 'skipped' and 'cancelled'
+  # are excluded: nothing was built, so there is nothing to assemble.
   publish:
     name: publish
     needs: build
     if: >-
-      always()
+      !cancelled()
       && needs.build.result != 'cancelled'
       && needs.build.result != 'skipped'
       && (github.ref == 'refs/heads/main' || inputs.test_mode)

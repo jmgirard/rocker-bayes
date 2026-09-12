@@ -92,7 +92,11 @@ while :; do
   fi
 
   if has_healthcheck; then
-    status="$(docker inspect --format '{{.State.Health.Status}}' "$NAME")"
+    # Guarded like the .State.Running read above. An unguarded read aborts the
+    # script under set -e when the container disappears mid-poll, and the run
+    # then ends with no FAIL: line at all. "unknown" falls through to the next
+    # iteration, where the .State.Running check reports the exit properly.
+    status="$(docker inspect --format '{{.State.Health.Status}}' "$NAME" 2>/dev/null || echo unknown)"
     case "$status" in
       healthy)
         echo "PASS: phase 1 (server up) - container reported healthy"
@@ -121,7 +125,13 @@ done
 # it a silent source compile also ends with a loadable package.
 apt_pkg="r-cran-$(printf '%s' "$PKG" | tr '[:upper:]' '[:lower:]')"
 echo "==> [2/3] bspm binary install ($PKG -> $apt_pkg)"
-if ! docker exec "$NAME" Rscript -e "install.packages('$PKG'); library($PKG)"; then
+# PKG reaches R through the environment, never by string interpolation into the
+# -e source: a value carrying a quote would otherwise run arbitrary R here.
+if ! docker exec -e SMOKE_PKG_NAME="$PKG" "$NAME" Rscript -e '
+  pkg <- Sys.getenv("SMOKE_PKG_NAME")
+  install.packages(pkg)
+  library(pkg, character.only = TRUE)
+'; then
   echo "FAIL: phase 2 (bspm binary) - install or load of $PKG failed"
   exit 1
 fi
