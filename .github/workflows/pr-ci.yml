@@ -40,7 +40,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Before the build, so a lint violation reports in seconds instead of
       # after a CmdStan compile.
@@ -50,7 +50,7 @@ jobs:
           dockerfile: Dockerfile
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # No build-args: the Dockerfile already defaults BASE_TAG to noble and
       # pins CMDSTAN_VERSION, and this lane produces no tag that has to carry
@@ -60,7 +60,7 @@ jobs:
       # noble amd64 leg writes, and never writes back. A pull request must not
       # be able to poison the cache the publish lane builds from.
       - name: Build noble (amd64) and load it
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64
