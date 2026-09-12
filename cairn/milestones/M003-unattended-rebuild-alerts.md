@@ -98,12 +98,12 @@ M002. The Docker Hub description sync stays a candidate row.
 - [x] T3: Port `.github/date-lib.sh`, `.github/keepalive.sh`, and the keepalive
       suite.
 - [x] T4: Port `.github/rebuild-gap.sh` and its suite.
-- [ ] T5: Write `.github/workflows/rebuild-gap.yml`. Point it at this repo's
+- [x] T5: Write `.github/workflows/rebuild-gap.yml`. Point it at this repo's
       `docker.yml` schedule. Set the threshold to 8 days: a weekly watchdog
       sees gaps in multiples of a week, so 8 alerts on the second missed
       rebuild with a day of slack for a late run. Add the last-success-date
       dispatch input that AC4 drives.
-- [ ] T6: Add a step to M002's pre-merge lane that runs the four suites, and
+- [x] T6: Add a step to M002's pre-merge lane that runs the four suites, and
       add `.github/tests/**` to that lane's paths filter.
 - [ ] T7: Add a temporary `push` trigger scoped to the milestone branch, with
       the date committed alongside it. Make the three runs of AC4, one with an
@@ -143,6 +143,8 @@ M002. The Docker Hub description sync stays a candidate row.
 - 2026-09-12: T2 done. The build-leg parse matches `build (` only, because `publish` is one job here and is named by itself. ci-failure suite 99 assertions pass.
 - 2026-09-12: T4 done. Issue subjects name `docker.yml`. The over-wide threshold is refused, as in keepalive. Suite 131 assertions pass at the 8-day bound, shellcheck clean. Plants (boundary, `none` into the measured branch, `unknown` wording, future date) each turn it red.
 - 2026-09-12: T8 and T9 (partial): `.github/retry-decision.sh` and its suite (35 assertions; plants on the cap, the attempt, publish, the wait rule, and a skipped job each turn it red). docker.yml gains the `keepalive_threshold` and `notify` inputs, workflow env `RETRY_CAP`, the `keepalive` and `notify` jobs, and `retry-on-failure` rewired to need notify and read the script. actionlint 1.7.7 clean. Live runs pending.
+- 2026-09-12: T5 done. `rebuild-gap.yml` runs Tuesdays 07:00 UTC, a day after the Monday rebuild, because recent scheduled runs were created up to 8 hours after their cron time. `LAST_SUCCESS` is the one date variable: the dispatch input sets it, and the lookup fills it when empty. Threshold 8.
+- 2026-09-12: T6 done. `pr-ci.yml` gains a `script-tests` job running the four suites, and `.github/tests/**` joins its paths filter. The four suites pass under bash 3.2. The two jq-free suites also pass under Linux bash 5.2.
 
 ## Decisions
 
