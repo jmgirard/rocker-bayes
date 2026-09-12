@@ -57,12 +57,12 @@ usage() {
 # counts as a failure, and a failure outranks a cancellation. An empty list is a
 # failure too, because nothing reported success.
 aggregate_result() {
-    local all_success=1 any_failure=0 any_cancelled=0 r
+    local all_success=1 any_failure=0 r
     [ $# -gt 0 ] || { all_success=0; any_failure=1; }
     for r in "$@"; do
         case "$r" in
             success)   ;;
-            cancelled) all_success=0; any_cancelled=1 ;;
+            cancelled) all_success=0 ;;
             *)         all_success=0; any_failure=1 ;;
         esac
     done
