@@ -95,18 +95,18 @@ Docker Hub description sync becomes a candidate row.
       `rstudio2u/.github/smoke-test.sh:1-124`, without its mirror phase.
 - [ ] T3: Run the pass case and the six controls of AC2 against a freshly
       built image. Record the FAIL line from each transcript.
-- [ ] T4: In `docker.yml`, remove the `refs/heads/main` guard on the digest
+- [x] T4: In `docker.yml`, remove the `refs/heads/main` guard on the digest
       push so every ref pushes an untagged image by digest. Add the pull-back
       step and the two architecture assertions to each leg.
-- [ ] T5: Add the smoke-test step to each leg, ordered before the digest
+- [x] T5: Add the smoke-test step to each leg, ordered before the digest
       upload, so a leg that fails contributes no digest.
-- [ ] T6: Replace the two per-variant merge jobs with one publish job gated on
+- [x] T6: Replace the two per-variant merge jobs with one publish job gated on
       four digests. This is the all-or-nothing choice made at the 2026-09-11
       gate under GP4. Add the `test_mode` dispatch input and assemble every tag
       in a single `imagetools create`.
-- [ ] T7: Add the dry-run manifest read-back and the both-architectures
+- [x] T7: Add the dry-run manifest read-back and the both-architectures
       assertion before the real create. Drive the four bad indexes from AC5.
-- [ ] T8: Update the CI/publish family and the Conventions in
+- [x] T8: Update the CI/publish family and the Conventions in
       `cairn/DESIGN.md` to state the gate and the all-or-nothing publish rule.
       Run the verify slot.
 
@@ -118,11 +118,18 @@ Docker Hub description sync becomes a candidate row.
 - 2026-09-11: plan chose a conjugate Bernoulli fixture over a richer model. Reason: a known answer keeps the sampling assertion stable. Falsified by the assertion proving flaky in CI at the stated tolerance.
 - 2026-09-11: implement gate chose an extracted `.github/publish-guard.sh` with a local test over inline workflow shell. Reason: AC5's four bad indexes run locally in seconds instead of costing four-leg CI builds. Falsified by the script drifting from what the workflow actually calls.
 - 2026-09-11: implement gate chose shipping the Stan fixture in the repo over baking it into the image. Reason: it is a CI artifact, and AC2 control (d) needs a second Stan file that no user needs.
-- 2026-09-11: implement gate chose verifying both variants' manifest lists before either variant's tags attach. Reason: the 2026-09-11 plan gate already made publishing all-or-nothing across the four legs under GP4.
+- 2026-09-11: implement gate chose checking both variants' manifest lists before either variant's tags attach. Reason: the 2026-09-11 plan gate already made publishing all-or-nothing across the four legs under GP4.
 - 2026-09-11: implement gate left `retry-on-failure` unchanged (the user expressed no preference, so the recommendation was taken). Reason: cached layers make a repeated smoke failure cheap, and the mirror flakiness the job exists for is unchanged.
 - 2026-09-11: T1 added `.github/smoke-fixtures/` with `bernoulli.stan`, `bernoulli.data.json` (N=100, sum(y)=40, analytic posterior mean 41/102 = 0.4019608) and `does-not-compile.stan` for AC2 control (d).
 - 2026-09-11: `hadolint Dockerfile` reported DL3025 on the pre-existing shell-form HEALTHCHECK. Rewrote it in exec form. hadolint is now clean. AC6 needs this.
 - 2026-09-11: T2 wrote `.github/smoke-test.sh`. Three phases, each printing one PASS line and every failure path naming its phase. `SMOKE_PKG` defaults to `praise`, which is not in the roster, so the install exercises a fresh bspm fetch. Phase 3 runs as the `rstudio` user with `HOME=/home/rstudio`, because CmdStan lives under that home and root finds nothing. `bash -n` and shellcheck are clean.
+- 2026-09-11: T4 and T5 rewrote the build legs in `docker.yml`. The matrix now carries `arch` rather than a platform string. Every ref pushes by digest. Each leg pulls that digest back and asserts both the recorded architecture and the container's `uname -m`. It then smoke-tests the image and only after that uploads its digest.
+- 2026-09-11: T6 replaced the two per-variant merge jobs with one publish job for all four legs. It runs under `always()` so a run with a failed leg still reaches the digest guard and reports the shortfall. The `test_mode` dispatch input assembles and checks both manifest lists and attaches nothing.
+- 2026-09-11: T7 added `.github/publish-guard.sh` (subcommands `digests` and `manifest`) and `.github/tests/test_publish_guard.sh`. The test drives 13 cases and all pass. It covers the four bad indexes AC5 names, plus a missing file, unreadable JSON, and four digest-count cases. Three cases are silent controls: a valid two-architecture index, one carrying an attestation entry, and a full set of four digests.
+- 2026-09-11: T3 found that controls (d) and (e) printed the same phase 3 FAIL line. Phase 3 now prints a stage marker before it gives up. A compile failure, a sampling failure, and a wrong posterior mean each get their own FAIL line.
+- 2026-09-11: T3 control (c) uses `SMOKE_PKG=oolong`. A diff of current CRAN against the r2u index inside the built image found 8 CRAN packages with no r2u binary (observed 2026-09-11). Of those, `oolong` installs from source and loads.
+- 2026-09-11: T8 updated the DESIGN CI/publish family and added a Conventions bullet for the gate and the all-or-nothing publish rule. GP8's parenthetical said a CI smoke test was a candidate. It is corrected in place to name the gate.
+- 2026-09-11: tasks were worked T1, T2, T7, T4 to T6, T8, then T3. T3 needs a locally built image, and that build ran for most of the session. No task content changed.
 - 2026-09-11: criteria audit ([O], full mode) flagged the goal and all five drafted criteria. It found an unenumerable goal domain and a smoke test never wired per leg. It also found single-exemplar controls, an unreachable branch-run evidence state, digest count standing in for a passing smoke test, and a single-form manifest probe. All were fixed above before the gate. The GP4 tension went to the gate as a question.
 
 ## Decisions

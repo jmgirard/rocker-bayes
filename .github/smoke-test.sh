@@ -145,7 +145,12 @@ if ! docker exec -u rstudio -e HOME=/home/rstudio "$NAME" Rscript -e '
   exit 1
 fi
 
-if ! docker exec -u rstudio -e HOME=/home/rstudio \
+# The R block below prints a `stage:` marker before it gives up, so a compile
+# failure and a wrong posterior mean produce different FAIL lines rather than
+# one message covering both. A check that cannot say which thing broke cannot
+# be trusted to have caught the thing it names.
+set +e
+stan_out="$(docker exec -u rstudio -e HOME=/home/rstudio \
      -e STAN_BASE="$STAN_BASE" -e DATA_BASE="$DATA_BASE" \
      -e THETA_REF="$THETA_REF" -e THETA_TOL="$THETA_TOL" \
      "$NAME" Rscript -e '
@@ -158,28 +163,52 @@ if ! docker exec -u rstudio -e HOME=/home/rstudio \
   invisible(file.copy(file.path("/smoke-fixtures", Sys.getenv("STAN_BASE")), stan, overwrite = TRUE))
   data_src <- file.path("/smoke-fixtures", Sys.getenv("DATA_BASE"))
   if (!file.exists(data_src)) {
+    cat("stage:data\n")
     stop("no data file beside the Stan program: ", Sys.getenv("DATA_BASE"), call. = FALSE)
   }
-  mod <- cmdstanr::cmdstan_model(stan)
-  fit <- mod$sample(
-    data = data_src,
-    seed = 20260911,
-    chains = 2,
-    parallel_chains = 2,
-    iter_warmup = 500,
-    iter_sampling = 1000,
-    refresh = 0,
-    show_messages = FALSE
+  mod <- tryCatch(
+    cmdstanr::cmdstan_model(stan),
+    error = function(e) {
+      cat("stage:compile\n")
+      stop(conditionMessage(e), call. = FALSE)
+    }
+  )
+  fit <- tryCatch(
+    mod$sample(
+      data = data_src,
+      seed = 20260911,
+      chains = 2,
+      parallel_chains = 2,
+      iter_warmup = 500,
+      iter_sampling = 1000,
+      refresh = 0,
+      show_messages = FALSE
+    ),
+    error = function(e) {
+      cat("stage:sample\n")
+      stop(conditionMessage(e), call. = FALSE)
+    }
   )
   got <- fit$summary("theta")$mean
   ref <- as.numeric(Sys.getenv("THETA_REF"))
   tol <- as.numeric(Sys.getenv("THETA_TOL"))
   cat(sprintf("theta posterior mean %.4f, reference %.4f, tolerance %.2f\n", got, ref, tol))
   if (!is.finite(got) || abs(got - ref) > tol) {
+    cat("stage:mean\n")
     stop(sprintf("posterior mean %.4f is not within %.2f of %.4f", got, tol, ref), call. = FALSE)
   }
-'; then
-  echo "FAIL: phase 3 (cmdstan) - model did not compile, sample, or match the reference posterior mean"
+' 2>&1)"
+stan_status=$?
+set -e
+printf '%s\n' "$stan_out"
+if [ "$stan_status" -ne 0 ]; then
+  case "$stan_out" in
+    *"stage:data"*)    echo "FAIL: phase 3 (cmdstan) - no data file beside $STAN_BASE" ;;
+    *"stage:compile"*) echo "FAIL: phase 3 (cmdstan) - $STAN_BASE did not compile" ;;
+    *"stage:sample"*)  echo "FAIL: phase 3 (cmdstan) - the model compiled but sampling failed" ;;
+    *"stage:mean"*)    echo "FAIL: phase 3 (cmdstan) - the posterior mean is not within $THETA_TOL of $THETA_REF" ;;
+    *)                 echo "FAIL: phase 3 (cmdstan) - the CmdStan run failed before it reached a stage marker" ;;
+  esac
   exit 1
 fi
 echo "PASS: phase 3 (cmdstan) - model compiled, sampled, and matched the reference posterior mean"
