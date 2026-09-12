@@ -70,7 +70,7 @@ mkdir -p /home/rstudio/.cmdstan
 R -q -e '
   cmdstanr::install_cmdstan(
     dir = "/home/rstudio/.cmdstan",
-    version = "'${CMDSTAN_VERSION}'",
+    version = "'"${CMDSTAN_VERSION}"'",
     cpp_options = list("CXXFLAGS+= -Wno-psabi -O3")
   )
   cmdstanr::set_cmdstan_path("/home/rstudio/.cmdstan")

@@ -64,9 +64,10 @@ before merge, because M001's publish lane boots all four.
       the build cache scope that M001's publish lane writes.
 - [x] T2: Add the smoke-test step and the hadolint step to that lane. Give the
       smoke step a timeout that covers a cold CmdStan compile.
-- [ ] T3: Write `.github/workflows/lint.yml`. Pin the shellcheck release by
+- [x] T3: Write `.github/workflows/lint.yml`. Pin the shellcheck release by
       version and SHA256 rather than taking the runner's package. Follow
-      `rstudio2u/.github/workflows/lint.yml:21-46`.
+      `rstudio2u/.github/workflows/lint.yml:21-46`. Also fix the one
+      pre-existing SC2086 the pinned level reports, so the lane starts green.
 - [x] T4: Add `.github/dependabot.yml` for the github-actions ecosystem on a
       monthly schedule. The current pins in `docker.yml` are several major
       versions behind, so the first batch of update pull requests is expected.
@@ -89,6 +90,8 @@ before merge, because M001's publish lane boots all four.
 - 2026-09-12: T2 added the hadolint step and the smoke step. hadolint runs before the build, so a lint violation reports in seconds rather than after a CmdStan compile. The job takes `timeout-minutes: 45`, which covers a cold compile when a Dockerfile change invalidates the cached layer. There is no hadolint pin in `docker.yml` to match, so the action takes the current v3.5.0, which is also what rstudio2u runs.
 - 2026-09-12: AC1 asks for a pull request run showing the build step and the smoke PASS lines. This milestone's own pull request supplies it, because the paths filter includes `.github/workflows/**`. No early push is needed.
 
+- 2026-09-12: T3 wrote `.github/workflows/lint.yml`. It enumerates once with `git ls-files -z` into a file and reads that file for both the count and the lint, because enumerating twice would let the two disagree. The shellcheck 0.11.0 tarball SHA256 was verified by downloading the release, not copied from rstudio2u.
+- 2026-09-12: T3 fixed the SC2086 in `scripts/install_bayes.sh:73`. Verified by printing what the shell assembles: `version = "2.39.0",` for a normal value, and a value carrying spaces now stays one R string. `docker build` exit 0, hadolint exit 0, and the built image reports CmdStan 2.39.0 at `/home/rstudio/.cmdstan/cmdstan-2.39.0`. shellcheck over all nine tracked files now exits 0.
 - 2026-09-12: T4 added `.github/dependabot.yml`. It groups every action into one pull request per run, so a batch of major bumps arrives as a single change the pre-merge lane builds and boots once. Parsed with PyYAML.
 
 ## Decisions
