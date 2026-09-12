@@ -7,56 +7,68 @@ on:
       - "Dockerfile"
       - "scripts/**"
       - ".github/workflows/docker.yml"
+      - ".github/smoke-test.sh"
+      - ".github/smoke-fixtures/**"
+      - ".github/publish-guard.sh"
   # Weekly rebuild to pick up base-image (jmgirard/rstudio2u) updates
   schedule:
     - cron: "0 7 * * 1"
   workflow_dispatch:
+    inputs:
+      test_mode:
+        description: "Exercise the whole lane without publishing: every leg builds, pushes its layers by digest, is pulled back and smoke-tested, then the publish job assembles both manifest lists, checks them, prints the tag list it would apply, and attaches nothing."
+        type: boolean
+        default: false
 
 env:
   IMAGE: jmgirard/rocker-bayes
 
 jobs:
-  # Build each architecture on its own native runner (no QEMU emulation, so the
-  # CmdStan compile runs at native speed) and push each as an untagged image
-  # addressed only by digest. The merge job stitches the digests into the tags.
+  # One leg per (variant, architecture), each on a runner of that architecture,
+  # so nothing is emulated and the CmdStan compile runs at native speed. Each
+  # leg pushes its layers WITHOUT a tag, pulls that exact digest back, proves it
+  # is the architecture the leg claims, and smoke-tests it. The bytes that get
+  # tested are the bytes that ship. An untagged push is invisible to users: no
+  # moving tag moves until the publish job assembles the manifest lists, which
+  # it only completes when all four legs passed.
   build:
+    name: build (${{ matrix.variant }}, ${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
     strategy:
+      # A failure on one leg must not cancel the others mid-build: the legs that
+      # do pass must still upload their digests, so the publish job can count
+      # them and report the shortfall rather than being skipped in silence.
       fail-fast: false
       matrix:
         include:
           - variant: noble
             base_tag: noble
-            platform: linux/amd64
+            arch: amd64
             runner: ubuntu-latest
           - variant: noble
             base_tag: noble
-            platform: linux/arm64
+            arch: arm64
             runner: ubuntu-24.04-arm
           - variant: resolute
             base_tag: resolute
-            platform: linux/amd64
+            arch: amd64
             runner: ubuntu-latest
           - variant: resolute
             base_tag: resolute
-            platform: linux/arm64
+            arch: arm64
             runner: ubuntu-24.04-arm
     steps:
-      - name: Sanitize platform name
-        run: echo "PLATFORM_PAIR=${platform//\//-}" >> "$GITHUB_ENV"
-        env:
-          platform: ${{ matrix.platform }}
-
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Only needed to push (by digest); the base image is public so the build
-      # itself pulls fine without auth. Skipped on branch dry runs.
+      # Every ref pushes by digest now, not just the default branch: the
+      # pull-back, the architecture assertions, and the smoke test all read the
+      # pushed image, so a branch run that skipped the push could not exercise
+      # the gate it exists to prove.
       - name: Log in to Docker Hub
-        if: github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
         with:
           username: jmgirard
@@ -65,15 +77,23 @@ jobs:
       - name: Resolve CmdStan version
         id: meta
         run: |
+          set -euo pipefail
           CMDSTAN=$(grep -oP '(?<=^ARG CMDSTAN_VERSION=")[^"]+' Dockerfile)
+          # Without this check a reformatted ARG line yields an empty CMDSTAN,
+          # the step still exits 0 on the echo, and every leg builds with an
+          # empty --build-arg override before the publish job catches it.
+          if [ -z "$CMDSTAN" ]; then
+            echo "::error::could not read CMDSTAN_VERSION from the Dockerfile ARG line"
+            exit 1
+          fi
           echo "cmdstan=$CMDSTAN" >> "$GITHUB_OUTPUT"
 
-      - name: Build ${{ matrix.variant }} (${{ matrix.platform }})
+      - name: Build ${{ matrix.variant }} (${{ matrix.arch }}) and push by digest
         id: build
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: ${{ matrix.platform }}
+          platforms: linux/${{ matrix.arch }}
           build-args: |
             BASE_TAG=${{ matrix.base_tag }}
             CMDSTAN_VERSION=${{ steps.meta.outputs.cmdstan }}
@@ -81,54 +101,90 @@ jobs:
           # Always re-pull the rstudio2u base so builds pick up newer R/RStudio
           pull: true
           # Scheduled/manual runs rebuild from scratch so they actually pull in
-          # the updated base and recompile CmdStan; push (code change) builds use
-          # the cache. On branch dry runs nothing is pushed (push-by-digest off).
+          # the updated base and recompile CmdStan; push (code change) builds
+          # use the cache.
           no-cache: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
-          cache-from: type=gha,scope=${{ matrix.variant }}-${{ env.PLATFORM_PAIR }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.variant }}-${{ env.PLATFORM_PAIR }}
-          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=${{ github.ref == 'refs/heads/main' }}
+          cache-from: type=gha,scope=${{ matrix.variant }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.variant }}-${{ matrix.arch }}
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
 
-      - name: Export digest
-        if: github.ref == 'refs/heads/main'
+      # Pull the pushed digest back and prove it is the architecture this leg
+      # claims, both as the image records it and as the running kernel reports
+      # it. Without these two assertions a mis-wired matrix could smoke-test the
+      # same amd64 image twice and still look green.
+      - name: Pull back the pushed image and assert its architecture
+        id: pulled
         run: |
+          set -euo pipefail
+          ref="${IMAGE}@${{ steps.build.outputs.digest }}"
+          docker pull "$ref"
+          got_arch=$(docker image inspect --format '{{.Architecture}}' "$ref")
+          if [ "$got_arch" != "${{ matrix.arch }}" ]; then
+            echo "::error::image architecture is '$got_arch', expected '${{ matrix.arch }}'"
+            exit 1
+          fi
+          case "${{ matrix.arch }}" in
+            amd64) want_uname=x86_64 ;;
+            arm64) want_uname=aarch64 ;;
+            *) echo "::error::unknown arch '${{ matrix.arch }}'"; exit 1 ;;
+          esac
+          got_uname=$(docker run --rm --entrypoint uname "$ref" -m)
+          if [ "$got_uname" != "$want_uname" ]; then
+            echo "::error::container reports 'uname -m' = '$got_uname', expected '$want_uname'"
+            exit 1
+          fi
+          echo "image is ${{ matrix.arch }} ($got_arch / $got_uname): $ref"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
+      # A non-zero exit here fails this leg, and because the publish job
+      # requires all four digests, blocks every tag from moving. The CmdStan
+      # phase is the reason this repo needs its own smoke test: the base image
+      # has no CmdStan, so nothing upstream exercises it.
+      - name: Smoke-test ${{ matrix.variant }} (${{ matrix.arch }})
+        env:
+          SMOKE_TIMEOUT: "300"
+        run: bash ./.github/smoke-test.sh "${{ steps.pulled.outputs.ref }}"
+
+      # Hand the verified digest to the publish job. This runs only after the
+      # smoke test passed, so an unverified leg contributes no digest and the
+      # publish job's count comes up short.
+      - name: Export the verified digest
+        run: |
+          set -euo pipefail
           mkdir -p /tmp/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"
 
-      - name: Upload digest
-        if: github.ref == 'refs/heads/main'
+      - name: Upload the digest
         uses: actions/upload-artifact@v4
         with:
-          name: digests-${{ matrix.variant }}-${{ env.PLATFORM_PAIR }}
+          name: digests-${{ matrix.variant }}-${{ matrix.arch }}
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
 
-  # Combine the per-arch digests into multi-arch manifest lists and tag them:
-  # mutable tags (latest/noble/resolute) plus immutable tags pinning the date and
-  # the CmdStan version, so a course can pin a reproducible image.
-  merge:
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+  # One publish job for all four legs, not one per variant. Both variants are
+  # supported surfaces, so a broken resolute leg holds the noble tags back too:
+  # both manifest lists are assembled and checked before either variant's tags
+  # are attached (GP4).
+  #
+  # !cancelled() is required so a run with a failed leg still reaches the digest
+  # guard, which is what reports the shortfall. always() would do that too, but
+  # it also stays true when the run itself is cancelled, so four green legs
+  # followed by a cancel would still attach every tag. 'skipped' and 'cancelled'
+  # are excluded: nothing was built, so there is nothing to assemble.
+  publish:
+    name: publish
     needs: build
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - variant: noble
-            mutable: latest noble
-          - variant: resolute
-            mutable: resolute
+    if: >-
+      !cancelled()
+      && needs.build.result != 'cancelled'
+      && needs.build.result != 'skipped'
+      && (github.ref == 'refs/heads/main' || inputs.test_mode)
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Download digests
-        uses: actions/download-artifact@v4
-        with:
-          path: /tmp/digests
-          pattern: digests-${{ matrix.variant }}-*
-          merge-multiple: true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -139,33 +195,116 @@ jobs:
           username: jmgirard
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Compute tags
-        id: meta
+      # Three downloads of the same artifacts: one flat copy for the
+      # all-four-legs count, and one per variant for assembling that variant's
+      # manifest list. A pattern that matches nothing creates no directory,
+      # which publish-guard.sh reports as a count of zero.
+      - name: Download every verified digest
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests/all
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Download the noble digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests/noble
+          pattern: digests-noble-*
+          merge-multiple: true
+
+      - name: Download the resolute digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests/resolute
+          pattern: digests-resolute-*
+          merge-multiple: true
+
+      # First gate: all four legs smoke-tested clean. A short count means a leg
+      # failed or was skipped, and no tag may move for either variant.
+      - name: Require all four verified digests
+        run: bash ./.github/publish-guard.sh digests /tmp/digests/all 4
+
+      # Second gate: assemble both manifest lists with --dry-run, which
+      # produces the exact index a real create would push, and require each to
+      # name both linux architectures. Counting four digest files proves only
+      # that four legs uploaded something, never that each assembled index
+      # covers two architectures. Nothing is tagged in this step.
+      - name: Assemble and check both manifest lists
+        id: assemble
+        env:
+          NOBLE_MUTABLE: "latest noble"
+          RESOLUTE_MUTABLE: "resolute"
         run: |
-          set -e
+          set -euo pipefail
           DATE=$(date -u +%Y-%m-%d)
           CMDSTAN=$(grep -oP '(?<=^ARG CMDSTAN_VERSION=")[^"]+' Dockerfile)
-          TAGS=""
-          for t in ${{ matrix.mutable }}; do TAGS="$TAGS -t $IMAGE:$t"; done
-          TAGS="$TAGS -t $IMAGE:${{ matrix.variant }}-$DATE -t $IMAGE:${{ matrix.variant }}-cmdstan$CMDSTAN"
-          echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
+          if [ -z "$DATE" ] || [ -z "$CMDSTAN" ]; then
+            echo "::error::could not resolve the build date and CmdStan version (date='$DATE', cmdstan='$CMDSTAN')"
+            exit 1
+          fi
 
-      - name: Create and push manifest list
-        working-directory: /tmp/digests
+          for variant in noble resolute; do
+            case "$variant" in
+              noble)    mutable="$NOBLE_MUTABLE" ;;
+              resolute) mutable="$RESOLUTE_MUTABLE" ;;
+            esac
+
+            tags=()
+            for t in $mutable; do tags+=("$IMAGE:$t"); done
+            tags+=("$IMAGE:${variant}-${DATE}" "$IMAGE:${variant}-cmdstan${CMDSTAN}")
+
+            refs=()
+            while IFS= read -r f; do
+              refs+=("${IMAGE}@sha256:$(basename "$f")")
+            done < <(find "/tmp/digests/${variant}" -type f | sort)
+
+            tag_args=()
+            for t in "${tags[@]}"; do tag_args+=(-t "$t"); done
+
+            echo "tags for ${variant}:"
+            printf '  %s\n' "${tags[@]}"
+            docker buildx imagetools create --dry-run "${tag_args[@]}" "${refs[@]}" \
+              | tee "/tmp/manifest-${variant}.json"
+            bash ./.github/publish-guard.sh manifest "/tmp/manifest-${variant}.json" "$variant"
+
+            printf '%s\n' "${tag_args[@]}" > "/tmp/tagargs-${variant}.txt"
+            printf '%s\n' "${refs[@]}" > "/tmp/refs-${variant}.txt"
+          done
+
+      # Both indexes passed, so attach the tags. In test mode nothing is
+      # attached: the run has already exercised every leg, both assemblies, and
+      # both guards, and the tag list it would have applied is printed above.
+      - name: Attach the tags
+        env:
+          TEST_MODE: ${{ inputs.test_mode }}
         run: |
-          docker buildx imagetools create ${{ steps.meta.outputs.tags }} \
-            $(printf "$IMAGE@sha256:%s " *)
-
-      - name: Inspect
-        run: docker buildx imagetools inspect "$IMAGE:${{ matrix.variant }}"
+          set -euo pipefail
+          if [ "$TEST_MODE" = "true" ]; then
+            echo "test mode: both manifest lists were assembled and checked, and no tag was attached"
+            exit 0
+          fi
+          for variant in noble resolute; do
+            tag_args=()
+            while IFS= read -r a; do [ -n "$a" ] && tag_args+=("$a"); done < "/tmp/tagargs-${variant}.txt"
+            refs=()
+            while IFS= read -r r; do [ -n "$r" ] && refs+=("$r"); done < "/tmp/refs-${variant}.txt"
+            docker buildx imagetools create "${tag_args[@]}" "${refs[@]}"
+            docker buildx imagetools inspect "$IMAGE:$variant"
+          done
 
   # If any build leg failed, it is almost always an amd64 runner that could not
   # reach the single r2u mirror on its egress IP (arm64 native runners are
   # reliable). Re-running the whole workflow puts each leg on a fresh runner with
   # a new IP; unchanged legs restore from the build cache, so only the failed one
   # actually rebuilds and re-contacts the mirror. Capped at 3 total attempts.
+  #
+  # It needs publish as well as build. With `needs: build` alone it starts while
+  # the publish job is still running, and GitHub refuses to rerun a workflow
+  # that has a job in flight ("This workflow is already running"). Waiting for
+  # publish is what makes the rerun reachable at all.
   retry-on-failure:
-    needs: build
+    needs: [build, publish]
     if: failure() && github.run_attempt < 3
     runs-on: ubuntu-latest
     permissions:

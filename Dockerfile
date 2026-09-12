@@ -32,9 +32,11 @@ RUN chmod -R +x /rocker_scripts \
 # ---------------------------------------------------------------------------
 # Runtime
 # ---------------------------------------------------------------------------
-# Report container health by checking that RStudio Server is serving HTTP
+# Report container health by checking that RStudio Server is serving HTTP.
+# wget already exits non-zero when the request fails, so the exec form needs no
+# shell and no explicit `|| exit 1`.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-    CMD wget -q -O /dev/null http://localhost:8787/ || exit 1
+    CMD ["wget", "-q", "-O", "/dev/null", "http://localhost:8787/"]
 
 EXPOSE 8787
 CMD ["/init"]

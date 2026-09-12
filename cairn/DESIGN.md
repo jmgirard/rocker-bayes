@@ -46,8 +46,14 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
 - **Launchers**: `start_*` / `stop_*` files plus `launcher_common.sh`; the
   Windows `.bat` files are stored with CRLF line endings (see `.gitattributes`).
 - **CI / publish**: `.github/workflows/docker.yml` builds each architecture on
-  a native runner, pushes by digest, and merges the digests into multi-arch
-  manifest lists with mutable and immutable tags.
+  a native runner and pushes it by digest. Each leg then pulls that digest
+  back, asserts the architecture, and runs `.github/smoke-test.sh` against it.
+  One publish job requires all four verified digests. It assembles both
+  variants' manifest lists and checks each with `.github/publish-guard.sh`.
+  Only then does it attach the mutable and immutable tags.
+  `.github/smoke-fixtures/` holds the Stan program the smoke test compiles.
+  `.github/tests/test_publish_guard.sh` drives the guard through its failing
+  cases without a CI run.
 
 ## Conventions
 
@@ -68,6 +74,12 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   file diverges. `.bat` files are stored CRLF (`.gitattributes`).
 - A weekly scheduled CI rebuild (no cache) picks up base-image updates; push
   builds use the GitHub Actions cache.
+- **No tag moves until every leg is verified.** Each build leg smoke-tests the
+  exact digest it pushed. A leg uploads its digest only after that smoke test
+  passes. The publish job requires all four digests, and it checks both
+  assembled manifest lists before it attaches any tag. A broken leg in either
+  variant therefore holds both variants' tags back (GP4, GP8). The `test_mode`
+  dispatch input runs the whole lane and attaches nothing.
 - Container is intentionally root-capable (passwordless sudo); safety comes
   from the localhost-only bind, documented in README "Security".
 
@@ -120,7 +132,7 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   launcher file that diverges here states why and gets its tests ported.
 - GP8: **Never knowingly ship a broken moving tag.** An unattended rebuild must
   not publish an image whose server fails to come up or whose CmdStan cannot
-  compile a model (a CI smoke test is a ROADMAP candidate).
+  compile a model. The CI smoke-test gate enforces this (corrected M001).
 
 ## Architecture
 

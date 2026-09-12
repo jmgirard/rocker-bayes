@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-03 (status audit clean; no change since design inte
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M001 | Smoke-test gate before any tag moves | planned | — | high | milestones/M001-smoke-test-publish-gate.md |
+| M001 | Smoke-test gate before any tag moves | review | — | high | milestones/M001-smoke-test-publish-gate.md |
 | M002 | Pre-merge CI lane and lint | planned | M001 | normal | milestones/M002-pre-merge-ci-lane.md |
 | M003 | Unattended-rebuild alerts and schedule keepalive | planned | M001, M002 | normal | milestones/M003-unattended-rebuild-alerts.md |
 
