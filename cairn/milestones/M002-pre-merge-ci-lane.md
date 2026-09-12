@@ -104,6 +104,8 @@ before merge, because M001's publish lane boots all four.
 - 2026-09-12: claim audit: not owed — internal tier.
 - 2026-09-12: all six tasks done and the verify slot clean. Status set to review.
 
+- 2026-09-12: correction, superseding the 2026-09-12 cross-check line above. That line said PR #5 "touched only the Dockerfile" and PR #4 "touched only shell files". Both are false. Each control branch also carried the three new workflow files, and `git diff --name-only origin/main <sha>` confirms it. That is why `pr-ci.yml` triggered on both, through `.github/workflows/**`, rather than through the paths the line named. The conclusion stands: each linter passed on a branch where its own domain was clean, so neither fails everything. The `Dockerfile` and `scripts/**` trigger arms were never exercised in isolation.
+
 ## Decisions
 
 ## Review

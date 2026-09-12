@@ -13,6 +13,9 @@ on:
       - "**.command"
       - ".github/workflows/lint.yml"
 
+permissions:
+  contents: read
+
 jobs:
   shellcheck:
     name: shellcheck tracked shell files
@@ -27,13 +30,16 @@ jobs:
       - name: Install pinned shellcheck
         run: |
           set -euo pipefail
+          cd "$RUNNER_TEMP"
           url="https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
-          curl -sSL -o shellcheck.tar.xz "$url"
+          # --fail matters: without it curl exits 0 on a 404 and writes the
+          # error page to the tarball, so a renamed release asset reports as a
+          # checksum mismatch, which reads like a wrong pin or tampering.
+          curl -sSL --fail -o shellcheck.tar.xz "$url"
           echo "${SHELLCHECK_SHA256}  shellcheck.tar.xz" | sha256sum -c -
           tar -xJf shellcheck.tar.xz
           sudo install -m 0755 "shellcheck-v${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin/shellcheck
           shellcheck --version
-          rm -rf shellcheck.tar.xz "shellcheck-v${SHELLCHECK_VERSION}"
 
       # One `git ls-files` call writes the list, and everything below reads
       # that list. Enumerating twice would let the count and the lint disagree.

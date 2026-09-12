@@ -86,11 +86,14 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   assembled manifest lists before it attaches any tag. A broken leg in either
   variant therefore holds both variants' tags back (GP4, GP8). The `test_mode`
   dispatch input runs the whole lane and attaches nothing.
-- **Every pull request is built and booted before merge.** `pr-ci.yml` lints
+- **A pull request that can change the image is built and booted before
+  merge.** `pr-ci.yml` triggers on the Dockerfile, `.dockerignore`,
+  `scripts/**`, the workflows, and the smoke test and its fixtures. It lints
   the Dockerfile, then builds noble amd64 and runs the publish gate's own
-  smoke test against it. The lane reads the publish lane's build cache and
-  never writes it, so a pull request cannot poison what the publish lane
-  builds from. Shell files are linted by a pinned shellcheck at `-S info`.
+  smoke test against it. A pull request touching none of those paths runs no
+  build, by design. The lane reads the publish lane's build cache and never
+  writes it, so a pull request cannot poison what the publish lane builds
+  from. Shell files are linted by a pinned shellcheck at `-S info`.
 - Container is intentionally root-capable (passwordless sudo); safety comes
   from the localhost-only bind, documented in README "Security".
 

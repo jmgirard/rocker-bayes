@@ -15,9 +15,20 @@ on:
     branches: [main]
     paths:
       - "Dockerfile"
+      - ".dockerignore"
       - "scripts/**"
       - ".github/workflows/**"
       - ".github/*.sh"
+      # The fixtures the smoke test reads. docker.yml watches them too, and a
+      # change to bernoulli.data.json moves the posterior mean the test
+      # compares against, so a PR that edits them must be booted here.
+      - ".github/smoke-fixtures/**"
+
+# The lane runs the pull request's own copy of .github/smoke-test.sh, so it
+# must not hand that script a writable token. The repository default is
+# currently read-only, but that is a setting rather than a promise.
+permissions:
+  contents: read
 
 jobs:
   build-smoke:
@@ -56,12 +67,20 @@ jobs:
           load: true
           tags: rocker-bayes:pr-smoke-noble
           provenance: false
+          # Re-resolve the base tag rather than trusting a cached FROM layer,
+          # matching docker.yml. Without it the lane can certify an image built
+          # on a stale base while the publish build pulls a newer one.
+          pull: true
           cache-from: type=gha,scope=noble-amd64
 
       # The same script the publish gate runs against every leg. A non-zero
       # exit fails the job and blocks the merge. The script always tears its
       # container down.
+      # SMOKE_TIMEOUT bounds phase 1 only. The step timeout bounds the whole
+      # script, so a wedged CmdStan compile is cut here rather than running out
+      # the job budget, where the build's share of it would be lost too.
       - name: Smoke-test noble (amd64)
+        timeout-minutes: 25
         env:
           SMOKE_TIMEOUT: "300"
         run: bash ./.github/smoke-test.sh rocker-bayes:pr-smoke-noble
