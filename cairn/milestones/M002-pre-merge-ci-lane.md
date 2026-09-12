@@ -62,7 +62,7 @@ before merge, because M001's publish lane boots all four.
 - [x] T1: Write `.github/workflows/pr-ci.yml` with the paths filter AC1
       names. Build noble amd64 with `load: true` and no registry login. Reuse
       the build cache scope that M001's publish lane writes.
-- [ ] T2: Add the smoke-test step and the hadolint step to that lane. Give the
+- [x] T2: Add the smoke-test step and the hadolint step to that lane. Give the
       smoke step a timeout that covers a cold CmdStan compile.
 - [ ] T3: Write `.github/workflows/lint.yml`. Pin the shellcheck release by
       version and SHA256 rather than taking the runner's package. Follow
@@ -85,6 +85,9 @@ before merge, because M001's publish lane boots all four.
 - 2026-09-12: gate chose fixing the pre-existing SC2086 in `scripts/install_bayes.sh` over a disable directive. Reason: AC4 fixes the level at `-S info`, and adding a linter implies making the tree pass it. The quoting bug is real for a version string carrying a space.
 - 2026-09-12: gate chose pinning the new workflows at `docker.yml`'s existing action versions over current latest. Reason: one coherent Dependabot batch across all three workflows beats running two majors of the same action side by side.
 - 2026-09-12: T1 wrote `.github/workflows/pr-ci.yml`. It takes no build args, because the Dockerfile already defaults `BASE_TAG` to noble and pins `CMDSTAN_VERSION`. It reads the `noble-amd64` cache scope and never writes it, so a pull request cannot poison the cache the publish lane builds from. actionlint clean, and the AC2 grep finds nothing.
+
+- 2026-09-12: T2 added the hadolint step and the smoke step. hadolint runs before the build, so a lint violation reports in seconds rather than after a CmdStan compile. The job takes `timeout-minutes: 45`, which covers a cold compile when a Dockerfile change invalidates the cached layer. There is no hadolint pin in `docker.yml` to match, so the action takes the current v3.5.0, which is also what rstudio2u runs.
+- 2026-09-12: AC1 asks for a pull request run showing the build step and the smoke PASS lines. This milestone's own pull request supplies it, because the paths filter includes `.github/workflows/**`. No early push is needed.
 
 ## Decisions
 

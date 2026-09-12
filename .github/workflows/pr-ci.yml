@@ -31,6 +31,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Before the build, so a lint violation reports in seconds instead of
+      # after a CmdStan compile.
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.5.0
+        with:
+          dockerfile: Dockerfile
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -50,3 +57,11 @@ jobs:
           tags: rocker-bayes:pr-smoke-noble
           provenance: false
           cache-from: type=gha,scope=noble-amd64
+
+      # The same script the publish gate runs against every leg. A non-zero
+      # exit fails the job and blocks the merge. The script always tears its
+      # container down.
+      - name: Smoke-test noble (amd64)
+        env:
+          SMOKE_TIMEOUT: "300"
+        run: bash ./.github/smoke-test.sh rocker-bayes:pr-smoke-noble
