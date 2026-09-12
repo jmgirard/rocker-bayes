@@ -1,6 +1,6 @@
 # M002: Pre-merge CI lane and lint
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** M001
 - **Driving RR:** —
@@ -8,7 +8,7 @@
 - **Resolves:** —
 - **Surface tier:** internal. It is developer tooling, and nothing it produces
   is published.
-- **Branch/PR:** —
+- **Branch/PR:** `m002-pre-merge-ci-lane`
 
 ## Goal
 
