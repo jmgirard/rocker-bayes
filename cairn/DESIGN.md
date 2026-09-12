@@ -153,3 +153,9 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
 - Newest-on-CRAN means a bad upstream release can break the weekly rebuild
   (rstanarm dev bug, 2025-01); a failed build leaves the old moving tag in
   place.
+- Publishing is checked all-or-nothing but attached per variant. The publish
+  job checks both manifest lists before it attaches any tag, then calls
+  `imagetools create` once for noble and once for resolute. A registry error
+  between the two calls leaves one variant tagged and the other not, with the
+  run red. Two registry calls cannot be made atomic, so this is accepted rather
+  than fixed (M001 review).
