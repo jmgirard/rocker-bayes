@@ -161,11 +161,8 @@ stan_out="$(docker exec -u rstudio -e HOME=/home/rstudio \
   # beside the program, so compile from a copy.
   stan <- file.path(work, Sys.getenv("STAN_BASE"))
   invisible(file.copy(file.path("/smoke-fixtures", Sys.getenv("STAN_BASE")), stan, overwrite = TRUE))
-  data_src <- file.path("/smoke-fixtures", Sys.getenv("DATA_BASE"))
-  if (!file.exists(data_src)) {
-    cat("stage:data\n")
-    stop("no data file beside the Stan program: ", Sys.getenv("DATA_BASE"), call. = FALSE)
-  }
+  # Compile before looking for the data file. Compiling needs no data, and a
+  # missing data file must never stand in for a program that does not compile.
   mod <- tryCatch(
     cmdstanr::cmdstan_model(stan),
     error = function(e) {
@@ -173,6 +170,11 @@ stan_out="$(docker exec -u rstudio -e HOME=/home/rstudio \
       stop(conditionMessage(e), call. = FALSE)
     }
   )
+  data_src <- file.path("/smoke-fixtures", Sys.getenv("DATA_BASE"))
+  if (!file.exists(data_src)) {
+    cat("stage:data\n")
+    stop("no data file beside the Stan program: ", Sys.getenv("DATA_BASE"), call. = FALSE)
+  }
   fit <- tryCatch(
     mod$sample(
       data = data_src,

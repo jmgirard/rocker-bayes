@@ -130,6 +130,7 @@ Docker Hub description sync becomes a candidate row.
 - 2026-09-11: T3 control (c) uses `SMOKE_PKG=oolong`. A diff of current CRAN against the r2u index inside the built image found 8 CRAN packages with no r2u binary (observed 2026-09-11). Of those, `oolong` installs from source and loads.
 - 2026-09-11: T8 updated the DESIGN CI/publish family and added a Conventions bullet for the gate and the all-or-nothing publish rule. GP8's parenthetical said a CI smoke test was a candidate. It is corrected in place to name the gate.
 - 2026-09-11: tasks were worked T1, T2, T7, T4 to T6, T8, then T3. T3 needs a locally built image, and that build ran for most of the session. No task content changed.
+- 2026-09-11: T3 control (d) failed at the data-file check rather than the compile, because that check ran first. Compiling needs no data, so the compile now runs before it. Re-run in progress at this commit.
 - 2026-09-11: criteria audit ([O], full mode) flagged the goal and all five drafted criteria. It found an unenumerable goal domain and a smoke test never wired per leg. It also found single-exemplar controls, an unreachable branch-run evidence state, digest count standing in for a passing smoke test, and a single-form manifest probe. All were fixed above before the gate. The GP4 tension went to the gate as a question.
 
 ## Decisions
