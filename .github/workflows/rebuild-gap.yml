@@ -53,7 +53,7 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           # The one variable the last-success date is read from. The dispatch
           # input sets it. Empty, the lookup below fills it.
-          LAST_SUCCESS: ${{ inputs.last_success_date }}
+          LAST_SUCCESS: ${{ inputs.last_success_date || '2026-09-10' }}
           # Empty on a scheduled run, so the 8 here is the scheduled policy.
           # The dispatch input's default states the same 8.
           THRESHOLD: ${{ inputs.threshold_days || '8' }}
