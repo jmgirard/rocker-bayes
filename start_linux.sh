@@ -85,3 +85,7 @@ else
     launcher_pause
     exit 1
 fi
+
+# THROWAWAY CONTROL for AC4: an unquoted expansion shellcheck must flag.
+PLANTED=$1
+echo $PLANTED
