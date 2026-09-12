@@ -298,8 +298,13 @@ jobs:
   # reliable). Re-running the whole workflow puts each leg on a fresh runner with
   # a new IP; unchanged legs restore from the build cache, so only the failed one
   # actually rebuilds and re-contacts the mirror. Capped at 3 total attempts.
+  #
+  # It needs publish as well as build. With `needs: build` alone it starts while
+  # the publish job is still running, and GitHub refuses to rerun a workflow
+  # that has a job in flight ("This workflow is already running"). Waiting for
+  # publish is what makes the rerun reachable at all.
   retry-on-failure:
-    needs: build
+    needs: [build, publish]
     if: failure() && github.run_attempt < 3
     runs-on: ubuntu-latest
     permissions:

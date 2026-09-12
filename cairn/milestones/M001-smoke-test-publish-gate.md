@@ -141,6 +141,8 @@ Docker Hub description sync becomes a candidate row.
 - 2026-09-12: gate authorized pushing the branch and running CI to gather the AC3 and AC4 evidence, ahead of step 2's usual hold. The workflow's push filter is main-only, so the push starts nothing by itself.
 - 2026-09-12: three `test_mode` runs gathered the AC3 and AC4 evidence. 34704706994 green on four legs, 34704708302 red at the arch assertion on one leg, 34704709637 red at the smoke test on one leg. AC3 and AC4 ticked. No Docker Hub tag moved, confirmed after the runs.
 - 2026-09-12: the CI runs found that `retry-on-failure` is inert. It takes `needs: build` alone, so it fires while the publish job still runs, and the rerun is refused. The new publish condition created that overlap. Raised at the gate.
+- 2026-09-12: gate took the one-line retry fix. The job now takes `needs: [build, publish]`.
+- 2026-09-12: step-7 approval: m001-smoke-test-publish-gate approved for merge.
 - 2026-09-11: criteria audit ([O], full mode) flagged the goal and all five drafted criteria. It found an unenumerable goal domain and a smoke test never wired per leg. It also found single-exemplar controls, an unreachable branch-run evidence state, digest count standing in for a passing smoke test, and a single-form manifest probe. All were fixed above before the gate. The GP4 tension went to the gate as a question.
 
 ## Decisions
@@ -268,6 +270,11 @@ The effect is safe in direction. A flaky r2u mirror now leaves the run red and
 the moving tags stale, rather than retrying. Stale tags are what GP8 asks for.
 The mechanism named in the workflow comment does not work, so the comment
 describes behavior the code lacks.
+
+The maintainer took the one-line fix at the 2026-09-12 gate. The job now takes
+`needs: [build, publish]`, so it starts after the publish job finishes.
+actionlint is clean. No CI run has yet shown the repaired path firing, because
+firing it needs a genuinely failing run under the merged workflow.
 
 AC3 and AC4 each end in a clause that only a CI run can satisfy. AC3 wants one
 run showing the assertion line and the smoke PASS on all four legs. It wants a
