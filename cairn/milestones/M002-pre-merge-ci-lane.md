@@ -71,7 +71,7 @@ before merge, because M001's publish lane boots all four.
 - [x] T4: Add `.github/dependabot.yml` for the github-actions ecosystem on a
       monthly schedule. The current pins in `docker.yml` are several major
       versions behind, so the first batch of update pull requests is expected.
-- [ ] T5: Run the planted-defect branches for AC3 and AC4 and record the red
+- [x] T5: Run the planted-defect branches for AC3 and AC4 and record the red
       and green runs.
 - [ ] T6: Note the pre-merge lane in the CI/publish family of
       `cairn/DESIGN.md`. Run the verify slot.
@@ -93,6 +93,11 @@ before merge, because M001's publish lane boots all four.
 - 2026-09-12: T3 wrote `.github/workflows/lint.yml`. It enumerates once with `git ls-files -z` into a file and reads that file for both the count and the lint, because enumerating twice would let the two disagree. The shellcheck 0.11.0 tarball SHA256 was verified by downloading the release, not copied from rstudio2u.
 - 2026-09-12: T3 fixed the SC2086 in `scripts/install_bayes.sh:73`. Verified by printing what the shell assembles: `version = "2.39.0",` for a normal value, and a value carrying spaces now stays one R string. `docker build` exit 0, hadolint exit 0, and the built image reports CmdStan 2.39.0 at `/home/rstudio/.cmdstan/cmdstan-2.39.0`. shellcheck over all nine tracked files now exits 0.
 - 2026-09-12: T4 added `.github/dependabot.yml`. It groups every action into one pull request per run, so a batch of major bumps arrives as a single change the pre-merge lane builds and boots once. Parsed with PyYAML.
+
+- 2026-09-12: T5 ran both controls as real pull requests, because both workflows trigger on `pull_request`. PR #4 planted an unquoted expansion in `start_linux.sh` and `start_mac.command`. Its shellcheck job failed in 5s with `linting 9 files`, then SC2086 at `start_linux.sh line 91` and `start_mac.command line 97`, exit 123. PR #5 planted DL3003 in the Dockerfile. Its lane failed in 7s at `Dockerfile:45 DL3003 warning: Use WORKDIR to switch to a directory`, before the build ran. Removing that violation on the same branch turned the lane green in 6m0s, with every step succeeding.
+- 2026-09-12: the two controls cross-check each other. PR #5 touched only the Dockerfile and its shellcheck job passed, so the lint workflow is not failing everything it sees. PR #4 touched only shell files and its lane passed, so the hadolint step is not failing everything either.
+- 2026-09-12: PR #4's lane supplied the AC1 evidence. It built and loaded noble amd64 and printed the three phase PASS lines plus the summary line, with theta 0.3988 against reference 0.4020, in 5m51s.
+- 2026-09-12: both control branches and their pull requests are closed and deleted. Neither merged.
 
 ## Decisions
 
