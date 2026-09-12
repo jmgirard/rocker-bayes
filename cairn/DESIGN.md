@@ -54,6 +54,12 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   `.github/smoke-fixtures/` holds the Stan program the smoke test compiles.
   `.github/tests/test_publish_guard.sh` drives the guard through its failing
   cases without a CI run.
+- **Pre-merge checks**: `.github/workflows/pr-ci.yml` lints the Dockerfile,
+  then builds and boots noble amd64 with the same `smoke-test.sh` the publish
+  gate runs. It never logs in and never publishes.
+  `.github/workflows/lint.yml` runs a pinned shellcheck over every tracked
+  `*.sh` and `*.command` file. `.github/dependabot.yml` keeps the action pins
+  current.
 
 ## Conventions
 
@@ -80,6 +86,11 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   assembled manifest lists before it attaches any tag. A broken leg in either
   variant therefore holds both variants' tags back (GP4, GP8). The `test_mode`
   dispatch input runs the whole lane and attaches nothing.
+- **Every pull request is built and booted before merge.** `pr-ci.yml` lints
+  the Dockerfile, then builds noble amd64 and runs the publish gate's own
+  smoke test against it. The lane reads the publish lane's build cache and
+  never writes it, so a pull request cannot poison what the publish lane
+  builds from. Shell files are linted by a pinned shellcheck at `-S info`.
 - Container is intentionally root-capable (passwordless sudo); safety comes
   from the localhost-only bind, documented in README "Security".
 
