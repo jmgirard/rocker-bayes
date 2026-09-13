@@ -26,7 +26,7 @@ on:
         type: string
         default: ""
       threshold_days:
-        description: "The largest gap, in days, that is not yet an alert. Both workflows are weekly, so a real gap is a multiple of seven days, and 8 makes the second missed rebuild the alert. The scheduled run has no inputs and uses the fallback of 8 in the step below."
+        description: "The largest gap, in days, that is not yet an alert. Both workflows are weekly and this check runs a day after the rebuild, so a measured gap is normally 1, 8, 15, ... days, and 8 makes the second missed rebuild the alert. The scheduled run has no inputs and uses the fallback of 8 in the step below."
         type: string
         default: "8"
 

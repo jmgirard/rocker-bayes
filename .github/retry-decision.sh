@@ -2,14 +2,16 @@
 #
 # Decide, for one attempt of a docker.yml run, whether the `retry-on-failure`
 # job reruns the workflow and whether the `notify` job waits for that rerun
-# instead of reporting. Both jobs call this script with the same inputs, so the
-# rule and the attempt cap live in one place and
+# instead of reporting. Both jobs call this script with the same attempt and
+# cap. notify passes every job it needs, and retry-on-failure passes only build
+# and publish, the only results `retry` reads. The rule and the attempt cap live
+# in one place, and
 # .github/tests/test_retry_decision.sh can test it offline.
 #
 # Usage: .github/retry-decision.sh <attempt> <cap> <job>=<result>...
-#   attempt   github.run_attempt, a whole number from 1.
+#   attempt   github.run_attempt, a whole number from 1, at most six digits.
 #   cap       the total number of attempts a run may have, a whole number from
-#             1. docker.yml passes its RETRY_CAP.
+#             1, at most six digits. docker.yml passes its RETRY_CAP.
 #   job=result  one entry per needed job, for example `build=failure`. The
 #             jobs a rerun can heal are `build` and `publish`.
 #

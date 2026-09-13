@@ -12,7 +12,7 @@
 #
 # The fixtures are job listings in the shape docker.yml's jobs produce: one
 # build leg per (variant, arch) named "build (<variant>, <arch>)", and the plain
-# jobs `publish`, `keepalive` and `notify` beside them.
+# jobs `publish` and `keepalive` beside them.
 #
 # Usage: bash .github/tests/test_ci_failure_issue.sh
 #

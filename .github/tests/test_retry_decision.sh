@@ -4,7 +4,7 @@
 #
 # Each case gives the script one attempt number, the cap of 3 that docker.yml
 # uses, and the results of the jobs `notify` needs, and asserts the exact two
-# lines it prints. Attempts 1 through 4 are driven for every result shape, so
+# lines it prints. Attempts 1 through 4 are driven for every named shape, so
 # an off-by-one at the cap and a rule that ignores the attempt are both caught.
 # Runs offline and calls nothing.
 #
@@ -47,8 +47,10 @@ reject() {
     fi
 }
 
-# The shapes docker.yml produces. A failed build leg fails `build` and skips
-# `publish`. A cancelled build leg cancels `build` and skips `publish`.
+# The shapes docker.yml produces. A failed build leg fails `build`; `publish`
+# then fails at its digest guard on main or in test mode, and is skipped on any
+# other ref, the shape used here. Both give the same decision. A cancelled
+# build leg cancels `build` and skips `publish`.
 BUILD_FAIL="build=failure publish=skipped keepalive=success"
 PUBLISH_FAIL="build=success publish=failure keepalive=success"
 KEEPALIVE_FAIL="build=success publish=success keepalive=failure"

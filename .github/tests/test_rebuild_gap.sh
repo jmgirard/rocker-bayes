@@ -284,8 +284,9 @@ assert_rc      "an empty last-success date exits 2" 2 "$rc"
 assert_no_gh   "  ... and calls no gh command"
 assert_out     "  ... naming argument 1 as missing" 'last success date \(argument 1\) is missing'
 
-# 13. An over-wide threshold is refused. `10#` on a 19- or 20-digit value wraps
-#     negative, which would read as a gap and raise a false alert every week.
+# 13. An over-wide threshold is refused. `10#` on a value of 19 or more digits
+#     can wrap negative, which would read as a gap and raise a false alert every
+#     week.
 for huge in 10000000 9999999999999999999 99999999999999999999999999999999; do
     rc=$(run_script 2026-01-01 2026-01-17 "$huge")
     assert_rc      "a ${#huge}-digit threshold exits 2" 2 "$rc"

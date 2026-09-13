@@ -3,9 +3,10 @@
 # Open, update, or close the repo's `ci-failure` issue from a scheduled run's
 # job results. Ported from jmgirard/rstudio2u. Two callers use it:
 #
-#   - the `notify` job in .github/workflows/docker.yml, on scheduled runs, so a
-#     failure anywhere in the run reaches the maintainer as an issue, and the
-#     next fully green scheduled run closes it;
+#   - the `notify` job in .github/workflows/docker.yml, on scheduled runs (and
+#     on a dispatch with its `notify` input set), so a failure anywhere in the
+#     run reaches the maintainer as an issue, and the next fully green run
+#     closes it;
 #   - .github/rebuild-gap.sh, which reports what no single run can see: that no
 #     scheduled run has succeeded in too long. It uses this same issue, because
 #     the next fully green scheduled run is the right close condition for both.
@@ -25,8 +26,9 @@
 #             by its variant rather than its own leg name, since a variant with
 #             two failed legs is one thing wrong. Every other failed job is
 #             named by its own job name. Omitted, empty, or unparseable means
-#             the issue falls back to generic text. A document that is present
-#             but names no failed job is warned about.
+#             the issue falls back to generic text. A document that parses but
+#             names no failed job is warned about when the result is a failure
+#             and no subject is given.
 #   subject   what the issue is about, as one sentence. Given, it replaces the
 #             "Weekly run failed: <jobs>" wording in the title and in the lead
 #             line of the body or comment. A caller reporting something other
@@ -166,7 +168,7 @@ case "$result" in
             echo "::warning::the run is reported failed but its job listing names no failed job; the issue falls back to generic text"
         fi
         gh label create "$LABEL" --force \
-            --description "Opened by the scheduled run when a job fails" \
+            --description "Opened when a scheduled run fails or no scheduled rebuild has succeeded lately" \
             --color B60205 >/dev/null
         list_open
         if [ ${#open[@]} -eq 0 ]; then

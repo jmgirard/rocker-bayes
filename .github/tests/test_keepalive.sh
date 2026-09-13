@@ -217,8 +217,8 @@ for bad in -1 5.5 fifty " " 50days x; do
     assert_out    "  ... naming argument 3 as not an integer" 'threshold in days \(argument 3\) is not a non-negative integer'
 done
 
-# 11. An over-wide threshold. `10#` on a 19- or 20-digit value wraps to a
-#     negative number, which would read as "the age is past it" and commit.
+# 11. An over-wide threshold. `10#` on a value of 19 or more digits can wrap to
+#     a negative number, which would read as "the age is past it" and commit.
 #     Each of these is refused at eight digits and more. The age is past 50
 #     days, so a wrap or a skipped check would commit.
 for huge in 10000000 9999999999999999999 99999999999999999999999999999999; do

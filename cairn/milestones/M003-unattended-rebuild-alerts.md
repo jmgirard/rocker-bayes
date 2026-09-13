@@ -1,6 +1,6 @@
 # M003: Unattended-rebuild alerts and schedule keepalive
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** M001, M002
 - **Driving RR:** —
@@ -154,6 +154,8 @@ M002. The Docker Hub description sync stays a candidate row.
 - 2026-09-13: T1 done by the user. `gh repo deploy-key list` shows `KEEPALIVE_DEPLOY_KEY` read-write, and `gh secret list` shows the secret set 2026-09-13. Status back to in-progress.
 - 2026-09-13: T9 done. Dispatch https://github.com/jmgirard/rocker-bayes/actions/runs/34770877387 on the branch (test_mode, notify, keepalive_threshold 0, key set): keepalive logged a tip dated 2026-09-12, committed at age 1, and pushed `d19bc56..b444cd2 main -> main` over `git@github.com`. b444cd2 is empty and authored by github-actions[bot]. All four legs, publish, notify, and retry-on-failure succeeded, and notify closed #9. The no-key case is the 2026-09-12 run above. `grep -c 'contents: write' .github/workflows/docker.yml` prints 0.
 - 2026-09-13: merged origin/main (the empty b444cd2 only) into the branch. Verify: hadolint 2.12.0 (container image) on Dockerfile exits 0. The Dockerfile is unchanged since T10's local build, and the run above built all four legs. The four suites pass locally.
+- claim audit: 160 claims read, 15 corrected — .github/ci-failure-issue.sh, .github/date-lib.sh, .github/keepalive.sh, .github/rebuild-gap.sh, .github/retry-decision.sh, .github/workflows/docker.yml, .github/workflows/rebuild-gap.yml, .github/tests/test_ci_failure_issue.sh, .github/tests/test_keepalive.sh, .github/tests/test_rebuild_gap.sh, .github/tests/test_retry_decision.sh
+- 2026-09-13: [O] claim-audit reader, fresh context. Edits are prose only: comments, the `ci-failure` label description, and two dispatch-input descriptions. After them the five suites pass and actionlint 1.7.7 is clean. Status set to review.
 
 ## Decisions
 

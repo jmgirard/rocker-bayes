@@ -14,14 +14,15 @@
 # Usage: .github/keepalive.sh <commit-date> <current-date> <threshold-days>
 #   commit-date     YYYY-MM-DD; the date of the branch's newest commit.
 #   current-date    YYYY-MM-DD; today, in UTC.
-#   threshold-days  a non-negative integer of at most seven digits; the age at
-#                   which a commit is made.
+#   threshold-days  a non-negative integer of at most seven digits once leading
+#                   zeros are dropped; the age at which a commit is made.
 #
 # The branch needs a commit when current-date minus commit-date is
 # threshold-days or more. Then the script makes exactly two git calls: an empty
 # commit, then a push. Otherwise it makes no git call, prints a line saying so,
 # and exits 0. Every argument is validated before the dates are compared. A
-# rejection names the argument it rejected, exits 2, and makes no git call.
+# rejection names the argument it rejected (a fourth argument is refused by
+# count), exits 2, and makes no git call.
 # The validation lives in .github/date-lib.sh, shared with
 # .github/rebuild-gap.sh.
 #

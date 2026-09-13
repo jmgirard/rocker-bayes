@@ -76,11 +76,12 @@ parse_date() {
 # Validate a threshold in days and echo it with its leading zeros stripped. An
 # all-zero threshold collapses to a single 0.
 #
-# A threshold of more than seven digits is refused. Shell arithmetic is 64-bit,
-# so `10#` on a 19- or 20-digit value wraps to a negative number and would
-# invert the caller's comparison. The widest gap two YYYY-MM-DD dates can have
-# is `days_from_civil 9999 12 31` minus `days_from_civil 0000 01 01`, which is
-# seven digits, so no threshold wider than that can mean anything.
+# A threshold of more than seven digits (leading zeros aside) is refused. Shell
+# arithmetic is 64-bit, so `10#` on a value of 19 or more digits can wrap, often
+# to a negative number, which would invert the caller's comparison. The widest
+# gap two YYYY-MM-DD dates can have is `days_from_civil 9999 12 31` minus
+# `days_from_civil 0000 01 01`, which is seven digits, so no threshold wider
+# than that can mean anything.
 parse_threshold() {
     local label="$1" value="$2" stripped
     [ -n "$value" ] || die "$label is missing; expected a non-negative integer"

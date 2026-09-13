@@ -20,7 +20,7 @@ on:
         type: boolean
         default: false
       keepalive_threshold:
-        description: "How many days of quiet on the default branch make the keepalive job push an empty commit. Set 0 to commit on this run whatever the branch's age. .github/keepalive.sh refuses a value that is not a whole number of at most seven digits, which fails the keepalive job. The scheduled run has no inputs and uses the fallback of 50 in the keepalive job."
+        description: "How many days of quiet on the default branch make the keepalive job push an empty commit. Set 0 to commit on this run whatever the branch's age. .github/keepalive.sh refuses a value that is not a whole number of at most seven digits once leading zeros are dropped, which fails the keepalive job. The scheduled run has no inputs and uses the fallback of 50 in the keepalive job."
         type: string
         default: "50"
       notify:

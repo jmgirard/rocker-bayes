@@ -20,8 +20,9 @@
 #                      the alert with its own wording, so the issue never
 #                      claims a measured gap it does not have.
 #   current-date       YYYY-MM-DD; today, in UTC.
-#   threshold-days     a non-negative integer of at most seven digits; the
-#                      largest gap that is not yet an alert.
+#   threshold-days     a non-negative integer of at most seven digits once
+#                      leading zeros are dropped; the largest gap that is not
+#                      yet an alert.
 # Env: RUN_URL   link to this check's run, put in the issue body. When it is
 #                missing, a stand-in line is used and the alert still goes out.
 #      GH_TOKEN  (or a logged-in `gh`) with issues:write, for the issue.
@@ -32,8 +33,9 @@
 # run opens, because the next fully green scheduled run closes both. No gap
 # means no call to anything, a line saying so, and exit 0. Every argument is
 # validated before the dates are compared. A rejection names the argument it
-# rejected, exits 2, and raises nothing. The validation lives in
-# .github/date-lib.sh, shared with .github/keepalive.sh.
+# rejected (a fourth argument is refused by count), exits 2, and raises
+# nothing. The validation lives in .github/date-lib.sh, shared with
+# .github/keepalive.sh.
 #
 set -euo pipefail
 
