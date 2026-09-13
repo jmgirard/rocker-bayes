@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M005: Superseded CI runs stop acting
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** high   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** M004   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -138,7 +138,7 @@ records the rule and its exception to GP2.
 - [x] T6: Update the Conventions and Architecture sections of
       `cairn/DESIGN.md`: the freshness rule and its GP2 exception, the pull
       request concurrency groups, and the fifth suite.
-- [ ] T7: (review O1) Make the `fresh` step find the default branch without
+- [x] T7: (review O1) Make the `fresh` step find the default branch without
       `github.event.repository`, which scheduled runs may lack, for example
       with `git ls-remote --symref origin HEAD`. Refuse an empty branch
       argument in `fresh` with an `::error::`, and add a suite case for it.
@@ -169,6 +169,10 @@ records the rule and its exception to GP2.
 - 2026-09-13: three-lens review returned 8 [O] findings and no [S] conflicts. O1 (empty default branch on scheduled runs) is unconfirmed and put to the gate.
 - 2026-09-13: review returned to in-progress (defect return 1). The user judged review O1 a load-bearing defect: if scheduled runs carry no `github.event.repository`, `fresh` exits 1 on every weekly publish. Logged as T7.
 - 2026-09-13: T7 code in. The `fresh` step reads the default branch from `git ls-remote --symref origin HEAD`, and `fresh` prints `::error::` and exits 1 on an empty branch name. The new suite case failed first on bash's usage message. Suite 31/31 on bash 3.2 and on bash 5.2 in a container with no git identity. Shellcheck 0.11.0 `-S info` and actionlint 1.7.12 report nothing. The dispatch is next.
+- claim audit: 75 claims read, 1 corrected — .github/workflows/docker.yml
+- 2026-09-13: the correction was the new `fresh` step comment. It said a failed lookup leaves the name empty. The step runs under bash `-e` with `pipefail`, so a failed `ls-remote` ends the step with git's error, and only a missing symref line reaches `fresh` with an empty name. The reader re-read the new wording and found it accurate.
+- 2026-09-13: T7 done. Dispatch 34781490836 (`test_mode`, head `17c784b`) concluded `success`: four legs, keepalive, and publish passed, and notify was skipped. The lookup resolved `main`: the publish log printed `stale: the tip of main (492dbfc…)` and a warning naming it, and "Attach the tags" printed its no-tag line. The only later change is the corrected comment.
+- 2026-09-13: implement complete, status `review`.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

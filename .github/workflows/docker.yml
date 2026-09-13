@@ -297,8 +297,10 @@ jobs:
       # branch that edits one of the compared paths reads as stale.
       #
       # The default branch is read from the remote's HEAD, not from
-      # github.event.repository, which scheduled runs may not carry. A failed
-      # lookup leaves the name empty, and fresh fails the job on an empty name.
+      # github.event.repository, which scheduled runs may not carry. If
+      # ls-remote fails, the step's default -e ends it at the lookup and the
+      # job fails with git's own error. If the output has no symref line, the
+      # name is empty and fresh fails the job with an ::error:: line.
       - name: Check that the default branch has not changed the recipe
         id: fresh
         run: |
