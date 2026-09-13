@@ -175,6 +175,7 @@ records the rule and its exception to GP2.
 - 2026-09-13: implement complete, status `review`.
 - 2026-09-13: review pass 2 started at `cfd51f8`. All seven criteria have fresh evidence and the consistency gate passed. The three-lens review is running.
 - 2026-09-13: pass-2 three-lens review returned 4 [O] findings (2 low, 2 info) and no [S] conflicts. None shows a criterion failing, so they go to the gate for triage.
+- step-7 approval: m005-superseded-runs approved for merge
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
@@ -249,3 +250,10 @@ Independent review, pass 2 (three lenses, 2026-09-13). Dispositions are set at t
 - [O] lookup checked on push, schedule, dispatch, and rebuild-retry reruns, public-repo authentication, and protocol v0 and v2 output: no defect. No scheduled run of the new workflow exists yet.
 - [S] blame lens: no conflict with past intent. It repeats the pass-1 note that a failure in the new step is not retried, which matches M004.
 - [S] prior-review lens: no reintroduced or contradicted finding. The `gh` probe returned no PR review comments.
+
+Gate dispositions, pass 2 (2026-09-13):
+
+- Q1, Q3, Q4: follow-up, absorbed into the ROADMAP row "Publish guard hardening from M005 review".
+- Q2: rejected, because it applies only to reruns in the retry window around this merge.
+- Blame lens note on retry: noted, no action.
+- Prior-review lens: no findings.
