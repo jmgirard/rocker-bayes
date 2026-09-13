@@ -238,3 +238,13 @@ Consistency gate (pass 2):
 - `cairn_impact.py --changed` lists GP2 references only in this milestone file. No principle text changed.
 - `hadolint Dockerfile` exits 0 with no output. The branch changes no `Dockerfile` or build-context file, so no local `docker build` ran. Dispatch 34781490836 built all four legs green at `17c784b`.
 - Base image, secrets, `.dockerignore`, and changelog: unchanged from pass 1.
+
+Independent review, pass 2 (three lenses, 2026-09-13). Dispositions are set at the step-7 gate.
+
+- [O] Q1 (low): `docker.yml:308`: a failed `ls-remote` fails the job with git's own error and no `::error::` annotation, and the inline lookup has no unit test. A transient 5xx on a weekly run leaves the tags in place until someone reads the log.
+- [O] Q2 (low): a rerun of a run whose commit predates the merge uses that commit's `docker.yml`, which has no freshness check. This is possible only in the retry window around the merge, and only if a recipe-changing push lands inside it.
+- [O] Q3 (info): `docker.yml:388`, outside this diff: the keepalive checkout still reads `github.event.repository.default_branch`. An empty value falls back to `github.ref`, which is the default branch on a scheduled run.
+- [O] Q4 (info): `docker.yml:307`: the lookup relies on the runner's default `bash -e`. A later `shell: bash {0}` turns a failed lookup into the misleading "no branch name" error. The comment documents the dependence.
+- [O] lookup checked on push, schedule, dispatch, and rebuild-retry reruns, public-repo authentication, and protocol v0 and v2 output: no defect. No scheduled run of the new workflow exists yet.
+- [S] blame lens: no conflict with past intent. It repeats the pass-1 note that a failure in the new step is not retried, which matches M004.
+- [S] prior-review lens: no reintroduced or contradicted finding. The `gh` probe returned no PR review comments.
