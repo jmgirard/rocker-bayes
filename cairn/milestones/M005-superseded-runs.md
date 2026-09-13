@@ -168,6 +168,7 @@ records the rule and its exception to GP2.
 - 2026-09-13: review started. All seven criteria have fresh evidence and the consistency gate passed. The three-lens review is running.
 - 2026-09-13: three-lens review returned 8 [O] findings and no [S] conflicts. O1 (empty default branch on scheduled runs) is unconfirmed and put to the gate.
 - 2026-09-13: review returned to in-progress (defect return 1). The user judged review O1 a load-bearing defect: if scheduled runs carry no `github.event.repository`, `fresh` exits 1 on every weekly publish. Logged as T7.
+- 2026-09-13: T7 code in. The `fresh` step reads the default branch from `git ls-remote --symref origin HEAD`, and `fresh` prints `::error::` and exits 1 on an empty branch name. The new suite case failed first on bash's usage message. Suite 31/31 on bash 3.2 and on bash 5.2 in a container with no git identity. Shellcheck 0.11.0 `-S info` and actionlint 1.7.12 report nothing. The dispatch is next.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

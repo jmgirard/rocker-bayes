@@ -314,6 +314,13 @@ d="$(new_case unreachable)"; run_clone "$d"
 git -C "$d/run" remote set-url origin "file://$d/missing.git"
 check_fresh "fresh: an unreachable remote is a fetch failure" 2 "could not fetch" "$d"
 
+# Error: an empty branch name, as the workflow step would pass if its lookup of
+# the default branch came back empty. It must not fetch an empty ref name.
+d="$(new_case empty-branch)"; run_clone "$d"
+sha="$(git -C "$d/run" rev-parse HEAD)"
+CHECK_DIR="$d/run" check "fresh: an empty branch name is an error" 1 "::error::no branch name" \
+  fresh "$DOCKER_YML" "$sha" origin ""
+
 # --- summary -----------------------------------------------------------------
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

@@ -32,8 +32,9 @@
 #       does, and 2 when the fetch fails.
 #
 # digests and manifest print a GitHub Actions ::error:: line and exit 1 on
-# failure. paths and fresh do the same on a read error. A missing argument
-# prints bash's own usage message and exits 1.
+# failure. paths and fresh do the same on a read error, and fresh does the
+# same on an empty or missing branch name. Any other missing argument prints
+# bash's own usage message and exits 1.
 #
 set -euo pipefail
 
@@ -125,7 +126,11 @@ cmd_paths() {
 
 cmd_fresh() {
   local usage="usage: publish-guard.sh fresh <workflow-file> <run-sha> <remote> <branch>"
-  local file="${1:?$usage}" run_sha="${2:?$usage}" remote="${3:?$usage}" branch="${4:?$usage}"
+  local file="${1:?$usage}" run_sha="${2:?$usage}" remote="${3:?$usage}" branch="${4-}"
+
+  # The workflow looks the branch name up at run time, so an empty name is a
+  # failed lookup, not a typo. Report it as the job's error line.
+  [ -n "$branch" ] || die "no branch name was given, so there is no default-branch tip to compare with and no tag was attached"
 
   # The assignment would end the script under set -e with the ::error:: line
   # captured and never printed, so print it before exiting.

@@ -295,12 +295,15 @@ jobs:
       # .github/publish-guard.sh, tested by .github/tests/test_publish_guard.sh.
       # It runs in test mode too, so a branch dispatch shows its verdict. A
       # branch that edits one of the compared paths reads as stale.
+      #
+      # The default branch is read from the remote's HEAD, not from
+      # github.event.repository, which scheduled runs may not carry. A failed
+      # lookup leaves the name empty, and fresh fails the job on an empty name.
       - name: Check that the default branch has not changed the recipe
         id: fresh
-        env:
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           set -uo pipefail
+          DEFAULT_BRANCH=$(git ls-remote --symref origin HEAD | sed -n 's|^ref: refs/heads/\([^[:space:]]*\)[[:space:]]*HEAD$|\1|p')
           status=0
           out=$(bash ./.github/publish-guard.sh fresh .github/workflows/docker.yml "$GITHUB_SHA" origin "$DEFAULT_BRANCH") || status=$?
           echo "$out"
