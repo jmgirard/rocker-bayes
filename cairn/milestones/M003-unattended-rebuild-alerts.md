@@ -90,7 +90,7 @@ M002. The Docker Hub description sync stays a candidate row.
 
 ## Tasks
 
-- [ ] T1: Create a write-enabled deploy key on the repository and store it as
+- [x] T1: Create a write-enabled deploy key on the repository and store it as
       the `KEEPALIVE_DEPLOY_KEY` secret. This task is the user's to run, and
       the rest of the milestone does not wait on it.
 - [x] T2: Port `.github/ci-failure-issue.sh` and its suite. Adjust the job-name
@@ -114,7 +114,7 @@ M002. The Docker Hub description sync stays a candidate row.
       `retry-on-failure` to read the script. Drive one forced keepalive
       failure in test mode, and repeat the run if a build or publish job
       fails. Record the run and issue URLs.
-- [ ] T9: Add the `keepalive` job to `docker.yml` with two `actions/checkout`
+- [x] T9: Add the `keepalive` job to `docker.yml` with two `actions/checkout`
       steps. One takes the workflow's own ref for the script. One takes the
       default branch for the write.
       Keep the job's permissions read-only. Record the accepted exposure: a
@@ -151,6 +151,9 @@ M002. The Docker Hub description sync stays a candidate row.
 - 2026-09-12: T9 (partial), AC6's no-key case: in that same run keepalive committed at age 0, then `git push` failed with "Permission to jmgirard/rocker-bayes.git denied to github-actions[bot]" and HTTP 403, exit 128. `grep -c 'contents: write' .github/workflows/docker.yml` prints 0, and the three `contents:` lines all read `read`.
 - 2026-09-12: T10 done. DESIGN gains a Function Families entry and two Conventions bullets. Verify slot: `hadolint Dockerfile` (hadolint 2.12.0) exits 0, and `docker build` from a `git archive HEAD` context succeeds.
 - 2026-09-12: blocked on T1, the user's task: create a write-enabled deploy key and store its private half as the `KEEPALIVE_DEPLOY_KEY` secret. AC6's landing dispatch (threshold 0) waits on it.
+- 2026-09-13: T1 done by the user. `gh repo deploy-key list` shows `KEEPALIVE_DEPLOY_KEY` read-write, and `gh secret list` shows the secret set 2026-09-13. Status back to in-progress.
+- 2026-09-13: T9 done. Dispatch https://github.com/jmgirard/rocker-bayes/actions/runs/34770877387 on the branch (test_mode, notify, keepalive_threshold 0, key set): keepalive logged a tip dated 2026-09-12, committed at age 1, and pushed `d19bc56..b444cd2 main -> main` over `git@github.com`. b444cd2 is empty and authored by github-actions[bot]. All four legs, publish, notify, and retry-on-failure succeeded, and notify closed #9. The no-key case is the 2026-09-12 run above. `grep -c 'contents: write' .github/workflows/docker.yml` prints 0.
+- 2026-09-13: merged origin/main (the empty b444cd2 only) into the branch. Verify: hadolint 2.12.0 (container image) on Dockerfile exits 0. The Dockerfile is unchanged since T10's local build, and the run above built all four legs. The four suites pass locally.
 
 ## Decisions
 
