@@ -34,7 +34,7 @@ side effects of `notify` stay in their existing candidate rows.
 
 ## Acceptance criteria
 
-- [ ] AC1: `.github/tests/test_retry_decision.sh` shows
+- [x] AC1: `.github/tests/test_retry_decision.sh` shows
       `.github/retry-decision.sh` returning a rerun decision when six
       conditions hold. (1) The run's event is `schedule`. (2) Its attempt is 1.
       (3) Its conclusion is `failure`. (4) At least one build leg failed.
@@ -54,7 +54,7 @@ side effects of `notify` stay in their existing candidate rows.
       failed `Set up job` step, a failed `Post` step, a qualifying leg beside a
       leg whose log lacks the line, and a failed `keepalive` and a failed
       `notify`, each beside a qualifying leg.
-- [ ] AC2: If the event, attempt, and conclusion checks pass, the script reads
+- [x] AC2: If the event, attempt, and conclusion checks pass, the script reads
       the jobs listing and each failed build leg's log with `gh`. If those
       checks fail, the script makes no `gh` call. On a rerun decision, it calls
       `gh run rerun <run-id> --failed` exactly once for the run it received.
@@ -65,14 +65,14 @@ side effects of `notify` stay in their existing candidate rows.
       the rerun case, each no-rerun case in AC1, `gh` exiting non-zero on the
       listing and on a log, a zero-byte listing, an unparseable listing, and
       `gh run rerun` exiting non-zero.
-- [ ] AC3: At the review commit, `.github/workflows/rebuild-retry.yml` has
+- [x] AC3: At the review commit, `.github/workflows/rebuild-retry.yml` has
       `workflow_run` with `types: [completed]` as its only trigger. Its
       `workflows:` entry equals the `name:` value of `docker.yml`, shown by
       extracting both with grep and comparing them. Its top-level
       `permissions:` block grants only `actions: write` and `contents: read`.
       Its step passes `github.event.workflow_run.id`, `event`, `run_attempt`,
       and `conclusion` to `.github/retry-decision.sh`.
-- [ ] AC4: A rerun of only the failed jobs assembles and checks both manifest
+- [x] AC4: A rerun of only the failed jobs assembles and checks both manifest
       lists through the existing gates. The drill is a branch
       `workflow_dispatch` run with `test_mode=true`. In it, a temporary step
       placed before the build step fails the noble amd64 leg on attempt 1,
@@ -82,7 +82,7 @@ side effects of `notify` stay in their existing candidate rows.
       attempt 2, the four-digest guard of the `publish` job and both
       manifest-list checks pass. The temporary step is absent from the branch
       at the review commit.
-- [ ] AC5: The retry comment in `scripts/install_bayes.sh` names
+- [x] AC5: The retry comment in `scripts/install_bayes.sh` names
       `rebuild-retry.yml` and its rule of one rerun for scheduled runs only.
       `git grep -n retry-on-failure -- ':!cairn/'` returns no hit. In
       DESIGN.md, the Unattended-rebuild alerts entry names `rebuild-retry.yml`
@@ -154,3 +154,22 @@ side effects of `notify` stay in their existing candidate rows.
 ## Decisions
 
 ## Review
+
+Review run 2026-09-13 on `m004-weekly-leg-retry` at e276ecc. The `main` branch did not move after the branch was cut at faf75d7.
+
+- AC1: `bash .github/tests/test_retry_decision.sh` exits 0 and prints "PASS: all retry-decision assertions". It reads 9 build and 9 publish step names from docker.yml. An independent awk count of `- name:` lines gives the same 9 and 9. The rerun cases are one qualifying leg for each of the four legs, and two legs. Each no-rerun case asserts a `no rerun:` line that names the condition. The no-rerun cases are push, attempt 2, success, cancelled, timed_out, no failed job, and a cancelled leg. They also include the 8 other build steps and the 8 other publish steps. The last are `Set up job`, a `Post` step, a leg log without the line, and a failed keepalive or notify beside a qualifying leg. On a copy of the script without the log check, the suite exits 1 (3 failed assertions). It also exits 1 without the attempt check (4), the publish-step check (17), or the build-step check (21).
+- AC2: The same suite run asserts the stubbed `gh` call log and the exit status. For push, attempt 2, success, cancelled, and timed_out, it asserts exit 0 and an empty call log. Each rerun case asserts exit 0, a `run view 555 --attempt 1 --json jobs` call, and the log call for each failed leg. It also asserts exactly one `run rerun 555 --failed` call. Each other no-rerun case in AC1 asserts exit 0 and no `run rerun` call. These inputs each assert a non-zero exit and no rerun call: `gh` failing on the listing, `gh` failing on a log, a zero-byte listing, and an unparseable listing. For `gh run rerun` exiting non-zero, the suite asserts a non-zero exit after one rerun call. On a script copy without the event check, the suite exits 1 (4 failed assertions). On a copy that calls the rerun twice, it exits 1 (7).
+- AC3: At e276ecc, the `on:` block of `rebuild-retry.yml` holds one key, `workflow_run`, with `types: [completed]`. The grep-extracted `workflows:` entry and the grep-extracted `name:` of docker.yml compare equal as "Build and push Docker images". The top-level `permissions:` block holds `actions: write` and `contents: read` and nothing else. The step env passes `github.event.workflow_run.id`, `.event`, `.run_attempt`, and `.conclusion` as the four arguments of `.github/retry-decision.sh`.
+- AC4: Read again with `gh` at review. Run 34775210635 is a `workflow_dispatch` run on `m004-weekly-leg-retry` at 4aa3c36, and its publish log shows `TEST_MODE: true`. At 4aa3c36, the step `Drill failure on attempt 1` sits before the build step, with `if: github.run_attempt == 1 && matrix.variant == 'noble' && matrix.arch == 'amd64'`. Attempt 1: `build (noble, amd64)` failed at the drill step, and publish failed at `Require all four verified digests`. In attempt 2, only `build (noble, amd64)` has a new start time (18:45:27Z). The other three legs and keepalive keep their attempt-1 start times of 18:37Z. In attempt 2, publish job 103773956618 passed every step. Its log prints "found all 4 verified digests" and a "names both architectures: amd64 arm64" line for noble and for resolute. `git grep -n -i drill HEAD -- .github/workflows/docker.yml` returns no hit.
+- AC5: The retry comment at `scripts/install_bayes.sh:11-20` names `.github/workflows/rebuild-retry.yml`. It says a scheduled rebuild gets its failed jobs rerun once, and that push builds, dispatch builds, and a second attempt are not rerun. `git grep -n retry-on-failure -- ':!cairn/'` exits 1 with no output. In DESIGN.md, the Unattended-rebuild alerts entry names `rebuild-retry.yml` and `retry-decision.sh`. The Pre-merge checks entry says "four suites" and names `test_retry_decision.sh`. The new convention "A weekly rebuild that failed on the r2u mirror is rerun once" states one rerun, scheduled runs only, and the mirror symptom. It also states the 1-day limit, which matches `retention-days: 1` at docker.yml:172.
+- AC6 (first half): The `script-tests` job in `pr-ci.yml` runs `bash ./.github/tests/test_retry_decision.sh` as its fourth line. The `pr-ci.yml` paths filter admits `.github/*.sh`, `.github/tests/**`, and `.github/workflows/**`. The `lint.yml` filter admits `**.sh`. Both workflows therefore start on this pull request. The second half (both runs pass on the milestone PR) needs the PR, which opens only after merge approval. The box stays open until the CI wait before the merge shows both runs green.
+
+Consistency gate:
+
+- `cairn_validate.py` exits 0, and every check reads PASS or OK.
+- No DESIGN.md principle changed, so `cairn_impact.py` does not apply.
+- `docker build -t rocker-bayes:dev .` exits 0. `hadolint Dockerfile` (hadolint/hadolint image) exits 0 with no output.
+- The base image is `jmgirard/rstudio2u:${BASE_TAG}` with `BASE_TAG=noble`, a named tag and not `latest`. This line did not change in the milestone.
+- No `ENV`, `ARG`, or `COPY` line in the Dockerfile holds a credential. `.dockerignore` exists and excludes `.git`, `.github`, and `cairn`.
+- The changelog slot is none, so no entry is due.
+- Extra local checks: all five `.github/tests/` suites exit 0. Shellcheck 0.11.0 `-x -S info` over every tracked `*.sh` and `*.command` exits 0. actionlint 1.7.12 over all workflows exits 0.
