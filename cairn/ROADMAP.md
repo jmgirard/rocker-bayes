@@ -9,13 +9,14 @@ _Last hygiene check: 2026-09-13 (M003 done and archived, retry row promoted, 3 c
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
+| M004 | Rerun a weekly build that failed on the r2u mirror | planned | M003 | high | milestones/M004-weekly-leg-retry.md |
 | M003 | Unattended-rebuild alerts and schedule keepalive | done | M001, M002 | normal | milestones/archive/M003-unattended-rebuild-alerts.md |
 | M002 | Pre-merge CI lane and lint | done | M001 | normal | milestones/archive/M002-pre-merge-ci-lane.md |
 | M001 | Smoke-test gate before any tag moves | done | — | high | milestones/archive/M001-smoke-test-publish-gate.md |
 
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
-- [high] Promote to the next milestone (disposition chosen 2026-09-13): a retry for a failed weekly build leg. M003 removed `retry-on-failure`, because GitHub refuses a rerun requested from inside the same run. A `workflow_run` workflow can rerun failed jobs after the run ends, but it starts only from the default branch's copy, so it cannot be tested before merge. Scope it to mirror symptoms, because `no-cache` makes a deterministic failure rebuild all four legs. `scripts/install_bayes.sh:13-16` still says a leg fails fast so that job can rerun it, and its in-script retry is 2 tries 20 s apart — added 2026-09-12 — M001 review F2, M003 review O1, N1
+- [high] After M004 merges, check the live retry on the first scheduled run that fails on the r2u mirror: `rebuild-retry.yml` starts, reruns only the failed jobs, and a green attempt 2 closes the ci-failure issue. No run before merge can show this, because `workflow_run` starts only from the default branch's copy. Promote to a hotfix if a qualifying scheduled failure starts no retry run — added 2026-09-13 — M004 plan gate
 - [high] Smoke phase 2 cannot tell a fresh bspm fetch from a package the image already carries: it asserts `library()` plus `dpkg -s`, never that the package arrived this run. Assert absence before installing. Relatedly, the compile control fails at stanc parse time, so no control covers a broken C++ toolchain — added 2026-09-12 — M001 review F3, F12
 - [high] No workflow runs `.github/tests/test_publish_guard.sh`, and `.github/tests/**` is absent from the push paths filter, so the guard can drift from what `docker.yml` calls it with. M002 lints shell files and M003 runs the three ported suites, so neither covers it — added 2026-09-12 — M001 review F8, M003 review N5
 - [high] `scripts/install_bayes.sh` still builds the `install_cmdstan()` call by interpolating `CMDSTAN_VERSION` into R source. The M002 quoting fix stops whitespace from splitting it, but a value carrying a double quote still rewrites the call. Read it with `Sys.getenv()` instead, the convention `smoke-test.sh` already follows — added 2026-09-12 — M002 review
