@@ -182,7 +182,7 @@ new_case() {
   mkdir -p "$d/author"
   git init -q --bare "$d/remote.git"
   (
-    cd "$d/author"
+    cd "$d/author" || exit 1
     git init -q
     G symbolic-ref HEAD refs/heads/main
     mkdir -p scripts/lib .github/workflows .github/smoke-fixtures
@@ -249,7 +249,7 @@ check_fresh "fresh: near-miss names outside the filter" 0 "fresh:" "$d"
 d="$(new_case revert)"; run_clone "$d"
 author "$d" sh -c 'echo changed > scripts/install_bayes.sh'
 author "$d" G commit -q -am change
-author "$d" sh -c 'echo install > scripts/install_bayes.sh'
+author "$d" sh -c 'echo "echo install" > scripts/install_bayes.sh'
 author "$d" G commit -q -am revert; publish "$d"
 check_fresh "fresh: a change and its revert" 0 "fresh:" "$d"
 

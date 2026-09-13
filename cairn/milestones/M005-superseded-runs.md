@@ -113,7 +113,7 @@ records the rule and its exception to GP2.
       every commit, because CI runners have no git identity. Add the AC1 list
       case and the AC2 cases, each asserting its exit status. See each new
       case fail before T2.
-- [ ] T2: Add `.dockerignore` to the push `paths` filter in
+- [x] T2: Add `.dockerignore` to the push `paths` filter in
       `.github/workflows/docker.yml`, so the AC1 list matches. Add
       `paths <workflow-file>` and
       `fresh <workflow-file> <run-sha> <remote> <branch>` to
@@ -151,6 +151,7 @@ records the rule and its exception to GP2.
 - 2026-09-13: criteria re-audit after the gate (full mode, second fresh [O] reader) returned 7 findings, all fixed in place. AC4 accepts a first-push run that finished before the second push. AC2 adds depth-1 `file://` fetches, near-miss names, and renames into and out of the filter. AC1 names a `paths` subcommand. AC3 verifies the green and red publish outcomes by reading the code. `.dockerignore` moved to T2. AC5 names the second push's run. Scope says "normally".
 - 2026-09-13: implement started on branch `m005-superseded-runs`; no question gate, since the plan left nothing open.
 - 2026-09-13: T1 done. `test_publish_guard.sh` gained the `paths` case, a no-filter case, and 15 `fresh` cases over depth-1 `file://` clones. All 16 new cases fail on the missing subcommand before T2; the 14 old cases pass.
+- 2026-09-13: T2 done. `publish-guard.sh` gained `paths` and `fresh` (exit 0 fresh, 3 stale, 2 fetch failure, 1 other error), and `.dockerignore` joined the push filter. Suite 30/30 on bash 3.2 and on bash 5.2 in a container with no git identity; shellcheck 0.11.0 `-S info` clean. The test's own revert case first wrote the wrong content and was fixed. Plants in scratch copies: dropping the exit 3 turned 8 refuse cases red, a modify-only diff filter turned 5 red, and reading comments as list ends turned the `paths` case and 6 refuse cases red. Dropping the `:(top,glob)` magic turned nothing red, because git's default pathspec matches the current filter's entries the same way.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "Dockerfile"
+      # It decides what enters the build context.
+      - ".dockerignore"
       - "scripts/**"
       - ".github/workflows/docker.yml"
       - ".github/smoke-test.sh"
