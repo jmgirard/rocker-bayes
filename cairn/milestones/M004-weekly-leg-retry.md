@@ -150,6 +150,8 @@ side effects of `notify` stay in their existing candidate rows.
 - 2026-09-13: delegated the claim audit to a fresh [O] reader (read-only); its 7 corrections were applied by the author and re-read once by the same reader, all holding.
 - claim audit: 32 claims read, 7 corrected — .github/retry-decision.sh, .github/tests/test_retry_decision.sh, .github/workflows/pr-ci.yml, .github/workflows/rebuild-retry.yml
 - 2026-09-13: status set to review. Open for review: the `script-tests` job name still reads "alert and keepalive script suites" (kept so a required-check name cannot break); `test_publish_guard.sh` is still unrun in CI, already a candidate row.
+- 2026-09-13: review gate: user accepted the finding dispositions. O6 fixed with three suite cases, O1 added as a candidate row, O2 and O7 added to existing rows, O3, O4, O5, and O8 rejected.
+- step-7 approval: m004-weekly-leg-retry approved for merge
 
 ## Decisions
 
@@ -187,3 +189,4 @@ Independent review (user-facing tier, three lenses). Proposed dispositions go to
 - O7 [O]: A failed retry job raises no issue comment, so the open issue does not say that the retry failed. Proposed: follow-up, added to the existing quiet-alerts candidate row.
 - O8 [O]: The `script-tests` job name still reads "alert and keepalive script suites". Proposed: reject, because the name stays so a required-check name cannot break.
 - No finding shows an acceptance criterion failing, so status stays `review`.
+- Gate 2026-09-13: the user accepted every proposed disposition above. O6 fix: the suite adds the three cases and prints 149 lines, and it exits 0. On a script copy without each of the three decline checks, the suite exits 1 on that case. Shellcheck 0.11.0 `-x -S info` on the suite exits 0. O1 is a new candidate row. O2 is added to the live-retry row, and O7 to the quiet-alerts row.

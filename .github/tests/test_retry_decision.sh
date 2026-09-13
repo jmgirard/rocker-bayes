@@ -344,6 +344,26 @@ for jname in keepalive notify; do
     no_rerun "$rc" "a failed $jname beside a qualifying leg" "$jname"
 done
 
+# Publish failed at the digest guard while all four legs are green.
+reset_markers; std_listing ""
+rc=$(run_script schedule 1 failure)
+no_rerun "$rc" "publish failed at the digest guard with no failed leg" 'no build leg failed'
+
+# A leg concluded failure, but none of its steps did.
+reset_markers
+listing "$(leg noble amd64 failure '')" "$(leg noble arm64 success)" \
+    "$(leg resolute amd64 success)" "$(leg resolute arm64 success)" \
+    "$(publish_job failure 'Require all four verified digests')" "$GREEN_KEEPALIVE" "$GREEN_NOTIFY"
+jq '(.jobs[] | select(.name == "build (noble, amd64)") | .steps[]).conclusion = "success"' \
+    "$WORK/jobs.json" > "$WORK/jobs.tmp" && mv "$WORK/jobs.tmp" "$WORK/jobs.json"
+rc=$(run_script schedule 1 failure)
+no_rerun "$rc" "a build leg failed with no failed step" 'build \(noble, amd64\).*no failed step'
+
+# Publish concluded failure, but none of its steps did, beside a qualifying leg.
+reset_markers; std_listing "noble amd64" failure ""
+rc=$(run_script schedule 1 failure)
+no_rerun "$rc" "publish failed with no failed step" 'publish failed with no failed step'
+
 # --- gh failures: non-zero exit, and never a rerun -------------------------
 
 reset_markers; std_listing "noble amd64"; : > "$WORK/view.fail"
