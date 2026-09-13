@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-13 (status audit: checks and byte budgets clean, no open issues or PRs, no outside merges, 3 finding-absorbing candidate rows put to triage)_
+_Last hygiene check: 2026-09-13 (M005 done: archived, 2 absorbed candidate rows removed and 1 trimmed, M002 row pruned, caps and byte budgets clean)_
 
 ## Milestones
 
@@ -9,17 +9,15 @@ _Last hygiene check: 2026-09-13 (status audit: checks and byte budgets clean, no
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M005 | Superseded CI runs stop acting | review | M004 | high | milestones/M005-superseded-runs.md |
+| M005 | Superseded CI runs stop acting | done | M004 | high | milestones/archive/M005-superseded-runs.md |
 | M004 | Rerun a weekly build that failed on the r2u mirror | done | M003 | high | milestones/archive/M004-weekly-leg-retry.md |
 | M003 | Unattended-rebuild alerts and schedule keepalive | done | M001, M002 | normal | milestones/archive/M003-unattended-rebuild-alerts.md |
-| M002 | Pre-merge CI lane and lint | done | M001 | normal | milestones/archive/M002-pre-merge-ci-lane.md |
 
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
 - [high] After M004 merges, check the live retry on the first scheduled run that fails on the r2u mirror: `rebuild-retry.yml` starts, reruns only the failed jobs, and a green attempt 2 closes the ci-failure issue. No run before merge can show this, because `workflow_run` starts only from the default branch's copy. The same run also shows whether GitHub accepts `gh run rerun --failed` from the workflow's own `GITHUB_TOKEN`, because the branch drill used a local login. Promote to a hotfix if a qualifying scheduled failure starts no retry run — added 2026-09-13 — M004 plan gate, M004 review O2
-- [high] `docker.yml` has no `concurrency` group, so a retry attempt 2 that finishes after a newer push build publishes the older commit's images to `latest` and `noble`. Add a group, or make `retry-decision.sh` decline when the default branch moved past the run's commit. The `[low]` PR-lane concurrency row covers cancelled PR builds only — added 2026-09-13 — M004 review O1
 - [high] Smoke phase 2 cannot tell a fresh bspm fetch from a package the image already carries: it asserts `library()` plus `dpkg -s`, never that the package arrived this run. Assert absence before installing. Relatedly, the compile control fails at stanc parse time, so no control covers a broken C++ toolchain — added 2026-09-12 — M001 review F3, F12
-- [high] No workflow runs `.github/tests/test_publish_guard.sh`, and `.github/tests/**` is absent from the push paths filter, so the guard can drift from what `docker.yml` calls it with. M002 lints shell files and M003 runs the three ported suites, so neither covers it — added 2026-09-12 — M001 review F8, M003 review N5
+- [high] `.github/tests/**` is absent from the `docker.yml` push paths filter, so a change to `test_publish_guard.sh` alone starts no publish-lane run. `pr-ci.yml` runs the suite since M005 — added 2026-09-12 — M001 review F8, M003 review N5
 - [high] `scripts/install_bayes.sh` still builds the `install_cmdstan()` call by interpolating `CMDSTAN_VERSION` into R source. The M002 quoting fix stops whitespace from splitting it, but a value carrying a double quote still rewrites the call. Read it with `Sys.getenv()` instead, the convention `smoke-test.sh` already follows — added 2026-09-12 — M002 review
 - [high] Nothing asserts a leg's digest was built from the base tag its variant claims. A matrix edit setting `base_tag: noble` on a resolute row passes every gate and ships noble bytes under the resolute tag. Read an OS-release or base label out of the pulled image, as the arch assertion reads `{{.Architecture}}` — added 2026-09-12 — M001 review F14
 - A failed push build of `docker.yml` alerts no one, because `notify` runs only on scheduled runs and opted-in dispatches. A broken recipe merged to main leaves the tags on the older image with no issue opened. A green stale run also closes an open ci-failure issue and counts as a rebuild in `rebuild-gap`, even when the newer push build failed — added 2026-09-13 — M005 plan, M005 review O2
@@ -34,7 +32,6 @@ _Last hygiene check: 2026-09-13 (status audit: checks and byte budgets clean, no
 - `pr-ci.yml` triggers a full noble build on any `.github/workflows/**` edit, including a comment-only change to the publish lane. Same class as the `docker.yml` paths row above, in the other workflow — added 2026-09-12 — M002 review
 - A `paths` filter plus a required status check leaves a pull request that touches none of those paths waiting forever for a check that never runs. Neither workflow declares a `merge_group` trigger either, so a merge queue merges unchecked — added 2026-09-12 — M002 review
 - The shell lint pathspec covers `*.sh` and `*.command` only. An extensionless script or a `.bash` file is never linted, and the enumeration count still reads as if coverage were complete — added 2026-09-12 — M002 review
-- [low] Neither `pr-ci.yml` nor `lint.yml` sets a `concurrency` group, so several quick pushes to one pull request each start a full build and none is cancelled. M003's `script-tests` job in `pr-ci.yml` has none either — added 2026-09-12 — M002 review, M003 review P2
 - [low] Dispatch and cancel side effects of `notify`: its `always()` gate reports a cancelled scheduled run (`cancelled skipped success`) as a failure. A branch dispatch with `notify` and without `test_mode` skips `publish` and opens an issue. A green `notify` dispatch, or a manual rerun of a scheduled run, closes a real issue whose text says only a scheduled run closes it — added 2026-09-13 — M003 review O2, P1, O3, O5, N4
 - [low] `.github/dependabot.yml` matches no workflow trigger path and is schema-validated by nothing, so a config error surfaces only on GitHub's Dependabot page — added 2026-09-12 — M002 review
 - [low] The smoke test's cleanup trap fires on EXIT only, so a cancelled CI job leaves the container holding the port and the next run reports a collision as an image defect — added 2026-09-12 — M001 review F23, F17
