@@ -173,3 +173,17 @@ Consistency gate:
 - No `ENV`, `ARG`, or `COPY` line in the Dockerfile holds a credential. `.dockerignore` exists and excludes `.git`, `.github`, and `cairn`.
 - The changelog slot is none, so no entry is due.
 - Extra local checks: all five `.github/tests/` suites exit 0. Shellcheck 0.11.0 `-x -S info` over every tracked `*.sh` and `*.command` exits 0. actionlint 1.7.12 over all workflows exits 0.
+
+Independent review (user-facing tier, three lenses). Proposed dispositions go to the merge gate.
+
+- Prior-review lens [S]: no finding. The diff resolves M003 review O1 and N1 and contradicts no archived finding.
+- Blame-history lens [S]: no defect. B1: the retry job sets `timeout-minutes: 10` and `persist-credentials: false`, which `rebuild-gap.yml` does not. Proposed: noted. B2: the job sets `GH_REPO`, which the sibling scripts leave to the checkout. Proposed: noted.
+- O1 [O]: `docker.yml` has no `concurrency` group. A rerun that finishes after a newer push build publishes the older commit's images to `latest` and `noble`. Proposed: follow-up candidate row.
+- O2 [O]: No run shows that GitHub accepts `gh run rerun --failed` with the workflow's own `GITHUB_TOKEN`. The drill used a local login. Proposed: follow-up, added to the existing post-merge live-retry candidate row.
+- O3 [O]: The script reads every failed leg's log before any decline check. An unreadable log on a leg that failed at `Set up job` gives exit 1 in place of "no rerun". The test stub reads a missing log file as an empty log. Proposed: reject, because AC2 requires reading each failed leg's log, and the red retry run is visible beside the already open issue.
+- O4 [O]: The give-up line prints for any R failure that repeats, so a package error that does not involve the mirror also gets one rerun. Proposed: reject, because the plan gate chose this symptom and recorded its falsification condition.
+- O5 [O]: The retry job runs the default branch's script, not the failed run's commit. A step rename that lands during a scheduled run makes a real mirror failure decline. Proposed: reject, because it needs a rename inside a one-hour window and costs one missed retry.
+- O6 [O]: Three decline branches have no test: "no build leg failed", "build leg failed with no failed step", and "publish failed with no failed step". Proposed: fix now, with three suite cases.
+- O7 [O]: A failed retry job raises no issue comment, so the open issue does not say that the retry failed. Proposed: follow-up, added to the existing quiet-alerts candidate row.
+- O8 [O]: The `script-tests` job name still reads "alert and keepalive script suites". Proposed: reject, because the name stays so a required-check name cannot break.
+- No finding shows an acceptance criterion failing, so status stays `review`.
