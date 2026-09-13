@@ -50,10 +50,11 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   back, asserts the architecture, and runs `.github/smoke-test.sh` against it.
   One publish job requires all four verified digests. It assembles both
   variants' manifest lists and checks each with `.github/publish-guard.sh`.
-  Only then does it attach the mutable and immutable tags.
+  It then runs the guard's `fresh` check against the default branch. Only
+  then does it attach the mutable and immutable tags.
   `.github/smoke-fixtures/` holds the Stan program the smoke test compiles.
   `.github/tests/test_publish_guard.sh` drives the guard through its failing
-  cases without a CI run.
+  cases without a build.
 - **Unattended-rebuild alerts**: `docker.yml`'s `keepalive` job
   (`.github/keepalive.sh`) and its `notify` job (`.github/ci-failure-issue.sh`).
   `.github/workflows/rebuild-gap.yml` runs `.github/rebuild-gap.sh`. Both date
@@ -63,11 +64,13 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
 - **Pre-merge checks**: `.github/workflows/pr-ci.yml` lints the Dockerfile,
   then builds and boots noble amd64 with the same `smoke-test.sh` the publish
   gate runs. It never logs in and never publishes. Its `script-tests` job runs
-  four suites: `test_ci_failure_issue.sh`, `test_keepalive.sh`,
-  `test_rebuild_gap.sh`, and `test_retry_decision.sh`.
-  `.github/workflows/lint.yml` runs a pinned shellcheck over every tracked
-  `*.sh` and `*.command` file. `.github/dependabot.yml` keeps the action pins
-  current.
+  five suites: `test_ci_failure_issue.sh`, `test_keepalive.sh`,
+  `test_rebuild_gap.sh`, `test_retry_decision.sh`, and
+  `test_publish_guard.sh`. `.github/workflows/lint.yml` runs a pinned
+  shellcheck over every tracked `*.sh` and `*.command` file. Both workflows
+  declare a concurrency group keyed on the workflow and the pull request
+  number with `cancel-in-progress: true`, so a new push cancels that pull
+  request's older run. `.github/dependabot.yml` keeps the action pins current.
 
 ## Conventions
 
@@ -94,6 +97,17 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   assembled manifest lists before it attaches any tag. A broken leg in either
   variant therefore holds both variants' tags back (GP4, GP8). The `test_mode`
   dispatch input runs the whole lane and attaches nothing.
+- **No tag moves back to an older recipe.** Before it attaches tags, the
+  publish job fetches the default branch's tip. It compares the tip with the
+  run's commit over the paths in `docker.yml`'s push `paths` filter. If any
+  differ, the run attaches no tag for either variant, warns, and ends green.
+  A commit that changes one of those paths normally starts its own push build,
+  which publishes the newer recipe. A failed fetch fails the job. This is an
+  exception to GP2's "every build also publishes immutable tags": a refused
+  run withholds its date and CmdStan tags too. Otherwise it overwrites the
+  newer build's same-day date tag. `docker.yml` has no concurrency group. A
+  group cancels a waiting job when another joins, and that can drop the newer
+  publish with no alert.
 - **A pull request that can change the image is built and booted before
   merge.** `pr-ci.yml` triggers on the Dockerfile, `.dockerignore`,
   `scripts/**`, the workflows, and the smoke test and its fixtures. It lints
