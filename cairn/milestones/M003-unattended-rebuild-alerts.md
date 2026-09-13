@@ -1,6 +1,6 @@
 # M003: Unattended-rebuild alerts and schedule keepalive
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** M001, M002
 - **Driving RR:** —
@@ -57,7 +57,7 @@ M002. The Docker Hub description sync stays a candidate row.
       variable, which the dispatch input sets and the `gh run list` lookup
       fills when the input is empty, and one of the three runs takes its date
       from that lookup. At review, the file has no `push` trigger.
-- [x] AC5: `docker.yml` gains a `notify` job whose `needs` list and `RESULTS`
+- [ ] AC5: `docker.yml` gains a `notify` job whose `needs` list and `RESULTS`
       string name every other job in the file except `retry-on-failure`. It
       runs whatever those jobs' results are, on scheduled runs and when the
       `notify` dispatch input is set. `retry-on-failure` needs `build`,
@@ -156,6 +156,7 @@ M002. The Docker Hub description sync stays a candidate row.
 - 2026-09-13: merged origin/main (the empty b444cd2 only) into the branch. Verify: hadolint 2.12.0 (container image) on Dockerfile exits 0. The Dockerfile is unchanged since T10's local build, and the run above built all four legs. The four suites pass locally.
 - claim audit: 160 claims read, 15 corrected — .github/ci-failure-issue.sh, .github/date-lib.sh, .github/keepalive.sh, .github/rebuild-gap.sh, .github/retry-decision.sh, .github/workflows/docker.yml, .github/workflows/rebuild-gap.yml, .github/tests/test_ci_failure_issue.sh, .github/tests/test_keepalive.sh, .github/tests/test_rebuild_gap.sh, .github/tests/test_retry_decision.sh
 - 2026-09-13: [O] claim-audit reader, fresh context. Edits are prose only: comments, the `ci-failure` label description, and two dispatch-input descriptions. After them the five suites pass and actionlint 1.7.7 is clean. Status set to review.
+- 2026-09-13: review return 1 (defect): AC5 fails. GitHub refuses `gh run rerun` from `retry-on-failure` while that job runs (scheduled runs 34127399018 and 32007984150). No retry fires, and `notify` with `wait=true` leaves a failed build leg unreported. AC1-AC4, AC6, AC7 verified. 16 review findings logged in Review, untriaged. Status back to in-progress.
 
 ## Decisions
 
@@ -177,3 +178,24 @@ Consistency gate, 2026-09-13:
 - `rhysd/actionlint:1.7.7` over the repository exits 0. `koalaman/shellcheck:v0.11.0 -x` over `.github/*.sh` and `.github/tests/*.sh` exits 0. `test_publish_guard.sh` passes too (14 `ok`).
 - The base image is `jmgirard/rstudio2u:${BASE_TAG}` with `BASE_TAG=noble`. That is an explicit tag, not `latest`, and the diff does not touch it. The Dockerfile has no `ENV` or `--build-arg` that carries a token or key. `.dockerignore` excludes `.git`, `.github` and `cairn`. The diff touches neither the Dockerfile, `scripts/`, nor `.dockerignore`.
 - The changelog slot is none (D-002), so no changelog entry is due. This milestone changes CI only, so it needs no recipe release.
+
+AC5 retracted, 2026-09-13. The AC5 evidence above covers the decision script and a run with no retryable failure. It never exercised a rerun. Scheduled runs 34127399018 (2026-09-07) and 32007984150 (2026-08-17) each had one failed amd64 build leg. Every other job had finished, and `retry-on-failure` logged "cannot be rerun; This workflow is already running" and exited 1. Both runs stayed at attempt 1. GitHub refuses the rerun because the calling job is itself in flight. This diff keeps the rerun inside the run. AC5 promises a retry when `build` fails below the cap, and that retry does not fire. `notify` then prints `wait=true` and reports nothing. The weekly failure goes unreported until `rebuild-gap` sees the second missed week. The AC5 box is unticked.
+
+Independent review findings, 2026-09-13. Three fresh-context reviewers ran: [O] diff, [S] blame history, [S] prior reviews. The review returned before the approval gate, so the maintainer has not triaged any finding yet. Each line gives the rank order within its lens.
+
+- O1 (floor return): notify waits on a rerun that GitHub refuses, so a failed build leg goes unreported. Confirmed by the two run logs above.
+- O2: cancelling a scheduled run gives `cancelled skipped success`, and notify opens an issue. Case 6e of the suite asserts this on purpose, for a timed-out leg.
+- O3: a branch dispatch with `notify` set and `test_mode` off skips `publish`, and notify opens an issue.
+- O4: `ci-failure-issue.sh` reads `gh issue list` through process substitution, so a failed list reads as "none open". A failure run then opens a duplicate issue, and a green run leaves the real issue open.
+- O5: a green dispatch with `notify` set closes a real scheduled-failure or gap issue. The issue body says only a scheduled run closes it.
+- O6: the keepalive comment understates the deploy key's exposure. Any workflow pushed to any branch can read a repository secret.
+- O7: a keepalive failure alone marks the run failed. `rebuild-gap` then reports no successful rebuild although tags moved.
+- O8: the 50-day threshold leaves one weekly chance before the 60-day cutoff.
+- O9: a kept comment says reruns restore from the build cache, but scheduled builds set `no-cache`.
+- O10: the retry comment says finishing after the other jobs makes the rerun possible, which O1 shows false.
+- O11: a `rebuild-gap.sh` refusal (exit 2, for example a future `createdAt`) fails the job and raises no issue.
+- S1: `docker.yml`'s push paths filter does not list the four new scripts it runs, against the M002 trigger-path lesson.
+- S2: `retry-on-failure` now starts on every run, not only on failure. This is documented, and it adds one short job per run.
+- P1: `notify` uses `always()`, the construct the M001 cancel lesson warns about. The script ignores an all-cancelled list, but O2's shape still reports.
+- P2: `pr-ci.yml` gains a job with no concurrency group, which widens an open M002 candidate row.
+- P3: `retry-on-failure` reads `retry-decision.sh` without the guard that `notify` uses. The script writes its error to stderr first, so the failure is not silent.
