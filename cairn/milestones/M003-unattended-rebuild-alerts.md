@@ -210,3 +210,16 @@ Re-review after return 1, evidence gathered 2026-09-13 on abf0f84. `git log HEAD
 - AC7: `hadolint/hadolint:v2.12.0` reads `Dockerfile` from stdin and exits 0 with no output. `docker build --no-cache` from a `git archive` of abf0f84 (no `.git`) exits 0 in 206 s on Docker 29.5.2. It builds arm64 image `sha256:a131d2035587`.
 
 Consistency gate, 2026-09-13 on abf0f84: `cairn_validate.py` exits 0 with every check passing. No IP or GP line changed in `cairn/DESIGN.md`, so `cairn_impact` was not run. actionlint 1.7.7 and shellcheck 0.11.0 over `.github/*.sh` and `.github/tests/*.sh` exit 0. `git diff main...HEAD` touches neither `Dockerfile`, `scripts/` nor `.dockerignore`, so the base-image pin (`jmgirard/rstudio2u:${BASE_TAG}`, `BASE_TAG=noble`), the no-secrets check and the `.dockerignore` check stand as recorded above. The changelog slot is none.
+
+Independent review on abf0f84, 2026-09-13. Three fresh-context reviewers ran: [O] diff, [S] blame history, [S] prior reviews. Status of the first pass at HEAD: O1, O9, O10, S2 and P3 are gone with the retry. O2, O3, O4, O5, O6, O7, O8, O11, P1 and P2 still apply. S1 now covers three scripts, and push runs skip both jobs that read them. The prior-review lens called O6 addressed, but `git diff 8ab46f9 HEAD` leaves that comment unchanged, so O6 stands. New findings, ranked by the [O] lens:
+
+- N1: `scripts/install_bayes.sh:13-16` says the build fails fast so that "the workflow's retry-on-failure job" reruns the leg, and that job is gone. The in-script retry stays at 2 tries 20 s apart, so one amd64 mirror blip fails the week's rebuild.
+- N2: `cairn/DESIGN.md:65` says `script-tests` runs "the four alert and keepalive suites", but `pr-ci.yml` runs three.
+- N3: a `keepalive` failure alone fails the run, and `rebuild-gap.yml` counts only `--status success` runs. A deleted deploy key would make the second week raise a false "no successful rebuild" alert while tags move.
+- N4: a manual rerun of a failed scheduled run keeps the `schedule` event, so its green notify closes the issue. This is a note, not a defect.
+- N5: `.github/tests/test_publish_guard.sh` runs in no workflow, and T6's list of three suites leaves it out.
+- N6: a `ci-failure-issue.sh` that fails in `notify` raises no issue, only GitHub's failure email.
+- N7: `sed 's/^[a-z-]*=//' | xargs` in `notify` drops an empty result, so a job named in `needs` but misspelled in `RESULTS` vanishes and an otherwise green list closes the issue.
+- N8: `cairn/DESIGN.md:111-114` has two lines past the usual width.
+
+No finding shows an acceptance criterion failing.
