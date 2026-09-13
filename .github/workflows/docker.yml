@@ -96,6 +96,13 @@ jobs:
           fi
           echo "cmdstan=$CMDSTAN" >> "$GITHUB_OUTPUT"
 
+      # TEMPORARY drill step: fails noble amd64 on attempt 1 only. Remove before review.
+      - name: Drill failure on attempt 1
+        if: github.run_attempt == 1 && matrix.variant == 'noble' && matrix.arch == 'amd64'
+        run: |
+          echo "::error::drill: failing noble amd64 on attempt 1"
+          exit 1
+
       - name: Build ${{ matrix.variant }} (${{ matrix.arch }}) and push by digest
         id: build
         uses: docker/build-push-action@v7
