@@ -13,8 +13,10 @@
 # for docker.yml: each job carries databaseId, name, conclusion, and steps. The
 # step names are read from docker.yml when this suite runs, with the matrix
 # values filled in per leg, so a renamed step changes the fixtures and the
-# script together. GitHub adds "Set up job" first, a "Post <step>" entry for
-# each action step, and "Complete job" last.
+# script together. GitHub adds "Set up job" first, a "Post <step>" entry in
+# reverse order for each step whose action has a post phase (checkout,
+# setup-buildx, login, build-push; not upload- or download-artifact), and
+# "Complete job" last.
 #
 # Usage: bash .github/tests/test_retry_decision.sh
 #
@@ -86,13 +88,14 @@ build_steps() {
 build_step_name() { printf 'Build %s (%s) and push by digest' "$1" "$2"; }
 
 # job_json <id> <name> <conclusion> <failing-step> <step-names>: one job whose
-# steps succeed up to <failing-step>, which fails, and are skipped after it.
+# steps succeed up to <failing-step>, which fails. After it, Post steps and
+# "Complete job" succeed and the rest are skipped.
 # The failing step may be "Set up job" or a "Post ..." name. An empty
 # <failing-step> gives an all-green job.
 job_json() {
     local id="$1" name="$2" conclusion="$3" failing="$4" names="$5"
     { echo "Set up job"; printf '%s\n' "$names"
-      printf '%s\n' "$names" | grep -E '^(Checkout|Set up Docker Buildx|Log in to Docker Hub|Build .* and push by digest|Upload the digest)$' | sed 's/^/Post /' | awk '{ l[NR] = $0 } END { for (i = NR; i > 0; i--) print l[i] }'
+      printf '%s\n' "$names" | grep -E '^(Checkout|Set up Docker Buildx|Log in to Docker Hub|Build .* and push by digest)$' | sed 's/^/Post /' | awk '{ l[NR] = $0 } END { for (i = NR; i > 0; i--) print l[i] }'
       echo "Complete job"; } \
     | jq -R . | jq -s --argjson id "$id" --arg name "$name" --arg c "$conclusion" --arg f "$failing" '
         (if $f == "" then -1 else (index($f) // -2) end) as $at
@@ -156,7 +159,8 @@ std_listing() {
     listing "${jobs[@]}"
 }
 
-# run_script <event> <attempt> <conclusion>: fresh log and markers each run.
+# run_script <event> <attempt> <conclusion>: truncates the gh call log before
+# each run. reset_markers clears the markers and fixtures.
 run_script() {
     : > "$LOG"
     bash "$SCRIPT" "$RUN_ID" "$1" "$2" "$3" >"$WORK/out" 2>&1
@@ -206,7 +210,7 @@ assert_rerun_calls() {
     else echo "ok: $1"; fi
 }
 
-# no_rerun <desc> <condition-regex>: exit 0, a no-rerun line naming the
+# no_rerun <rc> <desc> <condition-regex>: exit 0, a no-rerun line naming the
 # condition, and no rerun call.
 no_rerun() {
     local rc="$1" desc="$2" re="$3"
@@ -214,7 +218,7 @@ no_rerun() {
     assert_out         "  ... decides no rerun, naming the broken condition" "^no rerun: .*$re"
     assert_rerun_calls "  ... and makes no rerun call" 0
 }
-# rerun <desc>: exit 0, a rerun line, and exactly one rerun call for the run.
+# rerun <rc> <desc>: exit 0, a rerun line, and exactly one rerun call for the run.
 rerun() {
     local rc="$1" desc="$2"
     assert_rc          "$desc: exits 0" 0 "$rc"

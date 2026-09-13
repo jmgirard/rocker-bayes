@@ -80,9 +80,11 @@ job_id() {
     jq -r --argjson i "$1" '.jobs[$i].databaseId' "$work/jobs.json"
 }
 
-# Read every failed build leg's log first. gh 2.97.0 and later refuse to print
-# a response that holds terminal escape sequences, which build logs do, unless
-# --allow-escape-sequences is passed. The log only goes to a file here.
+# Read every failed build leg's log first. gh refuses to write a response that
+# holds terminal escape sequences, which build logs do, unless
+# --allow-escape-sequences is passed (seen on gh 2.100.0, even with the output
+# redirected to a file; gh's escape-sequence change came in 2.97.0). The log
+# only goes to a file here.
 while IFS=$'\t' read -r i c name; do
     [[ $name == "build ("* && $c == failure ]] || continue
     id="$(job_id "$i")"

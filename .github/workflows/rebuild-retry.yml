@@ -3,7 +3,8 @@ name: Rerun a weekly build that failed on the r2u mirror
 # When a docker.yml run completes, decide whether it gets one rerun of its
 # failed jobs, and start that rerun. The rule is in .github/retry-decision.sh,
 # tested offline by .github/tests/test_retry_decision.sh: a scheduled run's
-# first attempt, failed only because build legs could not reach the r2u mirror.
+# first attempt whose failed build legs each failed at the build step with
+# install_bayes.sh's give-up line in the log, the r2u mirror symptom.
 #
 # This is its own workflow because a job inside docker.yml cannot rerun the run
 # it belongs to: GitHub refuses the request while that run is still in progress.

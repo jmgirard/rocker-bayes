@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-13 (M003 done and archived, retry row promoted, 3 c
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M004 | Rerun a weekly build that failed on the r2u mirror | in-progress | M003 | high | milestones/M004-weekly-leg-retry.md |
+| M004 | Rerun a weekly build that failed on the r2u mirror | review | M003 | high | milestones/M004-weekly-leg-retry.md |
 | M003 | Unattended-rebuild alerts and schedule keepalive | done | M001, M002 | normal | milestones/archive/M003-unattended-rebuild-alerts.md |
 | M002 | Pre-merge CI lane and lint | done | M001 | normal | milestones/archive/M002-pre-merge-ci-lane.md |
 | M001 | Smoke-test gate before any tag moves | done | — | high | milestones/archive/M001-smoke-test-publish-gate.md |
