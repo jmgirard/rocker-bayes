@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M005: Superseded CI runs stop acting
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** high   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** M004   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -129,7 +129,7 @@ records the rule and its exception to GP2.
 - [x] T4: Add the concurrency groups to `.github/workflows/pr-ci.yml` and
       `.github/workflows/lint.yml`. Add `test_publish_guard.sh` to
       `script-tests` and update its comment.
-- [ ] T5: Collect branch evidence. Dispatch `docker.yml` on the milestone
+- [x] T5: Collect branch evidence. Dispatch `docker.yml` on the milestone
       branch with `test_mode=true`, and record the publish log's refusal
       line. Push a copy of the branch, open a drill pull request, then push
       two commits seconds apart from one script. Record each run's conclusion
@@ -158,6 +158,8 @@ records the rule and its exception to GP2.
 - 2026-09-13: T6 done. DESIGN.md Architecture names the `fresh` check and five `script-tests` suites and describes the PR concurrency groups. A new Conventions bullet states the freshness rule, its GP2 exception, and why `docker.yml` has no group.
 - claim audit: 41 claims read, 4 corrected — .github/publish-guard.sh, .github/tests/test_publish_guard.sh, .github/workflows/docker.yml, .github/workflows/lint.yml, .github/workflows/pr-ci.yml
 - 2026-09-13: the 4 corrections were the `fresh` header and the publish step's comment, warning, and attach message, which claimed a difference always means a newer build. On a branch run the difference can be the branch's own change. The header also claimed `::error::` output for missing arguments, which bash prints as its own usage message. Suite 30/30, shellcheck and actionlint clean afterwards. The running dispatch (head `8dfdcde`) prints the pre-correction warning text.
+- 2026-09-13: T5 done. Dispatch 34779453138 concluded `success`: all four legs, keepalive, and publish passed, and notify was skipped. The publish log printed `stale: the tip of main (492dbfc…) changed .github/publish-guard.sh .github/workflows/docker.yml` and a warning naming `492dbfc`. "Attach the tags" printed its no-tag line and exited before the test-mode line. Drill PR #13 runs: at the opening commit `8dfdcde`, lint was `success` (it finished before the first push) and PR CI was `cancelled`. At push 1 `207ce12`, lint and PR CI were both `cancelled`. At push 2 `da7cbd7`, lint was `success` and PR CI was `success`, with `script-tests` and the build job both `success`. PR #13 was closed unmerged and `m005-drill` was deleted.
+- 2026-09-13: implement complete, status `review`. The branch changes no Dockerfile or build context, so the profile's hadolint and build gate was not rerun locally; drill run 34779532789 ran hadolint and the noble build green on `da7cbd7`. The only commit after that is the claim-correction commit, which changes comments and messages alone.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
