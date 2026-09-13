@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-13 (M004 done and archived, M001 row pruned, 1 candidate row added and 2 extended, 3 lessons added, caps and byte budgets clean)_
+_Last hygiene check: 2026-09-13 (status audit: checks and byte budgets clean, no open issues or PRs, no outside merges, 3 finding-absorbing candidate rows put to triage)_
 
 ## Milestones
 
