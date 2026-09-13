@@ -58,7 +58,7 @@ from a separate `workflow_run` workflow stays a candidate row.
       variable, which the dispatch input sets and the `gh run list` lookup
       fills when the input is empty, and one of the three runs takes its date
       from that lookup. At review, the file has no `push` trigger.
-- [ ] AC5: `docker.yml` gains a `notify` job whose `needs` list and `RESULTS`
+- [x] AC5: `docker.yml` gains a `notify` job whose `needs` list and `RESULTS`
       string name every other job in the file. It runs whatever those jobs'
       results are, on scheduled runs and when the `notify` dispatch input is
       set, and no step in it skips the report for a later attempt. The file has
@@ -198,3 +198,12 @@ Independent review findings, 2026-09-13. Three fresh-context reviewers ran: [O] 
 - P1: `notify` uses `always()`, the construct the M001 cancel lesson warns about. The script ignores an all-cancelled list, but O2's shape still reports.
 - P2: `pr-ci.yml` gains a job with no concurrency group, which widens an open M002 candidate row.
 - P3: `retry-on-failure` reads `retry-decision.sh` without the guard that `notify` uses. The script writes its error to stderr first, so the failure is not silent.
+
+Re-review after return 1, evidence gathered 2026-09-13 on abf0f84. `git log HEAD..origin/main` is empty, and no PR exists for the branch.
+
+- AC1: `.github/ci-failure-issue.sh` and its suite are unchanged since 8ab46f9 (`git diff --stat` empty). The suite exits 0 with 99 `ok` lines and no `FAIL`. A plant in a scratch copy that reads `cancelled` as success turns it red with 3 failures, and the restored copy passes.
+- AC2: `.github/keepalive.sh`, `.github/date-lib.sh` and the suite are unchanged since 8ab46f9. The suite exits 0 with 102 `ok` lines. A plant of `age <=` at the threshold gives 6 failures, and the restored copy passes.
+- AC3: `.github/rebuild-gap.sh` and its suite are unchanged since 8ab46f9. The suite exits 0 with 131 `ok` lines. A plant of `gap <` at the bound gives 3 failures, and the restored copy passes.
+- AC4: the run and issue evidence above stands, and `gh issue list --label ci-failure --state all` still shows #8 created 20:29:32Z and closed 20:31:47Z. Its comments are the bot's at 20:30:08Z and the maintainer's at 20:31:46Z. At abf0f84, `grep -cE '^\s*push:'` over `rebuild-gap.yml` prints 0. `git diff 2bc94a4 HEAD` on the file shows the trigger removal, the date literal removal, one input description edit, and one comment that no longer mentions a rerun. `LAST_SUCCESS` is still the one date variable (line 51).
+- AC5: a PyYAML read lists the jobs `build`, `publish`, `keepalive` and `notify`, and workflow `env` holds only `IMAGE`. `notify` needs `build`, `publish` and `keepalive`, and its `RESULTS` names the same three. Its `if` is `always()` joined to the schedule event or a dispatch with `inputs.notify`. Its one run step has no `exit` and no condition on the attempt, and it reads `GITHUB_RUN_ATTEMPT` only to list that attempt's jobs. `grep -cE 'retry-on-failure|gh run rerun'` over `docker.yml` prints 0. Run 34772606155 was a `workflow_dispatch` at 541300a, and `git diff --stat 541300a HEAD` outside `cairn/` is empty. Its publish logged `TEST_MODE: true` and the no-tag line, all four legs and publish succeeded, and keepalive failed. notify logged "opened a ci-failure issue for: keepalive" at 17:54:21Z. #10 was created at 17:54:21Z with the `ci-failure` label, the title "Weekly run failed: keepalive", and the body "The scheduled run failed in: keepalive". No `ci-failure` issue was open at the run: #8 closed 2026-09-12 and #9 closed 17:19:31Z.
+- AC6: a PyYAML comparison finds the `keepalive` job at abf0f84 equal to the job at key run 8e01724, so the key run and the no-key run above still describe this job. `gh repo deploy-key list` shows `KEEPALIVE_DEPLOY_KEY` read-write, and `gh secret list` shows the secret. `git branch -r --contains b444cd2` lists origin/main. `grep -c 'contents: write' .github/workflows/docker.yml` prints 0, and the two `contents:` lines read `read`. `build` and `publish` set no permissions, and the file has no workflow-level `permissions`. The repository default workflow permission is `read`.
