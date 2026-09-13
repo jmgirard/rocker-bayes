@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "Dockerfile"
+      # It decides what enters the build context.
+      - ".dockerignore"
       - "scripts/**"
       - ".github/workflows/docker.yml"
       - ".github/smoke-test.sh"
@@ -280,14 +282,60 @@ jobs:
             printf '%s\n' "${refs[@]}" > "/tmp/refs-${variant}.txt"
           done
 
-      # Both indexes passed, so attach the tags. In test mode nothing is
-      # attached: the run has already exercised every leg, both assemblies, and
-      # both guards, and the tag list it would have applied is printed above.
+      # Third gate: the default branch must not have changed the recipe since
+      # this run's commit. A rerun of an older run, started by rebuild-retry.yml
+      # or by hand, can finish after a newer push build has published, and
+      # attaching here would move the tags back to the older recipe. The
+      # compared paths are this file's push `paths` filter, so a difference
+      # means the newer commit normally started its own push build.
+      #
+      # A stale run is not a failure: it attaches nothing, warns, and ends
+      # green, so a scheduled run does not open the ci-failure issue for it. A
+      # failed fetch leaves the recipe unknown, so the job fails. The rule is in
+      # .github/publish-guard.sh, tested by .github/tests/test_publish_guard.sh.
+      # It runs in test mode too, so a branch dispatch shows its verdict. A
+      # branch that edits one of the compared paths reads as stale.
+      #
+      # The default branch is read from the remote's HEAD, not from
+      # github.event.repository, which scheduled runs may not carry. If
+      # ls-remote fails, the step's default -e ends it at the lookup and the
+      # job fails with git's own error. If the output has no symref line, the
+      # name is empty and fresh fails the job with an ::error:: line.
+      - name: Check that the default branch has not changed the recipe
+        id: fresh
+        run: |
+          set -uo pipefail
+          DEFAULT_BRANCH=$(git ls-remote --symref origin HEAD | sed -n 's|^ref: refs/heads/\([^[:space:]]*\)[[:space:]]*HEAD$|\1|p')
+          status=0
+          out=$(bash ./.github/publish-guard.sh fresh .github/workflows/docker.yml "$GITHUB_SHA" origin "$DEFAULT_BRANCH") || status=$?
+          echo "$out"
+          case "$status" in
+            0)
+              echo "verdict=fresh" >> "$GITHUB_OUTPUT"
+              ;;
+            3)
+              echo "verdict=stale" >> "$GITHUB_OUTPUT"
+              echo "::warning::no tag was attached for either variant. ${out}. If this run's commit is on the default branch, a newer push build of that tip normally publishes its recipe, but a commit that started no build (a [skip ci] message, a push made with a workflow token) leaves the tags where they are. On a branch dispatch the difference can be the branch's own change."
+              ;;
+            *)
+              exit 1
+              ;;
+          esac
+
+      # Both indexes passed, so attach the tags, unless the check above found
+      # a newer recipe. In test mode nothing is attached: the run has already
+      # exercised every leg, both assemblies, and all three guards, and the tag
+      # list it would have applied is printed above.
       - name: Attach the tags
         env:
           TEST_MODE: ${{ inputs.test_mode }}
+          VERDICT: ${{ steps.fresh.outputs.verdict }}
         run: |
           set -euo pipefail
+          if [ "$VERDICT" != "fresh" ]; then
+            echo "the recipe paths differ between this run's commit and the tip of the default branch, so no tag was attached (see the warning above)"
+            exit 0
+          fi
           if [ "$TEST_MODE" = "true" ]; then
             echo "test mode: both manifest lists were assembled and checked, and no tag was attached"
             exit 0
