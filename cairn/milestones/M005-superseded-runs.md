@@ -174,6 +174,7 @@ records the rule and its exception to GP2.
 - 2026-09-13: T7 done. Dispatch 34781490836 (`test_mode`, head `17c784b`) concluded `success`: four legs, keepalive, and publish passed, and notify was skipped. The lookup resolved `main`: the publish log printed `stale: the tip of main (492dbfc…)` and a warning naming it, and "Attach the tags" printed its no-tag line. The only later change is the corrected comment.
 - 2026-09-13: implement complete, status `review`.
 - 2026-09-13: review pass 2 started at `cfd51f8`. All seven criteria have fresh evidence and the consistency gate passed. The three-lens review is running.
+- 2026-09-13: pass-2 three-lens review returned 4 [O] findings (2 low, 2 info) and no [S] conflicts. None shows a criterion failing, so they go to the gate for triage.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
