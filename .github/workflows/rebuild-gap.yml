@@ -1,0 +1,91 @@
+name: Check the weekly rebuild is not stale
+
+# docker.yml's `notify` job reports on a run that happened. A run that never
+# happens reports nothing. This workflow measures how long it has been since a
+# scheduled docker.yml rebuild last succeeded, so a disabled schedule, a deleted
+# workflow, and weeks of red builds all raise the same ci-failure issue.
+#
+# Its bound: this workflow is itself on a schedule, so when GitHub disables the
+# repository's scheduled workflows it stops too. docker.yml's `keepalive` job
+# exists to stop that from happening.
+#
+# The rule is in .github/rebuild-gap.sh, tested offline by
+# .github/tests/test_rebuild_gap.sh. The step below hands it a date, today, and
+# a threshold.
+
+on:
+  # Tuesdays at 07:00 UTC, a day after docker.yml's Monday 07:00 rebuild. Weekly
+  # runs have started hours after their cron time, so a day's margin lets the
+  # run being measured finish first.
+  schedule:
+    - cron: "0 7 * * 2"
+  workflow_dispatch:
+    inputs:
+      last_success_date:
+        description: "Use this YYYY-MM-DD date as the last successful scheduled rebuild instead of looking it up. A date more than the threshold days before today raises the alert. Leave empty to look up the real date."
+        type: string
+        default: ""
+      threshold_days:
+        description: "The largest gap, in days, that is not yet an alert. Both workflows are weekly and this check runs a day after the rebuild, so a measured gap is normally 1, 8, 15, ... days, and 8 makes the second missed rebuild the alert. The scheduled run has no inputs and uses the fallback of 8 in the step below."
+        type: string
+        default: "8"
+
+jobs:
+  gap:
+    name: rebuild-gap
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Alert if no scheduled rebuild has succeeded lately
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          # The one variable the last-success date is read from. The dispatch
+          # input sets it. Empty, the lookup below fills it.
+          LAST_SUCCESS: ${{ inputs.last_success_date }}
+          # Empty on a scheduled run, so the 8 here is the scheduled policy.
+          # The dispatch input's default states the same 8.
+          THRESHOLD: ${{ inputs.threshold_days || '8' }}
+        run: |
+          set -euo pipefail
+          if [ -n "$LAST_SUCCESS" ]; then
+            echo "last-success date supplied: $LAST_SUCCESS"
+            last_success="$LAST_SUCCESS"
+          # The newest successful scheduled docker.yml run, and only that. A
+          # push or dispatch build proves someone was here, not that the
+          # unattended lane still works.
+          elif ! gh run list --workflow docker.yml --event schedule \
+                 --status success --limit 1 --json createdAt \
+                 --jq '.[0].createdAt // empty' > created_at.txt; then
+            # The lookup failed. That is neither a measured gap nor a clean
+            # result, so it goes to the script as the `unknown` sentinel.
+            echo "::warning::gh run list failed; reporting an unreadable rebuild history"
+            last_success=unknown
+          else
+            created_at="$(cat created_at.txt)"
+            if [ -z "$created_at" ]; then
+              # The query worked and matched nothing: no successful scheduled
+              # run is on record.
+              last_success=none
+            elif [[ $created_at =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]]; then
+              # createdAt is RFC 3339 in UTC, so the date is the part before
+              # the T.
+              last_success="${created_at%%T*}"
+            else
+              # An answer the step cannot parse would reach the script as a
+              # bad date and end the run at exit 2 with nothing raised. Report
+              # it as an unreadable history instead.
+              echo "::warning::gh run list returned an unparseable createdAt ('$created_at'); reporting an unreadable rebuild history"
+              last_success=unknown
+            fi
+            echo "last successful scheduled rebuild, looked up: $last_success"
+          fi
+          today=$(date -u +%Y-%m-%d)
+          echo "today is $today (UTC)"
+          bash ./.github/rebuild-gap.sh "$last_success" "$today" "$THRESHOLD"

@@ -19,6 +19,14 @@ on:
         description: "Exercise the whole lane without publishing: every leg builds, pushes its layers by digest, is pulled back and smoke-tested, then the publish job assembles both manifest lists, checks them, prints the tag list it would apply, and attaches nothing."
         type: boolean
         default: false
+      keepalive_threshold:
+        description: "How many days of quiet on the default branch make the keepalive job push an empty commit. Set 0 to commit on this run whatever the branch's age. .github/keepalive.sh refuses a value that is not a whole number of at most seven digits once leading zeros are dropped, which fails the keepalive job. The scheduled run has no inputs and uses the fallback of 50 in the keepalive job."
+        type: string
+        default: "50"
+      notify:
+        description: "Run the notify job on this dispatch, as a scheduled run does. It opens, comments on, or closes the ci-failure issue from this run's results. A fully green dispatch closes an open issue."
+        type: boolean
+        default: false
 
 env:
   IMAGE: jmgirard/rocker-bayes
@@ -293,26 +301,109 @@ jobs:
             docker buildx imagetools inspect "$IMAGE:$variant"
           done
 
-  # If any build leg failed, it is almost always an amd64 runner that could not
-  # reach the single r2u mirror on its egress IP (arm64 native runners are
-  # reliable). Re-running the whole workflow puts each leg on a fresh runner with
-  # a new IP; unchanged legs restore from the build cache, so only the failed one
-  # actually rebuilds and re-contacts the mirror. Capped at 3 total attempts.
+  # Keep the `schedule` trigger above from being switched off. GitHub disables
+  # a public repository's scheduled workflows after 60 days without repository
+  # activity, and a disabled schedule runs no rebuild and no watchdog. This job
+  # pushes an empty commit when the default branch has been quiet for 50 days.
+  # The commit changes no file, so it matches no `paths` filter and starts no
+  # build. The rule lives in .github/keepalive.sh, tested offline by
+  # .github/tests/test_keepalive.sh. Push runs skip the job, because they are
+  # already the activity it exists to make.
+  keepalive:
+    name: keepalive
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    # No write scope. The push authenticates with the deploy key below, never
+    # with this token, and the repository's default workflow token stays
+    # read-only.
+    permissions:
+      contents: read
+    steps:
+      # Two checkouts, because the script and the commit can come from different
+      # refs. The script is read from the ref this workflow file came from, so a
+      # dispatch aimed at a branch runs that branch's version of it. The commit
+      # lands on the default branch whatever ref was dispatched. On a scheduled
+      # run the two are the same ref.
+      #
+      # The accepted exposure: on a dispatch against a branch, that branch's
+      # copy of keepalive.sh runs while the deploy key is in scope. Dispatching
+      # already requires write access to this repository, so it reaches nothing
+      # a dispatcher could not reach anyway.
+      - name: Check out this workflow's own ref for the script
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Check out the default branch for the commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: default-branch
+          # A write-enabled deploy key on this repository only. checkout stores
+          # it and points the remote at SSH, which is what the `git push` inside
+          # keepalive.sh uses.
+          ssh-key: ${{ secrets.KEEPALIVE_DEPLOY_KEY }}
+
+      - name: Commit if the default branch has gone quiet
+        working-directory: default-branch
+        env:
+          # Empty on a scheduled run, where there are no inputs, so the 50 here
+          # is the scheduled policy. The dispatch input's default states the
+          # same 50.
+          THRESHOLD: ${{ inputs.keepalive_threshold || '50' }}
+        run: |
+          set -euo pipefail
+          # Both dates in UTC: format-local with TZ=UTC renders the committer
+          # date in UTC, and `date -u` gives today in the same zone.
+          commit_date=$(TZ=UTC git log -1 --format=%cd --date=format-local:%Y-%m-%d)
+          today=$(date -u +%Y-%m-%d)
+          echo "default branch tip is dated $commit_date; today is $today (UTC)"
+          bash "$GITHUB_WORKSPACE/.github/keepalive.sh" "$commit_date" "$today" "$THRESHOLD"
+
+  # Report a scheduled run's outcome through the ci-failure issue: a failure
+  # opens it or comments on it, and a fully green run closes it. A dispatch runs
+  # this job too when its `notify` input is set.
   #
-  # It needs publish as well as build. With `needs: build` alone it starts while
-  # the publish job is still running, and GitHub refuses to rerun a workflow
-  # that has a job in flight ("This workflow is already running"). Waiting for
-  # publish is what makes the rerun reachable at all.
-  retry-on-failure:
-    needs: [build, publish]
-    if: failure() && github.run_attempt < 3
+  # `needs` and RESULTS name every other job in this file. A job added to
+  # `needs` and not to RESULTS, or the reverse, is a job whose failure goes
+  # unreported.
+  #
+  # Every attempt reports. This file has no job that starts a new attempt of
+  # the workflow, because GitHub refuses that request from a job inside the
+  # same run ("This workflow is already running").
+  #
+  # always() runs the job whatever the results are, including when a leg
+  # failed and publish was skipped.
+  notify:
+    name: notify
+    needs: [build, publish, keepalive]
+    if: always() && (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.notify))
     runs-on: ubuntu-latest
     permissions:
-      actions: write
+      contents: read
+      issues: write
+      actions: read
     steps:
-      - name: Re-run on fresh runners
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # The open, comment, or close rule is in .github/ci-failure-issue.sh.
+      - name: Open, update, or close the ci-failure issue
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RESULTS: build=${{ needs.build.result }} publish=${{ needs.publish.result }} keepalive=${{ needs.keepalive.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          sleep 30
-          gh run rerun "${{ github.run_id }}" --repo "${{ github.repository }}"
+          set -euo pipefail
+          # A failed job listing must not block the alert: warn, and let the
+          # script fall back to its generic text. An empty file, not
+          # '{"jobs":[]}', because the script reads an empty listing as "no
+          # listing available" rather than as a contradiction.
+          gh run view "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT" --json jobs > jobs.json || {
+            echo "::warning::gh run view failed; the issue will not name the failed jobs"
+            : > jobs.json
+          }
+          # ci-failure-issue.sh takes the bare results, so strip each `job=`.
+          # shellcheck disable=SC2086
+          bare=$(printf '%s\n' $RESULTS | sed 's/^[a-z-]*=//' | xargs)
+          bash ./.github/ci-failure-issue.sh "$bare" "$RUN_URL" jobs.json

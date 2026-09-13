@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-12 (M002 done and archived, 6 review findings filed
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M003 | Unattended-rebuild alerts and schedule keepalive | planned | M001, M002 | normal | milestones/M003-unattended-rebuild-alerts.md |
+| M003 | Unattended-rebuild alerts and schedule keepalive | review | M001, M002 | normal | milestones/M003-unattended-rebuild-alerts.md |
 | M002 | Pre-merge CI lane and lint | done | M001 | normal | milestones/archive/M002-pre-merge-ci-lane.md |
 | M001 | Smoke-test gate before any tag moves | done | — | high | milestones/archive/M001-smoke-test-publish-gate.md |
 
@@ -20,7 +20,7 @@ _Last hygiene check: 2026-09-12 (M002 done and archived, 6 review findings filed
 - [high] `scripts/install_bayes.sh` still builds the `install_cmdstan()` call by interpolating `CMDSTAN_VERSION` into R source. The M002 quoting fix stops whitespace from splitting it, but a value carrying a double quote still rewrites the call. Read it with `Sys.getenv()` instead, the convention `smoke-test.sh` already follows — added 2026-09-12 — M002 review
 - [high] Nothing asserts a leg's digest was built from the base tag its variant claims. A matrix edit setting `base_tag: noble` on a resolute row passes every gate and ships noble bytes under the resolute tag. Read an OS-release or base label out of the pulled image, as the arch assertion reads `{{.Architecture}}` — added 2026-09-12 — M001 review F14
 - CmdStan is compiled into `/home/rstudio/.cmdstan`, which the compose home volume captures on first run; an image update does not refresh CmdStan for existing users until the volume is wiped. Move it outside the home directory or refresh at start — added 2026-09-03 — cairn/DESIGN.md Architecture
-- `retry-on-failure` reruns genuine smoke failures, not just mirror flakes, and `no-cache` is true for `schedule`, so a deterministic weekly failure rebuilds all four legs up to three times. Scope the retry to mirror symptoms, or drop it — added 2026-09-12 — M001 review F2
+- A retry for a failed weekly build leg. M003 removed `retry-on-failure`, because GitHub refuses a rerun requested from inside the same run. A `workflow_run` workflow can rerun failed jobs after the run ends, but it starts only from the default branch's copy, so it cannot be tested before merge. Scope it to mirror symptoms, because `no-cache` makes a deterministic failure rebuild all four legs — added 2026-09-12 — M001 review F2, M003 review O1
 - Digest artifacts are named by digest alone and merged flat, so two legs building byte-identical images collapse to one file and the guard blocks with a wrong-cause message. Name them `<variant>-<arch>` — added 2026-09-12 — M001 review F7
 - Phase 1 never touches the published host port when the image declares a HEALTHCHECK, because the healthcheck requests `localhost:8787` from inside the container. Add a host-side probe — added 2026-09-12 — M001 review F18
 - The manifest guard compares the architecture list against the exact string `amd64 arm64`, so an index naming a third architecture as well is refused though it satisfies AC5. Use a subset check — added 2026-09-12 — M001 review F13
