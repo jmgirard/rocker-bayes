@@ -126,7 +126,7 @@ records the rule and its exception to GP2.
       The "Attach the tags" step reads the verdict before its `test_mode`
       exit. The warning says that a newer build normally, but not always,
       follows. Update the comments.
-- [ ] T4: Add the concurrency groups to `.github/workflows/pr-ci.yml` and
+- [x] T4: Add the concurrency groups to `.github/workflows/pr-ci.yml` and
       `.github/workflows/lint.yml`. Add `test_publish_guard.sh` to
       `script-tests` and update its comment.
 - [ ] T5: Collect branch evidence. Dispatch `docker.yml` on the milestone
@@ -153,6 +153,7 @@ records the rule and its exception to GP2.
 - 2026-09-13: T1 done. `test_publish_guard.sh` gained the `paths` case, a no-filter case, and 15 `fresh` cases over depth-1 `file://` clones. All 16 new cases fail on the missing subcommand before T2; the 14 old cases pass.
 - 2026-09-13: T2 done. `publish-guard.sh` gained `paths` and `fresh` (exit 0 fresh, 3 stale, 2 fetch failure, 1 other error), and `.dockerignore` joined the push filter. Suite 30/30 on bash 3.2 and on bash 5.2 in a container with no git identity; shellcheck 0.11.0 `-S info` clean. The test's own revert case first wrote the wrong content and was fixed. Plants in scratch copies: dropping the exit 3 turned 8 refuse cases red, a modify-only diff filter turned 5 red, and reading comments as list ends turned the `paths` case and 6 refuse cases red. Dropping the `:(top,glob)` magic turned nothing red, because git's default pathspec matches the current filter's entries the same way.
 - 2026-09-13: T3 done. The publish job's new step runs `fresh` against the default branch and records the verdict. A stale verdict prints a warning naming the tip, and "Attach the tags" exits 0 before its test-mode branch; any other failure fails the step. actionlint reports nothing on the three workflows. The live dispatch is T5.
+- 2026-09-13: T4 done. `pr-ci.yml` and `lint.yml` declare `group: ${{ github.workflow }}-${{ github.event.pull_request.number }}` with `cancel-in-progress: true`, and `script-tests` runs `test_publish_guard.sh` fifth. All five suites pass locally; actionlint reports nothing.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
