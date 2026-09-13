@@ -30,10 +30,6 @@ on:
 
 env:
   IMAGE: jmgirard/rocker-bayes
-  # The total number of attempts a run may have. retry-on-failure and notify
-  # both hand it to .github/retry-decision.sh, so they agree on when a rerun
-  # will follow.
-  RETRY_CAP: "3"
 
 jobs:
   # One leg per (variant, architecture), each on a runner of that architecture,
@@ -368,11 +364,13 @@ jobs:
   # opens it or comments on it, and a fully green run closes it. A dispatch runs
   # this job too when its `notify` input is set.
   #
-  # `needs` and RESULTS name every other job except retry-on-failure, which
-  # needs this job instead. GitHub refuses to rerun a workflow while any of its
-  # jobs is still pending, so retry-on-failure has to start after this job has
-  # finished. A job added to `needs` and not to RESULTS, or the reverse, is a
-  # job whose failure goes unreported.
+  # `needs` and RESULTS name every other job in this file. A job added to
+  # `needs` and not to RESULTS, or the reverse, is a job whose failure goes
+  # unreported.
+  #
+  # Every attempt reports. This file has no job that starts a new attempt of
+  # the workflow, because GitHub refuses that request from a job inside the
+  # same run ("This workflow is already running").
   #
   # always() runs the job whatever the results are, including when a leg
   # failed and publish was skipped.
@@ -389,10 +387,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      # When a rerun will follow and no job it cannot heal failed, this attempt
-      # reports nothing, and the rerun's own notify decides what the issue says.
-      # The rule is in .github/retry-decision.sh, which retry-on-failure reads
-      # too. The open, comment, or close rule is in .github/ci-failure-issue.sh.
+      # The open, comment, or close rule is in .github/ci-failure-issue.sh.
       - name: Open, update, or close the ci-failure issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -400,17 +395,6 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          # Deliberately unquoted: RESULTS is a space-separated list.
-          # shellcheck disable=SC2086
-          if ! decision=$(bash ./.github/retry-decision.sh "$GITHUB_RUN_ATTEMPT" "$RETRY_CAP" $RESULTS); then
-            # A refused decision must not silence the alert, so report.
-            echo "::warning::retry-decision.sh refused its inputs; reporting this attempt"
-            decision="wait=false"
-          fi
-          if printf '%s\n' "$decision" | grep -qx 'wait=true'; then
-            echo "attempt $GITHUB_RUN_ATTEMPT of $RETRY_CAP failed in build or publish and a rerun follows; not reporting yet"
-            exit 0
-          fi
           # A failed job listing must not block the alert: warn, and let the
           # script fall back to its generic text. An empty file, not
           # '{"jobs":[]}', because the script reads an empty listing as "no
@@ -423,45 +407,3 @@ jobs:
           # shellcheck disable=SC2086
           bare=$(printf '%s\n' $RESULTS | sed 's/^[a-z-]*=//' | xargs)
           bash ./.github/ci-failure-issue.sh "$bare" "$RUN_URL" jobs.json
-
-  # If any build leg failed, it is almost always an amd64 runner that could not
-  # reach the single r2u mirror on its egress IP (arm64 native runners are
-  # reliable). Re-running the whole workflow puts each leg on a fresh runner with
-  # a new IP; unchanged legs restore from the build cache, so only the failed one
-  # actually rebuilds and re-contacts the mirror. RETRY_CAP bounds the attempts.
-  #
-  # It needs publish as well as build, and notify after both. GitHub refuses to
-  # rerun a workflow that has a job pending or in flight ("This workflow is
-  # already running"), so this job starts only after every other job finished.
-  #
-  # !cancelled() lets the job start when a need failed or was skipped.
-  # .github/retry-decision.sh then reruns only when build or publish failed and
-  # the attempt is below RETRY_CAP. A keepalive or notify failure alone never
-  # reruns the four legs.
-  retry-on-failure:
-    needs: [build, publish, notify]
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      actions: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Re-run on fresh runners
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RESULTS: build=${{ needs.build.result }} publish=${{ needs.publish.result }}
-        run: |
-          set -euo pipefail
-          # Deliberately unquoted: RESULTS is a space-separated list.
-          # shellcheck disable=SC2086
-          decision=$(bash ./.github/retry-decision.sh "$GITHUB_RUN_ATTEMPT" "$RETRY_CAP" $RESULTS)
-          echo "$decision"
-          if ! printf '%s\n' "$decision" | grep -qx 'retry=true'; then
-            echo "no rerun: build and publish did not fail, or attempt $GITHUB_RUN_ATTEMPT reached the cap of $RETRY_CAP"
-            exit 0
-          fi
-          sleep 30
-          gh run rerun "${{ github.run_id }}" --repo "${{ github.repository }}"

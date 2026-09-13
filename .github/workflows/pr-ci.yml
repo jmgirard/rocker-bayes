@@ -51,7 +51,6 @@ jobs:
           bash ./.github/tests/test_ci_failure_issue.sh
           bash ./.github/tests/test_keepalive.sh
           bash ./.github/tests/test_rebuild_gap.sh
-          bash ./.github/tests/test_retry_decision.sh
 
   build-smoke:
     name: build and smoke-test noble (amd64)

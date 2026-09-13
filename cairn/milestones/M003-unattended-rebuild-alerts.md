@@ -22,12 +22,13 @@ happening, both report themselves.
 three unit-test suites. A `notify` job and a `keepalive` job in `docker.yml`.
 A new `.github/workflows/rebuild-gap.yml`. A step in M002's pre-merge lane
 that runs the three suites. A dispatch input on the gap workflow that supplies
-the last-success date, so the alert path can be driven on demand. A retry
-decision script, `.github/retry-decision.sh`, with its suite, read by both
-`notify` and `retry-on-failure`.
+the last-success date, so the alert path can be driven on demand. The removal
+of the `retry-on-failure` job, because GitHub refuses a rerun started from
+inside the run it reruns.
 
 **Out:** the publish gate goes to M001. The pre-merge lane itself goes to
-M002. The Docker Hub description sync stays a candidate row.
+M002. The Docker Hub description sync stays a candidate row. A retry started
+from a separate `workflow_run` workflow stays a candidate row.
 
 ## Acceptance criteria
 
@@ -58,16 +59,11 @@ M002. The Docker Hub description sync stays a candidate row.
       fills when the input is empty, and one of the three runs takes its date
       from that lookup. At review, the file has no `push` trigger.
 - [ ] AC5: `docker.yml` gains a `notify` job whose `needs` list and `RESULTS`
-      string name every other job in the file except `retry-on-failure`. It
-      runs whatever those jobs' results are, on scheduled runs and when the
-      `notify` dispatch input is set. `retry-on-failure` needs `build`,
-      `publish` and `notify`. One script, `.github/retry-decision.sh`, decides
-      for both jobs: a retry fires when `build` or `publish` failed and the
-      attempt is below the cap, and `notify` waits instead of reporting only
-      when a retry fires and no other job failed. Its suite drives attempts 1
-      through 4 with a build failure, a publish failure, a keepalive failure, a
-      keepalive failure beside a build failure, a cancelled build, and an
-      all-green attempt. A `test_mode` run with no `ci-failure` issue open and
+      string name every other job in the file. It runs whatever those jobs'
+      results are, on scheduled runs and when the `notify` dispatch input is
+      set, and no step in it skips the report for a later attempt. The file has
+      no `retry-on-failure` job and no `gh run rerun` call, shown by a recorded
+      `grep`. A `test_mode` run with no `ci-failure` issue open and
       every build and publish job green, in which the keepalive job is forced
       to fail, opens the issue with a failed-job list of exactly `keepalive`.
 - [x] AC6: The keepalive job pushes its empty commit with a repository deploy
@@ -103,17 +99,17 @@ M002. The Docker Hub description sync stays a candidate row.
       sees gaps in multiples of a week, so 8 alerts on the second missed
       rebuild with a day of slack for a late run. Add the last-success-date
       dispatch input that AC4 drives.
-- [x] T6: Add a step to M002's pre-merge lane that runs the four suites, and
+- [x] T6: Add a step to M002's pre-merge lane that runs the three suites, and
       add `.github/tests/**` to that lane's paths filter.
 - [x] T7: Add a temporary `push` trigger scoped to the milestone branch, with
       the date committed alongside it. Make the three runs of AC4, one with an
       empty date so the lookup fills it. Record the issue URL and the run
       URLs, then remove the trigger.
-- [x] T8: Write `.github/retry-decision.sh` and its suite. Add the `notify`
-      job and the `notify` dispatch input to `docker.yml`, and rewire
-      `retry-on-failure` to read the script. Drive one forced keepalive
-      failure in test mode, and repeat the run if a build or publish job
-      fails. Record the run and issue URLs.
+- [ ] T8: Add the `notify` job and the `notify` dispatch input to
+      `docker.yml`. Remove `retry-on-failure`, `.github/retry-decision.sh`, its
+      suite, and its step in `pr-ci.yml`. Drive one forced keepalive failure in
+      test mode, and repeat the run if a build or publish job fails. Record the
+      run and issue URLs.
 - [x] T9: Add the `keepalive` job to `docker.yml` with two `actions/checkout`
       steps. One takes the workflow's own ref for the script. One takes the
       default branch for the write.
@@ -157,6 +153,8 @@ M002. The Docker Hub description sync stays a candidate row.
 - claim audit: 160 claims read, 15 corrected — .github/ci-failure-issue.sh, .github/date-lib.sh, .github/keepalive.sh, .github/rebuild-gap.sh, .github/retry-decision.sh, .github/workflows/docker.yml, .github/workflows/rebuild-gap.yml, .github/tests/test_ci_failure_issue.sh, .github/tests/test_keepalive.sh, .github/tests/test_rebuild_gap.sh, .github/tests/test_retry_decision.sh
 - 2026-09-13: [O] claim-audit reader, fresh context. Edits are prose only: comments, the `ci-failure` label description, and two dispatch-input descriptions. After them the five suites pass and actionlint 1.7.7 is clean. Status set to review.
 - 2026-09-13: review return 1 (defect): AC5 fails. GitHub refuses `gh run rerun` from `retry-on-failure` while that job runs (scheduled runs 34127399018 and 32007984150). No retry fires, and `notify` with `wait=true` leaves a failed build leg unreported. AC1-AC4, AC6, AC7 verified. 16 review findings logged in Review, untriaged. Status back to in-progress.
+- 2026-09-13: amendment (user decision, narrowing after return 1): AC5 drops the retry. notify names every other job, reports every attempt, and the file has no `retry-on-failure` job or `gh run rerun` call. Scope In removes `.github/retry-decision.sh` and adds the job's removal. Scope Out adds a `workflow_run` retry as a candidate row. AC5 already has two re-audit lines, so no reader ran and the wording went to the user. T8 reopened and T6 now names three suites. The other 15 findings stay for the review gate.
+- 2026-09-13: T8 (partial): removed `retry-on-failure`, `RETRY_CAP`, notify's wait branch, `.github/retry-decision.sh`, its suite, and its `pr-ci.yml` line. Comments in `docker.yml` and `rebuild-gap.yml`, DESIGN, the M001 rerun lesson (corrected), and the F2 retry candidate row follow. Run 34127399018's log reads "cannot be rerun; This workflow is already running". actionlint 1.7.7, shellcheck 0.11.0 and hadolint 2.12.0 exit 0, the four remaining suites pass, and the `grep -cE 'retry-on-failure|gh run rerun'` over `docker.yml` prints 0. Live run pending.
 
 ## Decisions
 

@@ -14,7 +14,7 @@ and 20,000 bytes; over either, retire or prune before adding. Corrected in
 place when proven false (never append a correction).
 
 - 2026-09-12 (M001): a GitHub Actions job gated on `always()` also runs when the run is cancelled. Use `!cancelled()` where the job must not act against a cancel.
-- 2026-09-12 (M001): `gh run rerun` refuses a workflow that still has a job in flight ("This workflow is already running"). A retry job must depend on every job that can still be running, not just the one that failed.
+- 2026-09-12 (M001): `gh run rerun` refuses a workflow that still has a job in flight ("This workflow is already running"). A job inside the run is itself in flight, so no job can rerun its own run, whatever it depends on. A retry has to start from another workflow, such as a `workflow_run` trigger (corrected M003).
 - 2026-09-12 (M001): under `set -e`, a failing command substitution in an assignment kills the script before any error message prints. Guard every `docker inspect` read with `2>/dev/null || echo <fallback>`.
 - 2026-09-12 (M001): `praise` and `oolong` are the smoke test's two bspm probes. `praise` has an r2u binary, `oolong` has none and installs from source, which is what makes the `dpkg -s` assertion discriminating.
 - 2026-09-12 (M001): Docker treats any non-zero healthcheck exit as unhealthy, `wget`'s exit 4 included, so an exec-form HEALTHCHECK needs no `|| exit 1`.

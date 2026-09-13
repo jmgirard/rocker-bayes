@@ -15,8 +15,8 @@ name: Check the weekly rebuild is not stale
 
 on:
   # Tuesdays at 07:00 UTC, a day after docker.yml's Monday 07:00 rebuild. Weekly
-  # runs have started hours after their cron time, and a failed rebuild can
-  # rerun twice, so a day's margin lets the run being measured finish first.
+  # runs have started hours after their cron time, so a day's margin lets the
+  # run being measured finish first.
   schedule:
     - cron: "0 7 * * 2"
   workflow_dispatch:

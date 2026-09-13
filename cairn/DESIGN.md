@@ -55,8 +55,7 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   `.github/tests/test_publish_guard.sh` drives the guard through its failing
   cases without a CI run.
 - **Unattended-rebuild alerts**: `docker.yml`'s `keepalive` job
-  (`.github/keepalive.sh`), its `notify` job (`.github/ci-failure-issue.sh`),
-  and its `retry-on-failure` job share `.github/retry-decision.sh`.
+  (`.github/keepalive.sh`) and its `notify` job (`.github/ci-failure-issue.sh`).
   `.github/workflows/rebuild-gap.yml` runs `.github/rebuild-gap.sh`. Both date
   scripts source `.github/date-lib.sh`. Each script has a suite in
   `.github/tests/`.
@@ -109,10 +108,9 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   `KEEPALIVE_DEPLOY_KEY` secret, so no job needs a token that can write.
 - **A failed or missing rebuild opens an issue.** If a job in a scheduled run
   fails, the `notify` job in `docker.yml` opens or comments on a `ci-failure`
-  issue. A fully green scheduled run closes it. If a failed build or publish
-  is below `RETRY_CAP` attempts, the run reruns and notify leaves the report to
-  the rerun. `.github/retry-decision.sh` holds that rule for both `notify` and
-  `retry-on-failure`. `rebuild-gap.yml` runs each Tuesday. If the last successful
+  issue. A fully green scheduled run closes it. Every attempt reports, and
+  `docker.yml` has no job that reruns it, because GitHub refuses a rerun
+  requested from inside the same run. `rebuild-gap.yml` runs each Tuesday. If the last successful
   scheduled rebuild is more than 8 days old, it raises the same issue. The suites in
   `.github/tests/` test these scripts offline, and `pr-ci.yml` runs them.
 - Container is intentionally root-capable (passwordless sudo); safety comes
