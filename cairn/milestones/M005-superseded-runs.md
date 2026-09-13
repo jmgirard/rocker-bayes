@@ -173,6 +173,7 @@ records the rule and its exception to GP2.
 - 2026-09-13: the correction was the new `fresh` step comment. It said a failed lookup leaves the name empty. The step runs under bash `-e` with `pipefail`, so a failed `ls-remote` ends the step with git's error, and only a missing symref line reaches `fresh` with an empty name. The reader re-read the new wording and found it accurate.
 - 2026-09-13: T7 done. Dispatch 34781490836 (`test_mode`, head `17c784b`) concluded `success`: four legs, keepalive, and publish passed, and notify was skipped. The lookup resolved `main`: the publish log printed `stale: the tip of main (492dbfc…)` and a warning naming it, and "Attach the tags" printed its no-tag line. The only later change is the corrected comment.
 - 2026-09-13: implement complete, status `review`.
+- 2026-09-13: review pass 2 started at `cfd51f8`. All seven criteria have fresh evidence and the consistency gate passed. The three-lens review is running.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
@@ -220,3 +221,20 @@ Gate dispositions (2026-09-13):
 - O8: rejected, because file names that contain `%`, CR, or LF are unlikely in this repository.
 - Blame lens note on retry and fetch failure: noted, no action.
 - Prior-review lens: no findings.
+
+Second pass, after defect return 1. Evidence gathered 2026-09-13 on `m005-superseded-runs` at `cfd51f8`. `origin/main` is still `492dbfc` and the branch contains it, so no merge was needed. No PR exists for the branch.
+
+- AC1 (pass 2): `paths .github/workflows/docker.yml` prints the same seven entries, `.dockerignore` second. `cmd_fresh` still reads its list from `cmd_paths` alone (line 138). The case "paths: docker.yml's push filter is read exactly" passes. Pass.
+- AC2 (pass 2): `test_publish_guard.sh` passed 31/31 under bash 3.2.57 (macOS). It also passed 31/31 under bash 5.2.15 in `debian:bookworm-slim` with git 2.39.5 and no git identity. All 15 AC2 `fresh` cases print `ok`, and the new 16th `fresh` case, an empty branch name, prints `ok` with status 1 and `::error::no branch name`. Pass.
+- AC3 (pass 2): Code read at `cfd51f8`. The `fresh` step (line 304) still follows "Assemble and check both manifest lists" (243) and precedes "Attach the tags" (329). It now sets the branch from `git ls-remote --symref origin HEAD` (line 308). The status-to-verdict mapping and the attach step's early exit on any verdict other than `fresh` (335), before the test-mode branch (339), are unchanged. The push filter lists `.dockerignore`. Dispatch run 34781490836 (`workflow_dispatch`, head `17c784b`, which changes `docker.yml`) concluded `success`. Its publish log prints `stale: the tip of main (492dbfc…)` and a warning naming `492dbfc`, and "Attach the tags" printed its no-tag line. The only later change under `.github` is `cfd51f8`, a comment in `docker.yml` (4 lines added, 2 removed). Pass.
+- AC4 (pass 2): `pr-ci.yml` (line 39) and `lint.yml` (line 22) declare the same concurrency group with `cancel-in-progress: true`, and neither file changed after the drill head `da7cbd7`. `gh run view`, read again today: push-1 runs at `207ce12` (created 20:02:50Z) Shell lint `cancelled` and PR CI `cancelled`. Push-2 runs at `da7cbd7` (created 20:02:56Z) Shell lint `success` and PR CI `success`. actionlint 1.7.12 reports nothing. Pass.
+- AC5 (pass 2): `pr-ci.yml` line 63 runs `test_publish_guard.sh`. In run 34779532789 the job "alert and keepalive script suites" concluded `success`, read again today. Pass.
+- AC6 (pass 2): All five suites exit 0 locally. shellcheck 0.11.0 at `-S info` on both files prints nothing and exits 0. Pass.
+- AC7 (pass 2): `cairn/DESIGN.md` is unchanged since pass 1. Line 100 states the freshness rule, line 106 names the GP2 exception, line 71 describes the concurrency groups, and line 67 names five suites. Pass.
+
+Consistency gate (pass 2):
+
+- `cairn_validate.py` exits 0, all checks PASS or OK, `coverage complete` included.
+- `cairn_impact.py --changed` lists GP2 references only in this milestone file. No principle text changed.
+- `hadolint Dockerfile` exits 0 with no output. The branch changes no `Dockerfile` or build-context file, so no local `docker build` ran. Dispatch 34781490836 built all four legs green at `17c784b`.
+- Base image, secrets, `.dockerignore`, and changelog: unchanged from pass 1.
