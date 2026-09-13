@@ -370,7 +370,11 @@ jobs:
   #
   # Every attempt reports. This file has no job that starts a new attempt of
   # the workflow, because GitHub refuses that request from a job inside the
-  # same run ("This workflow is already running").
+  # same run ("This workflow is already running"). rebuild-retry.yml starts
+  # that attempt from outside instead: once, for a scheduled run whose failure
+  # was the r2u mirror (the rule is in .github/retry-decision.sh). A rerun of
+  # the failed jobs reruns this job too, so attempt 1 opens or comments on the
+  # issue and a fully green attempt 2 closes it.
   #
   # always() runs the job whatever the results are, including when a leg
   # failed and publish was skipped.

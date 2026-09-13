@@ -1,0 +1,52 @@
+name: Rerun a weekly build that failed on the r2u mirror
+
+# When a docker.yml run completes, decide whether it gets one rerun of its
+# failed jobs, and start that rerun. The rule is in .github/retry-decision.sh,
+# tested offline by .github/tests/test_retry_decision.sh: a scheduled run's
+# first attempt whose failed build legs each failed at the build step with
+# install_bayes.sh's give-up line in the log, the r2u mirror symptom.
+#
+# This is its own workflow because a job inside docker.yml cannot rerun the run
+# it belongs to: GitHub refuses the request while that run is still in progress.
+# `workflow_run` starts after the run has completed.
+#
+# The job starts on every docker.yml completion, push and dispatch runs
+# included, and the script declines those before any gh call. The event rule
+# lives in the script alone.
+#
+# GitHub starts a `workflow_run` workflow only from the default branch's copy of
+# this file, so a branch edit here takes effect after it merges.
+
+on:
+  workflow_run:
+    # Must equal the `name:` at the top of docker.yml.
+    workflows: ["Build and push Docker images"]
+    types: [completed]
+
+# actions: write for `gh run rerun`. It also covers reading the jobs listing and
+# the job logs.
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  retry:
+    name: retry-decision
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # The default branch, which is what `workflow_run` checks out.
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Rerun the failed jobs if the failure was the r2u mirror
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_EVENT: ${{ github.event.workflow_run.event }}
+          RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+        run: bash ./.github/retry-decision.sh "$RUN_ID" "$RUN_EVENT" "$RUN_ATTEMPT" "$RUN_CONCLUSION"

@@ -19,8 +19,8 @@ on:
       - "scripts/**"
       - ".github/workflows/**"
       - ".github/*.sh"
-      # The unit suites for the alert and keepalive scripts, run by the
-      # script-tests job below.
+      # The unit suites for the alert, keepalive, rebuild-gap, and retry
+      # scripts, run by the script-tests job below.
       - ".github/tests/**"
       # The fixtures the smoke test reads. docker.yml watches them too, and a
       # change to bernoulli.data.json moves the posterior mean the test
@@ -34,9 +34,10 @@ permissions:
   contents: read
 
 jobs:
-  # The offline suites for the scripts docker.yml and rebuild-gap.yml call
-  # without anyone watching. They stub gh and git and need no image, so they
-  # run as their own job and report in seconds rather than after a build.
+  # The offline suites for the scripts docker.yml, rebuild-gap.yml, and
+  # rebuild-retry.yml call without anyone watching. They stub gh and git and
+  # need no image, so they run as their own job and report in seconds rather
+  # than after a build.
   script-tests:
     name: alert and keepalive script suites
     runs-on: ubuntu-latest
@@ -51,6 +52,7 @@ jobs:
           bash ./.github/tests/test_ci_failure_issue.sh
           bash ./.github/tests/test_keepalive.sh
           bash ./.github/tests/test_rebuild_gap.sh
+          bash ./.github/tests/test_retry_decision.sh
 
   build-smoke:
     name: build and smoke-test noble (amd64)
