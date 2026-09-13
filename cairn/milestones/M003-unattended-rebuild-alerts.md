@@ -31,24 +31,24 @@ M002. The Docker Hub description sync stays a candidate row.
 
 ## Acceptance criteria
 
-- [ ] AC1: If any job result is neither success nor cancelled,
+- [x] AC1: If any job result is neither success nor cancelled,
       `.github/ci-failure-issue.sh` opens one `ci-failure` issue. With an
       issue already open, it comments on that issue instead of opening a
       second one. With results that are unanimously successful, it closes the
       open issue. The ported suite drives all three branches and passes.
-- [ ] AC2: `.github/keepalive.sh` makes exactly two git calls, one empty
+- [x] AC2: `.github/keepalive.sh` makes exactly two git calls, one empty
       commit and one push, at an age at or past the threshold. Below the
       threshold it makes no git call at all. The ported suite intercepts `git`
       on `PATH` to count the calls. It drives the threshold and the day either
       side of it. It also drives five rejection cases: a malformed date, an
       impossible calendar date, a commit date in the future, a non-integer
       threshold, and an over-wide threshold.
-- [ ] AC3: `.github/rebuild-gap.sh` raises the alert only at a gap strictly
+- [x] AC3: `.github/rebuild-gap.sh` raises the alert only at a gap strictly
       greater than the threshold. The ported suite drives the gap at the
       threshold, one day under, and one day over. It also drives the `none`
       and `unknown` sentinels and asserts that each takes its own branch
       rather than the measured-age branch.
-- [ ] AC4: With no `ci-failure` issue open, a run of `rebuild-gap.yml` on the
+- [x] AC4: With no `ci-failure` issue open, a run of `rebuild-gap.yml` on the
       milestone branch whose last-success date is more than the threshold days
       before the run's UTC date opens a `ci-failure` issue whose title gives
       the measured gap and that date. A second such run comments on that same
@@ -57,7 +57,7 @@ M002. The Docker Hub description sync stays a candidate row.
       variable, which the dispatch input sets and the `gh run list` lookup
       fills when the input is empty, and one of the three runs takes its date
       from that lookup. At review, the file has no `push` trigger.
-- [ ] AC5: `docker.yml` gains a `notify` job whose `needs` list and `RESULTS`
+- [x] AC5: `docker.yml` gains a `notify` job whose `needs` list and `RESULTS`
       string name every other job in the file except `retry-on-failure`. It
       runs whatever those jobs' results are, on scheduled runs and when the
       `notify` dispatch input is set. `retry-on-failure` needs `build`,
@@ -70,7 +70,7 @@ M002. The Docker Hub description sync stays a candidate row.
       all-green attempt. A `test_mode` run with no `ci-failure` issue open and
       every build and publish job green, in which the keepalive job is forced
       to fail, opens the issue with a failed-job list of exactly `keepalive`.
-- [ ] AC6: The keepalive job pushes its empty commit with a repository deploy
+- [x] AC6: The keepalive job pushes its empty commit with a repository deploy
       key. A dispatch with the threshold at 0 lands the commit. The same
       dispatch with the key secret cleared fails to push. No job in
       `docker.yml` grants `contents: write`, shown by a recorded `grep` over
@@ -160,3 +160,19 @@ M002. The Docker Hub description sync stays a candidate row.
 ## Decisions
 
 ## Review
+
+Evidence gathered 2026-09-13 on 8ab46f9, which already contains origin/main (`git log HEAD..origin/main` is empty).
+
+- AC1: `bash .github/tests/test_ci_failure_issue.sh` exits 0, 99 `ok` lines, none failing. Case 1 (failure, none open) asserts `issue create` with the `ci-failure` label. Case 2 (failure, #41 and #57 open) asserts `issue comment 41` and no `issue create`. Case 3 (unanimous success, two open) asserts a comment and `issue close` on each. Cases 6a, 6b (cancelled only) assert no gh call. Cases 6c to 6h assert that skipped, unknown, and empty results never close. Two plants in a scratch copy turn the suite red. A comment on the newest open issue gives 11 failures. A `cancelled` result read as success gives 3 failures.
+- AC2: `bash .github/tests/test_keepalive.sh` exits 0, 102 `ok` lines. A `git` stub first on `PATH` logs each call. If the stub is not the `git` the suite finds, the suite fails at once. At 50 days against 50, and at 51, `assert_call_log` requires exactly two logged calls, an empty commit then a push. At 49 days `assert_no_git` requires an empty log. Each rejection case asserts exit 2 and no git call. Case 7 drives malformed dates. Case 8 drives 2026-02-30, 2026-02-29, 2026-04-31, 2026-13-01 and 2026-00-10. Case 9 drives a commit dated after today. Case 10 drives thresholds such as `5.5` and `fifty`. Case 11 drives thresholds of 8, 19 and 32 digits. Two plants turn it red: `<=` at the boundary gives 6 failures, and a dropped push gives 6 failures.
+- AC3: `bash .github/tests/test_rebuild_gap.sh` exits 0, 131 `ok` lines. Against an 8-day bound, 7 days (case 1) and 8 days (case 2) assert no gh call. 9 days (case 3) asserts `issue create` titled "No successful scheduled docker.yml rebuild in 9 days (since 2026-01-01)". Cases 5 and 6 drive `none` and `unknown` at thresholds 8 and 0. Each asserts its own title and output line, and asserts that the measured-age title and output are absent. Two plants turn it red: `<` in place of `<=` at the bound, and `none` sent into the measured branch (7 failures).
+- AC4: read again with `gh` on 2026-09-13. `gh issue list --label ci-failure --state all` lists only #8 and #9, so no `ci-failure` issue was open before the first run. Run 34717240302 (push, branch, f2bb815) logs "last-success date supplied: 2026-08-01", today 2026-09-12 UTC, 42 days past the 8-day bound. Issue #8 was created at 20:29:32Z with the title "No successful scheduled docker.yml rebuild in 42 days (since 2026-08-01)". Run 34717259419 (03d1eb1, `LAST_SUCCESS` left empty) logs "looked up: 2026-08-31", and #8 gains its one bot comment at 20:30:08Z. Run 34717295150 (2bc94a4, date 2026-09-10) logs "2 day(s) ago, within the 8-day bound; no alert". The next comment on #8 is the maintainer's hand close at 20:31:46Z, after that run ended at 20:30:36Z. At each of the three commits, `LAST_SUCCESS` is the one date variable. At HEAD, `grep -cE '^\s*push:' .github/workflows/rebuild-gap.yml` prints 0. `git diff 2bc94a4 HEAD` on the file shows only the trigger removal, the date literal removal, and one input description edit.
+- AC5: a PyYAML read of `docker.yml` lists the jobs `build`, `publish`, `keepalive`, `notify` and `retry-on-failure`. `notify` needs `build`, `publish` and `keepalive`, and its `RESULTS` names the same three. Its `if` is `always()` joined to the schedule event or a dispatch with `inputs.notify`. `retry-on-failure` needs `build`, `publish` and `notify`, and both jobs call `.github/retry-decision.sh` with `RETRY_CAP`. `bash .github/tests/test_retry_decision.sh` exits 0, 35 `ok` lines. It drives attempts 1 to 4 against a cap of 3 for six shapes. They are a build failure, a publish failure, a keepalive failure, keepalive beside build, a cancelled build, and all green. Three plants turn it red: `<=` at the cap (4 failures), a wait that ignores other jobs (4), and `publish` dropped from the retry set (6). Run 34717363489, attempt 1, was a branch dispatch with `test_mode` true in the build logs. All four legs and `publish` succeeded, and `keepalive` failed. `retry-on-failure` printed `retry=false` and `wait=false` and did not rerun. `notify` logged "opened a ci-failure issue for: keepalive" at 20:39:05Z. #9 was created at that second with the title "Weekly run failed: keepalive". No `ci-failure` issue was open, because #8 was closed at 20:31:46Z.
+- AC6: `gh repo deploy-key list` shows `KEEPALIVE_DEPLOY_KEY` read-write, and `gh secret list` shows the secret set 2026-09-13T17:10:15Z. Key run 34770877387 (8e01724, threshold 0) sets `core.sshCommand` with the key and a `git@github.com` remote. It logs "1 day(s) old, at or past the 0-day threshold" and then `d19bc56..b444cd2  main -> main`. `git show b444cd2` is an empty commit by github-actions[bot], and origin/main contains it. The no-key run 34717363489 ran at 54a0f29, before the secret existed. `git diff 54a0f29 8e01724` on `docker.yml` is empty, so the job was the same. It logs "denied to github-actions[bot]", HTTP 403 over https, and exit code 128. `grep -c 'contents: write' .github/workflows/docker.yml` prints 0. The file's three `contents:` lines read `read`, and it has no workflow-level `permissions`. The repository default workflow permission is `read` (`gh api .../actions/permissions/workflow`).
+
+Consistency gate, 2026-09-13:
+
+- `cairn_validate.py` exits 0, and every check passes. No IP or GP text changed in `cairn/DESIGN.md`, so `cairn_impact` was not run.
+- `rhysd/actionlint:1.7.7` over the repository exits 0. `koalaman/shellcheck:v0.11.0 -x` over `.github/*.sh` and `.github/tests/*.sh` exits 0. `test_publish_guard.sh` passes too (14 `ok`).
+- The base image is `jmgirard/rstudio2u:${BASE_TAG}` with `BASE_TAG=noble`. That is an explicit tag, not `latest`, and the diff does not touch it. The Dockerfile has no `ENV` or `--build-arg` that carries a token or key. `.dockerignore` excludes `.git`, `.github` and `cairn`. The diff touches neither the Dockerfile, `scripts/`, nor `.dockerignore`.
+- The changelog slot is none (D-002), so no changelog entry is due. This milestone changes CI only, so it needs no recipe release.
