@@ -115,7 +115,7 @@ side effects of `notify` stay in their existing candidate rows.
       and get no findings.
 - [x] T3: Add `.github/workflows/rebuild-retry.yml` per AC3. Add the suite to
       the `script-tests` job in `pr-ci.yml`.
-- [ ] T4: Run the drill on the branch. Add the temporary failing step,
+- [x] T4: Run the drill on the branch. Add the temporary failing step,
       dispatch `docker.yml` with `test_mode=true`, and run
       `gh run rerun <id> --failed`. Record the job list and publish log of
       attempt 2. If attempt 2 cannot read the digests of attempt 1, fix the
@@ -144,6 +144,7 @@ side effects of `notify` stay in their existing candidate rows.
 - 2026-09-13: T3 done: `rebuild-retry.yml` added (only trigger `workflow_run` completed, `actions: write` + `contents: read`, the four payload fields passed through env); `pr-ci.yml` script-tests runs the new suite, job name kept. actionlint 1.7.12 is clean on rebuild-retry.yml, pr-ci.yml, and docker.yml; the `workflows:` entry and docker.yml `name:` extract to the same string.
 - 2026-09-13: T4 drill started: temporary step pushed, branch dispatch run 34775210635 (`test_mode=true`); T5 begun in parallel with the `install_bayes.sh` retry comment (DESIGN.md and the `notify` comment wait on the drill result). Local hadolint (hadolint/hadolint image) is clean; local `docker build` running.
 - 2026-09-13: T4 attempt 1 of run 34775210635 concluded failure: noble amd64 failed at the drill step, publish at `Require all four verified digests`, the other legs and keepalive green, notify skipped. Local `docker build -t rocker-bayes:dev .` exited 0. `gh run rerun 34775210635 --failed` started attempt 2.
+- 2026-09-13: T4 attempt 2 of run 34775210635 concluded success. Only `build (noble, amd64)` started again (18:45:27Z; the other legs and keepalive keep their 18:37Z attempt-1 start); publish (job 103773956618) downloaded four `digests-*` artifacts, printed "found all 4 verified digests", then "the noble manifest list names both architectures: amd64 arm64" and the same for resolute; notify was rerun as a dependent and skipped on its condition. No `docker.yml` download fix was needed. Drill step removed.
 
 ## Decisions
 
