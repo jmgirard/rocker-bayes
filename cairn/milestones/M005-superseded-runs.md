@@ -156,6 +156,8 @@ records the rule and its exception to GP2.
 - 2026-09-13: T4 done. `pr-ci.yml` and `lint.yml` declare `group: ${{ github.workflow }}-${{ github.event.pull_request.number }}` with `cancel-in-progress: true`, and `script-tests` runs `test_publish_guard.sh` fifth. All five suites pass locally; actionlint reports nothing.
 - 2026-09-13: T5 started. Dispatched `docker.yml` run 34779453138 on the branch with `test_mode=true`. Opened drill PR #13 from `m005-drill`, then one script pushed `207ce12` at 20:02:46 and `da7cbd7` at 20:02:51 UTC. The first push's lint run concluded `cancelled`; the build runs are still going.
 - 2026-09-13: T6 done. DESIGN.md Architecture names the `fresh` check and five `script-tests` suites and describes the PR concurrency groups. A new Conventions bullet states the freshness rule, its GP2 exception, and why `docker.yml` has no group.
+- claim audit: 41 claims read, 4 corrected — .github/publish-guard.sh, .github/tests/test_publish_guard.sh, .github/workflows/docker.yml, .github/workflows/lint.yml, .github/workflows/pr-ci.yml
+- 2026-09-13: the 4 corrections were the `fresh` header and the publish step's comment, warning, and attach message, which claimed a difference always means a newer build. On a branch run the difference can be the branch's own change. The header also claimed `::error::` output for missing arguments, which bash prints as its own usage message. Suite 30/30, shellcheck and actionlint clean afterwards. The running dispatch (head `8dfdcde`) prints the pre-correction warning text.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

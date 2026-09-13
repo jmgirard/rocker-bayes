@@ -23,15 +23,17 @@
 #
 #   publish-guard.sh fresh <workflow-file> <run-sha> <remote> <branch>
 #       Run inside the run's checkout. Fetch the tip of <branch> and compare
-#       it with <run-sha> over the paths `paths` prints. A commit that changes
-#       one of those paths normally starts its own push build, so a difference
-#       means a newer build will publish, and this run must not move the tags
-#       back to its older recipe. Exits 0 ("fresh:") when nothing differs,
-#       3 ("stale:", naming the tip commit) when something does, and 2 when
-#       the fetch fails.
+#       it with <run-sha> over the paths `paths` prints. On a run of a
+#       default-branch commit, a difference means a later commit changed the
+#       recipe. Such a commit normally starts its own push build, so this run
+#       must not move the tags back to its older recipe. On a branch run the
+#       difference can be the branch's own change. Exits 0 ("fresh:") when
+#       nothing differs, 3 ("stale:", naming the tip commit) when something
+#       does, and 2 when the fetch fails.
 #
 # digests and manifest print a GitHub Actions ::error:: line and exit 1 on
-# failure. paths and fresh do the same on a usage or read error.
+# failure. paths and fresh do the same on a read error. A missing argument
+# prints bash's own usage message and exits 1.
 #
 set -euo pipefail
 
