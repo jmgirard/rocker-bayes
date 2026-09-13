@@ -49,12 +49,12 @@ records the rule and its exception to GP2.
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: `.github/publish-guard.sh paths <workflow-file>` prints one line
+- [x] AC1: `.github/publish-guard.sh paths <workflow-file>` prints one line
       per entry of that file's push `paths` filter, and `fresh` compares
       exactly the paths that `paths` prints. `test_publish_guard.sh` states
       the expected list for the repository's `docker.yml` separately and
       asserts that `paths` prints exactly that list.
-- [ ] AC2: `.github/tests/test_publish_guard.sh` runs `fresh` against a
+- [x] AC2: `.github/tests/test_publish_guard.sh` runs `fresh` against a
       bare repository reached over `file://`. The run's commit is cloned and
       the tip is fetched at depth 1. The test asserts three distinct exit
       statuses: pass, refuse, and fetch failure. It passes when the tip is the
@@ -67,7 +67,7 @@ records the rule and its exception to GP2.
       into, and out of the filter, a mode-only change, and a run commit that
       is not an ancestor of the tip. An unreachable remote gets the fetch
       failure status.
-- [ ] AC3: In `docker.yml`, the publish job runs `fresh` after both manifest
+- [x] AC3: In `docker.yml`, the publish job runs `fresh` after both manifest
       lists pass and before "Attach the tags". The code sets this behavior:
       on a refusal the job attaches no tag for either variant, prints a
       `::warning::` naming the tip commit, and succeeds. On a fetch failure it
@@ -75,20 +75,20 @@ records the rule and its exception to GP2.
       `.dockerignore`. A `test_mode` dispatch of the milestone branch, which
       changes `docker.yml`, prints the refusal warning naming the tip commit
       in its publish log.
-- [ ] AC4: `pr-ci.yml` and `lint.yml` each declare a workflow-level
+- [x] AC4: `pr-ci.yml` and `lint.yml` each declare a workflow-level
       concurrency group keyed on the workflow name and the pull request
       number, with `cancel-in-progress: true`. A drill pull request is opened
       first. Then one script pushes two commits seconds apart. For each
       workflow, the first push's run concludes `cancelled`, or it concluded
       before the second push's run was created, per `gh run view`
       timestamps. Each second-push run concludes `success`.
-- [ ] AC5: The `script-tests` job in `pr-ci.yml` runs
+- [x] AC5: The `script-tests` job in `pr-ci.yml` runs
       `.github/tests/test_publish_guard.sh` beside its four suites. The job
       in the second push's run on the drill pull request concludes `success`.
-- [ ] AC6: All five suites in `.github/tests/` pass locally, and shellcheck
+- [x] AC6: All five suites in `.github/tests/` pass locally, and shellcheck
       0.11.0 at `-S info` reports nothing on `.github/publish-guard.sh` and
       `.github/tests/test_publish_guard.sh`.
-- [ ] AC7: `cairn/DESIGN.md` states the freshness rule and names it as an
+- [x] AC7: `cairn/DESIGN.md` states the freshness rule and names it as an
       exception to the GP2 statement that every build publishes immutable
       tags. It lists the pull request concurrency groups and names five
       suites in `script-tests`.
@@ -166,3 +166,23 @@ records the rule and its exception to GP2.
 
 ## Review
 <!-- owner: review · exclusive -->
+
+Evidence gathered 2026-09-13 on `m005-superseded-runs` at `9862923`. The branch contains `origin/main` (`492dbfc`), so no merge was needed.
+
+- AC1: `publish-guard.sh paths .github/workflows/docker.yml` prints the seven entries, `.dockerignore` second. `cmd_fresh` builds its pathspecs from `cmd_paths` output alone (read in the diff). The suite's `want_paths` literal is stated apart from `docker.yml`, and the case "paths: docker.yml's push filter is read exactly" passes. Pass.
+- AC2: `test_publish_guard.sh` passed 30/30 under bash 3.2.57 (macOS). It also passed 30/30 under bash 5.2.15 in a `debian:bookworm-slim` container with git 2.39.5 and no git identity. Each case builds a bare remote over `file://`, a depth-1 run clone, and a depth-1 fetch in `fresh`. Status 0 cases: same commit, empty commit, the four near-miss names, change and revert, run commit ahead. Status 3 cases: modify, add under `scripts/a/b/`, delete, rename within, into, and out of the filter, mode-only, and a rewritten non-descendant tip. Status 2 case: unreachable remote. Pass.
+- AC3: Code read at `9862923`. The `fresh` step (`docker.yml:298`) follows "Assemble and check both manifest lists", which runs the `manifest` guard for both variants, and precedes "Attach the tags". That assembly uses `imagetools create --dry-run`, so no tag exists before the attach step. Status 3 writes `verdict=stale` and a `::warning::` that carries the `stale:` line with the tip SHA. The attach step exits 0 on any verdict other than `fresh`, before the test-mode branch and both variant loops. Any other status exits 1, which fails the job and skips the attach step. The push filter lists `.dockerignore` (line 9). Dispatch run 34779453138 (`test_mode`, head `8dfdcde`, which changes `docker.yml`) concluded `success`. Its publish log, read again today, prints `stale: the tip of main (492dbfc…)` and a warning naming `492dbfc`. "Attach the tags" printed its no-tag line. After `8dfdcde`, only `33f5703` touches `.github`, and it changes comments and two message strings. Pass.
+- AC4: `pr-ci.yml` and `lint.yml` each declare a workflow-level `concurrency` with `group: ${{ github.workflow }}-${{ github.event.pull_request.number }}` and `cancel-in-progress: true`. actionlint 1.7.12 reports nothing on the workflows. Drill PR #13 (branch `m005-drill`, now closed unmerged) opened at `8dfdcde` at 20:01:47 UTC. `gh run list`, read today, shows the push-1 runs at `207ce12` (created 20:02:50): Shell lint 34779526988 `cancelled`, PR CI 34779527102 `cancelled`. The push-2 runs at `da7cbd7` (created 20:02:56): Shell lint 34779532787 `success`, PR CI 34779532789 `success`. Pass.
+- AC5: `pr-ci.yml` `script-tests` runs `test_publish_guard.sh` as its fifth line. In run 34779532789 (the push-2 run), the job "alert and keepalive script suites" concluded `success`, and its log shows `bash ./.github/tests/test_publish_guard.sh` and `30 passed, 0 failed`. Pass.
+- AC6: All five suites in `.github/tests/` exit 0 locally: `test_ci_failure_issue.sh`, `test_keepalive.sh`, `test_publish_guard.sh`, `test_rebuild_gap.sh`, `test_retry_decision.sh`. shellcheck 0.11.0 (`koalaman/shellcheck:v0.11.0` image) at `-S info` on `.github/publish-guard.sh` and `.github/tests/test_publish_guard.sh` prints nothing and exits 0. Pass.
+- AC7: `cairn/DESIGN.md` Conventions opens with "No tag moves back to an older recipe", which states the freshness rule. Line 106 calls it an exception to GP2's "every build also publishes immutable tags". Architecture "Pre-merge checks" names the concurrency groups of `pr-ci.yml` and `lint.yml` and names the five `script-tests` suites. The GP2 text itself is unchanged. Pass.
+
+Consistency gate:
+
+- `cairn_validate.py` exits 0 with every check PASS or OK, `coverage complete` included.
+- `cairn_impact.py --changed` lists 8 GP2 references. No principle text changed, so no reconciliation is needed.
+- `hadolint Dockerfile` (`hadolint/hadolint` image) reports nothing. The branch does not change `Dockerfile` or any file in the build context, because `.dockerignore` excludes `.github` and `cairn`. So no local `docker build` ran. PR CI 34779532789 built and smoke-tested noble amd64 green at `da7cbd7`, and `docker.yml` dispatch 34779453138 built all four legs green at `8dfdcde`.
+- Base image: `FROM jmgirard/rstudio2u:${BASE_TAG}` uses a named variant tag, not `latest`. It moves by design (GP2), and this branch does not change it.
+- No secrets in `Dockerfile` layers, and `.dockerignore` is present and excludes `.git`.
+- Changelog: none as a file (D-002). The release walk writes release notes.
+- 2026-09-13: review started. All seven criteria verified with fresh evidence and the consistency gate passed; the three-lens review is running.
