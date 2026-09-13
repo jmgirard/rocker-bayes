@@ -57,12 +57,14 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
 - **Unattended-rebuild alerts**: `docker.yml`'s `keepalive` job
   (`.github/keepalive.sh`) and its `notify` job (`.github/ci-failure-issue.sh`).
   `.github/workflows/rebuild-gap.yml` runs `.github/rebuild-gap.sh`. Both date
-  scripts source `.github/date-lib.sh`. Each script has a suite in
-  `.github/tests/`.
+  scripts source `.github/date-lib.sh`. `.github/workflows/rebuild-retry.yml`
+  runs `.github/retry-decision.sh` each time a `docker.yml` run completes. Each
+  script has a suite in `.github/tests/`.
 - **Pre-merge checks**: `.github/workflows/pr-ci.yml` lints the Dockerfile,
   then builds and boots noble amd64 with the same `smoke-test.sh` the publish
   gate runs. It never logs in and never publishes. Its `script-tests` job runs
-  the three alert and keepalive suites.
+  four suites: `test_ci_failure_issue.sh`, `test_keepalive.sh`,
+  `test_rebuild_gap.sh`, and `test_retry_decision.sh`.
   `.github/workflows/lint.yml` runs a pinned shellcheck over every tracked
   `*.sh` and `*.command` file. `.github/dependabot.yml` keeps the action pins
   current.
@@ -108,11 +110,20 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   `KEEPALIVE_DEPLOY_KEY` secret, so no job needs a token that can write.
 - **A failed or missing rebuild opens an issue.** If a job in a scheduled run
   fails, the `notify` job in `docker.yml` opens or comments on a `ci-failure`
-  issue. A fully green scheduled run closes it. Every attempt reports, and
-  `docker.yml` has no job that reruns it, because GitHub refuses a rerun
-  requested from inside the same run. `rebuild-gap.yml` runs each Tuesday. If the last successful
+  issue. A fully green scheduled run closes it. Every attempt reports.
+  `rebuild-gap.yml` runs each Tuesday. If the last successful
   scheduled rebuild is more than 8 days old, it raises the same issue. The suites in
   `.github/tests/` test these scripts offline, and `pr-ci.yml` runs them.
+- **A weekly rebuild that failed on the r2u mirror is rerun once.**
+  `rebuild-retry.yml` starts when a `docker.yml` run completes, because
+  GitHub refuses a rerun requested from inside the same run. It reruns the
+  run's failed jobs once, for scheduled runs only, and only for the mirror
+  symptom: every failed build leg failed at its build step with
+  `Command still failing after` in its log, and publish failed at most at its
+  digest count. Attempt 1 still opens the issue, and a green attempt 2 closes
+  it. A rerun works only while attempt 1's digest artifacts exist, which is 1
+  day (`retention-days: 1`), because publish reads the green legs' digests
+  from them.
 - Container is intentionally root-capable (passwordless sudo); safety comes
   from the localhost-only bind, documented in README "Security".
 
