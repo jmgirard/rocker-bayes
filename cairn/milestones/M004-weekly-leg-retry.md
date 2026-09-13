@@ -123,7 +123,7 @@ side effects of `notify` stay in their existing candidate rows.
 - [x] T5: Update `scripts/install_bayes.sh:11-16`, the `notify` comment in
       `docker.yml`, and DESIGN.md per AC5. Write each against the T2 and T4
       results.
-- [ ] T6: Before review, run the profile verify slot (`hadolint Dockerfile`,
+- [x] T6: Before review, run the profile verify slot (`hadolint Dockerfile`,
       `docker build`) and all four suites locally.
 
 ## Work log
@@ -146,6 +146,7 @@ side effects of `notify` stay in their existing candidate rows.
 - 2026-09-13: T4 attempt 1 of run 34775210635 concluded failure: noble amd64 failed at the drill step, publish at `Require all four verified digests`, the other legs and keepalive green, notify skipped. Local `docker build -t rocker-bayes:dev .` exited 0. `gh run rerun 34775210635 --failed` started attempt 2.
 - 2026-09-13: T4 attempt 2 of run 34775210635 concluded success. Only `build (noble, amd64)` started again (18:45:27Z; the other legs and keepalive keep their 18:37Z attempt-1 start); publish (job 103773956618) downloaded four `digests-*` artifacts, printed "found all 4 verified digests", then "the noble manifest list names both architectures: amd64 arm64" and the same for resolute; notify was rerun as a dependent and skipped on its condition. No `docker.yml` download fix was needed. Drill step removed.
 - 2026-09-13: T5 done: `notify` comment in docker.yml names rebuild-retry.yml and that a failed-jobs rerun reruns notify (seen in T4 attempt 2); DESIGN.md alerts entry names both files, Pre-merge checks names the four suites, new convention states the one-rerun, scheduled-only, mirror-symptom rule and the 1-day digest-artifact limit. `git grep -n retry-on-failure -- ':!cairn/'` returns no hit.
+- 2026-09-13: T6 done: hadolint clean, `docker build -t rocker-bayes:dev .` exits 0, all five `.github/tests/` suites (the four named plus test_publish_guard.sh) exit 0, pinned shellcheck 0.11.0 `-x -S info` clean over every tracked `*.sh`/`*.command`, actionlint 1.7.12 clean over all workflows. AC6's PR-run half waits for the review-step PR.
 
 ## Decisions
 
