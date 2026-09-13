@@ -1,6 +1,6 @@
 # M003: Unattended-rebuild alerts and schedule keepalive
 
-- **Status:** blocked
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** M001, M002
 - **Driving RR:** —
