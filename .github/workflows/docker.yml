@@ -282,14 +282,54 @@ jobs:
             printf '%s\n' "${refs[@]}" > "/tmp/refs-${variant}.txt"
           done
 
-      # Both indexes passed, so attach the tags. In test mode nothing is
-      # attached: the run has already exercised every leg, both assemblies, and
-      # both guards, and the tag list it would have applied is printed above.
+      # Third gate: the default branch must not have changed the recipe since
+      # this run's commit. A rerun of an older run, started by rebuild-retry.yml
+      # or by hand, can finish after a newer push build has published, and
+      # attaching here would move the tags back to the older recipe. The
+      # compared paths are this file's push `paths` filter, so a difference
+      # means the newer commit normally started its own push build.
+      #
+      # A stale run is not a failure: it attaches nothing, warns, and ends
+      # green, so a scheduled run does not open the ci-failure issue for it. A
+      # failed fetch leaves the recipe unknown, so the job fails. The rule is in
+      # .github/publish-guard.sh, tested by .github/tests/test_publish_guard.sh.
+      # It runs in test mode too, so a branch dispatch shows its verdict.
+      - name: Check that the default branch has not changed the recipe
+        id: fresh
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -uo pipefail
+          status=0
+          out=$(bash ./.github/publish-guard.sh fresh .github/workflows/docker.yml "$GITHUB_SHA" origin "$DEFAULT_BRANCH") || status=$?
+          echo "$out"
+          case "$status" in
+            0)
+              echo "verdict=fresh" >> "$GITHUB_OUTPUT"
+              ;;
+            3)
+              echo "verdict=stale" >> "$GITHUB_OUTPUT"
+              echo "::warning::no tag was attached for either variant. ${out}. A newer push build of that tip normally publishes its recipe, but a commit that started no build (a [skip ci] message, a push made with a workflow token) leaves the tags where they are."
+              ;;
+            *)
+              exit 1
+              ;;
+          esac
+
+      # Both indexes passed, so attach the tags, unless the check above found
+      # a newer recipe. In test mode nothing is attached: the run has already
+      # exercised every leg, both assemblies, and all three guards, and the tag
+      # list it would have applied is printed above.
       - name: Attach the tags
         env:
           TEST_MODE: ${{ inputs.test_mode }}
+          VERDICT: ${{ steps.fresh.outputs.verdict }}
         run: |
           set -euo pipefail
+          if [ "$VERDICT" != "fresh" ]; then
+            echo "the default branch changed the recipe since this run's commit, so no tag was attached (see the warning above)"
+            exit 0
+          fi
           if [ "$TEST_MODE" = "true" ]; then
             echo "test mode: both manifest lists were assembled and checked, and no tag was attached"
             exit 0
