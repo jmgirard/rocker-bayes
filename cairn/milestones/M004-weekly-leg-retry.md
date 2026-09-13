@@ -142,6 +142,7 @@ side effects of `notify` stay in their existing candidate rows.
 - 2026-09-13: T2 done: `retry-decision.sh` passes the suite (139 assertions) and shellcheck 0.11.0 `-x -S info` (run through Docker, none installed locally). Mutating the log check, the build-step check, the publish-step check, the attempt check, or `--attempt` each fails the suite.
 - 2026-09-13: T2 found that gh 2.97.0 and later refuse to print a job log holding terminal escape sequences; the log call passes `--allow-escape-sequences`, and the suite asserts it. With it, the failed 2026-09-07 leg's log (job 101759190487) reads and holds the mirror line. Runner image ubuntu-24.04 lists gh 2.100.0.
 - 2026-09-13: T3 done: `rebuild-retry.yml` added (only trigger `workflow_run` completed, `actions: write` + `contents: read`, the four payload fields passed through env); `pr-ci.yml` script-tests runs the new suite, job name kept. actionlint 1.7.12 is clean on rebuild-retry.yml, pr-ci.yml, and docker.yml; the `workflows:` entry and docker.yml `name:` extract to the same string.
+- 2026-09-13: T4 drill started: temporary step pushed, branch dispatch run 34775210635 (`test_mode=true`); T5 begun in parallel with the `install_bayes.sh` retry comment (DESIGN.md and the `notify` comment wait on the drill result). Local hadolint (hadolint/hadolint image) is clean; local `docker build` running.
 
 ## Decisions
 

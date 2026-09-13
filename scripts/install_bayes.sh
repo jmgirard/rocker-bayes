@@ -12,8 +12,12 @@ CMDSTAN_VERSION=${1:-${CMDSTAN_VERSION}}
 # fetch fails, R aborts with an empty error and the whole build fails; installs
 # are idempotent, so a retry just picks up whatever didn't land. This stays
 # deliberately short: a runner that can't reach the mirror stays blocked on the
-# same IP no matter how long we wait, so we fail fast and let the workflow's
-# retry-on-failure job re-run the leg on a fresh runner (a new IP) instead.
+# same IP no matter how long we wait, so we fail fast. For a scheduled rebuild,
+# .github/workflows/rebuild-retry.yml then reruns the run's failed jobs once, on
+# fresh runners, when every failed leg failed in its build step with the
+# "Command still failing after" line below in its log. Push and dispatch
+# builds, and a second attempt, are not rerun. The rule is in
+# .github/retry-decision.sh.
 retry() {
   local n=1 max=2 delay=20
   until "$@"; do
