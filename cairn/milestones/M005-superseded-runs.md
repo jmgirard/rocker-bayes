@@ -161,6 +161,7 @@ records the rule and its exception to GP2.
 - 2026-09-13: T5 done. Dispatch 34779453138 concluded `success`: all four legs, keepalive, and publish passed, and notify was skipped. The publish log printed `stale: the tip of main (492dbfc…) changed .github/publish-guard.sh .github/workflows/docker.yml` and a warning naming `492dbfc`. "Attach the tags" printed its no-tag line and exited before the test-mode line. Drill PR #13 runs: at the opening commit `8dfdcde`, lint was `success` (it finished before the first push) and PR CI was `cancelled`. At push 1 `207ce12`, lint and PR CI were both `cancelled`. At push 2 `da7cbd7`, lint was `success` and PR CI was `success`, with `script-tests` and the build job both `success`. PR #13 was closed unmerged and `m005-drill` was deleted.
 - 2026-09-13: implement complete, status `review`. The branch changes no Dockerfile or build context, so the profile's hadolint and build gate was not rerun locally; drill run 34779532789 ran hadolint and the noble build green on `da7cbd7`. The only commit after that is the claim-correction commit, which changes comments and messages alone.
 - 2026-09-13: review started. All seven criteria have fresh evidence and the consistency gate passed. The three-lens review is running.
+- 2026-09-13: three-lens review returned 8 [O] findings and no [S] conflicts. O1 (empty default branch on scheduled runs) is unconfirmed and put to the gate.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
@@ -186,3 +187,16 @@ Consistency gate:
 - Base image: `FROM jmgirard/rstudio2u:${BASE_TAG}` uses a named variant tag, not `latest`. It moves by design (GP2), and this branch does not change it.
 - No secrets in `Dockerfile` layers, and `.dockerignore` is present and excludes `.git`.
 - Changelog: none as a file (D-002). The release walk writes release notes.
+
+Independent review (user-facing tier, three lenses, 2026-09-13). Dispositions are set at the step-7 gate.
+
+- [O] O1 (high): `docker.yml:301` reads `github.event.repository.default_branch`, which reports say is empty on `schedule` events (docker/metadata-action#184, community discussion #54817). With an empty branch, `fresh` stops at `${4:?}` with exit 1, so every scheduled publish fails and attaches no tag. Not confirmed: no scheduled run of the current `docker.yml` exists yet (latest scheduled run 34127399018 predates M001's workflow). The T5 dispatch could not show it, because dispatch events carry `repository`.
+- [O] O2 (medium): a stale run ends green, so `notify` closes an open ci-failure issue and `rebuild-gap` counts a rebuild, even when the newer push build failed and the tags never moved.
+- [O] O3 (low): the `paths` parser keeps trailing whitespace, a CRLF carriage return, and a leading `!`, which print as pathspecs that match nothing. The exact-list test case catches this for `docker.yml` itself.
+- [O] O4 (low): GitHub globs and git pathspecs differ for `!x/**` and `**.sh`. The current entries do not use either form.
+- [O] O5 (low): pass cases in `test_publish_guard.sh` discard push errors and never assert that the tip moved, so a failed push still reads `ok`.
+- [O] O6 (low): no test covers "run's commit not in this checkout", a `paths` read failure inside `fresh`, an empty branch argument, or the workflow step's status-to-verdict mapping.
+- [O] O7 (low): the attach message on a stale `test_mode` dispatch says "paths differ", and an empty `VERDICT` prints the same text though no comparison ran.
+- [O] O8 (low): `${out}` goes into `::warning::` without escaping `%`, CR, or LF.
+- [S] blame lens: no conflict with past intent. Noted: a fetch failure in the new step fails publish at a step `retry-decision.sh` does not retry, which matches M004's "anything else is left for a person".
+- [S] prior-review lens: no reintroduced or contradicted finding. The `gh` probe returned no PR review comments.
