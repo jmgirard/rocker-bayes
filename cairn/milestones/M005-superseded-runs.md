@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M005: Superseded CI runs stop acting
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** high   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** M004   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP2, GP8   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — the publish job decides which image `latest`, `noble`, and `resolute` point at   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create -->
+- **Branch/PR:** m005-superseded-runs   <!-- owner: implement (branch) / review (PR URL) · create -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -107,7 +107,7 @@ records the rule and its exception to GP2.
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits) -->
 
-- [ ] T1: Write the tests first in `.github/tests/test_publish_guard.sh`. Add
+- [x] T1: Write the tests first in `.github/tests/test_publish_guard.sh`. Add
       a helper that builds a bare remote and reaches it over `file://` with
       depth-1 clones and fetches. Pass `-c user.name` and `-c user.email` to
       every commit, because CI runners have no git identity. Add the AC1 list
@@ -149,6 +149,8 @@ records the rule and its exception to GP2.
 - 2026-09-13: plan chose the publish-time check over a decline in `retry-decision.sh`. The publish job is the one place every run passes, including a rerun started by hand. Falsified by a stale publish that did not pass through the publish job.
 - 2026-09-13: plan chose not to cancel superseded push builds in `docker.yml`. The freshness check already stops them from tagging, and a cancel group on push runs adds a second cancellation path. Falsified by build minutes becoming a constraint.
 - 2026-09-13: criteria re-audit after the gate (full mode, second fresh [O] reader) returned 7 findings, all fixed in place. AC4 accepts a first-push run that finished before the second push. AC2 adds depth-1 `file://` fetches, near-miss names, and renames into and out of the filter. AC1 names a `paths` subcommand. AC3 verifies the green and red publish outcomes by reading the code. `.dockerignore` moved to T2. AC5 names the second push's run. Scope says "normally".
+- 2026-09-13: implement started on branch `m005-superseded-runs`; no question gate, since the plan left nothing open.
+- 2026-09-13: T1 done. `test_publish_guard.sh` gained the `paths` case, a no-filter case, and 15 `fresh` cases over depth-1 `file://` clones. All 16 new cases fail on the missing subcommand before T2; the 14 old cases pass.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

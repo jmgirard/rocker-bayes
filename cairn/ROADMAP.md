@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-13 (status audit: checks and byte budgets clean, no
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M005 | Superseded CI runs stop acting | planned | M004 | high | milestones/M005-superseded-runs.md |
+| M005 | Superseded CI runs stop acting | in-progress | M004 | high | milestones/M005-superseded-runs.md |
 | M004 | Rerun a weekly build that failed on the r2u mirror | done | M003 | high | milestones/archive/M004-weekly-leg-retry.md |
 | M003 | Unattended-rebuild alerts and schedule keepalive | done | M001, M002 | normal | milestones/archive/M003-unattended-rebuild-alerts.md |
 | M002 | Pre-merge CI lane and lint | done | M001 | normal | milestones/archive/M002-pre-merge-ci-lane.md |
