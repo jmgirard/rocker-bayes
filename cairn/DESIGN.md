@@ -62,7 +62,7 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
 - **Pre-merge checks**: `.github/workflows/pr-ci.yml` lints the Dockerfile,
   then builds and boots noble amd64 with the same `smoke-test.sh` the publish
   gate runs. It never logs in and never publishes. Its `script-tests` job runs
-  the four alert and keepalive suites.
+  the three alert and keepalive suites.
   `.github/workflows/lint.yml` runs a pinned shellcheck over every tracked
   `*.sh` and `*.command` file. `.github/dependabot.yml` keeps the action pins
   current.

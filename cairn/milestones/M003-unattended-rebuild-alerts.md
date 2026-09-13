@@ -156,6 +156,8 @@ from a separate `workflow_run` workflow stays a candidate row.
 - 2026-09-13: amendment (user decision, narrowing after return 1): AC5 drops the retry. notify names every other job, reports every attempt, and the file has no `retry-on-failure` job or `gh run rerun` call. Scope In removes `.github/retry-decision.sh` and adds the job's removal. Scope Out adds a `workflow_run` retry as a candidate row. AC5 already has two re-audit lines, so no reader ran and the wording went to the user. T8 reopened and T6 now names three suites. The other 15 findings stay for the review gate.
 - 2026-09-13: T8 (partial): removed `retry-on-failure`, `RETRY_CAP`, notify's wait branch, `.github/retry-decision.sh`, its suite, and its `pr-ci.yml` line. Comments in `docker.yml` and `rebuild-gap.yml`, DESIGN, the M001 rerun lesson (corrected), and the F2 retry candidate row follow. Run 34127399018's log reads "cannot be rerun; This workflow is already running". actionlint 1.7.7, shellcheck 0.11.0 and hadolint 2.12.0 exit 0, the four remaining suites pass, and the `grep -cE 'retry-on-failure|gh run rerun'` over `docker.yml` prints 0. Live run pending.
 - 2026-09-13: T8 done. No ci-failure issue was open. Dispatch https://github.com/jmgirard/rocker-bayes/actions/runs/34772606155 on 541300a (test_mode, notify, keepalive_threshold `fifty`): all four legs and publish succeeded, and publish logged the test-mode no-tag line. keepalive exited 2 on "not a non-negative integer: 'fifty'". notify succeeded and opened https://github.com/jmgirard/rocker-bayes/issues/10 titled "Weekly run failed: keepalive" with body "The scheduled run failed in: keepalive". #10 is left open. Claim audit not re-run: its one pass ran before the return, and the return added only comment lines in `docker.yml` and `rebuild-gap.yml`. Status set to review.
+- 2026-09-13: re-review on abf0f84: AC1-AC7 verified again, AC5 ticked, consistency gate clean, three reviewers ran, 19 findings triaged at the gate.
+- step-7 approval: m003-unattended-rebuild-alerts approved for merge
 
 ## Decisions
 
@@ -223,3 +225,14 @@ Independent review on abf0f84, 2026-09-13. Three fresh-context reviewers ran: [O
 - N8: `cairn/DESIGN.md:111-114` has two lines past the usual width.
 
 No finding shows an acceptance criterion failing.
+
+Triage at the approval gate, 2026-09-13, accepted by the maintainer as proposed:
+
+- Fix now: N2. `cairn/DESIGN.md` now says "the three alert and keepalive suites".
+- Follow-up, retry candidate row: N1. A change under `scripts/` rebuilds and republishes the image on merge, so the comment waits. The row already carries M001 and M003 findings, so post-merge hygiene poses its disposition first.
+- Follow-up, new keepalive candidate row: N3, O7, O8, O6.
+- Follow-up, new candidate row for alerts that fail quietly: O4, O11, N6, N7.
+- Follow-up, new `[low]` candidate row for dispatch and cancel side effects: O2, P1, O3, O5, N4.
+- Follow-up, existing rows: N5 joins the publish-guard suite row, and P2 joins the concurrency row.
+- Reject: S1, because push runs skip `keepalive` and `notify`, so a paths entry for their scripts tests nothing. N8, because line width changes no behavior.
+- Gone at HEAD, no action: O1, O9, O10, S2, P3.
