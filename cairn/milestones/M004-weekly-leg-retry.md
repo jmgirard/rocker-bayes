@@ -1,6 +1,6 @@
 # M004: Rerun a weekly build that failed on the r2u mirror
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** M003
 - **Driving RR:** —
@@ -8,7 +8,7 @@
 - **Resolves:** —
 - **Surface tier:** user-facing — it decides whether the moving tags get the
   weekly rebuild when a mirror blip fails one leg.
-- **Branch/PR:** —
+- **Branch/PR:** m004-weekly-leg-retry
 
 ## Goal
 
@@ -105,7 +105,7 @@ side effects of `notify` stay in their existing candidate rows.
 
 ## Tasks
 
-- [ ] T1: Write `.github/tests/test_retry_decision.sh` first, in the style of
+- [x] T1: Write `.github/tests/test_retry_decision.sh` first, in the style of
       the existing suites (stubbed `gh`, call log, exit status). Shape the jobs
       fixtures on a real listing (`gh run view 34127399018 --json jobs`). Read
       the step names from `docker.yml` with the matrix values filled in. Run it
@@ -135,6 +135,10 @@ side effects of `notify` stay in their existing candidate rows.
 - 2026-09-13: plan gate chose scheduled runs only over scheduled runs plus pushes, because the person who merged watches a push build. Falsified by a push build that fails on the mirror and goes unnoticed.
 - 2026-09-13: plan gate chose letting attempt 1 open the issue and a green rerun close it over holding `notify` on attempt 1. Holding it hides a failure for a week if the retry never starts. Falsified by the open-then-close emails proving a burden in practice.
 - 2026-09-13: plan gate chose a branch rerun drill plus a post-merge candidate row over keeping M004 in review until a real failure, which can block work for weeks. Falsified by a qualifying scheduled failure that starts no retry run.
+- 2026-09-13: implement started; branch m004-weekly-leg-retry cut from main at faf75d7.
+- 2026-09-13: implement gate chose reading leg logs through the job-log API (`gh api repos/{owner}/{repo}/actions/jobs/<id>/logs`) over `gh run view --log-failed`, which can print nothing when it cannot map step log files to steps.
+- 2026-09-13: implement gate chose starting the retry job on every docker.yml completion and letting the script decide, over a job-level `if` that would duplicate the event rule.
+- 2026-09-13: T1 done: `test_retry_decision.sh` builds fixtures from docker.yml step names; with no script it fails 85 assertions.
 
 ## Decisions
 
