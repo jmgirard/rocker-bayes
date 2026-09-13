@@ -72,6 +72,8 @@ guard_parse() {
         echo "FAIL: could not read the $1 step '$3' from docker.yml"; exit 1
     fi
 }
+# The ${{ }} expressions are the literal workflow text, not shell expansions.
+# shellcheck disable=SC2016
 guard_parse build   "$BUILD_TEMPLATE" 'Build ${{ matrix.variant }} (${{ matrix.arch }}) and push by digest'
 guard_parse publish "$PUBLISH_STEPS"  'Require all four verified digests'
 echo "ok: read $(printf '%s\n' "$BUILD_TEMPLATE" | wc -l | tr -d ' ') build steps and $(printf '%s\n' "$PUBLISH_STEPS" | wc -l | tr -d ' ') publish steps from docker.yml"
@@ -222,6 +224,12 @@ rerun() {
     assert_call        "  ... after reading the jobs listing for attempt 1" "^run view $RUN_ID --attempt 1 --json jobs$"
 }
 
+# ere_quote <text>: <text> with its extended-regex metacharacters escaped.
+ere_quote() {
+    # shellcheck disable=SC2016
+    printf '%s' "$1" | sed 's/[][\.*^$()+?{}|]/\\&/g'
+}
+
 # --- Rerun decisions -------------------------------------------------------
 
 # One qualifying leg of each of the four legs.
@@ -229,7 +237,7 @@ while read -r v a; do
     reset_markers; std_listing "$v $a"
     rc=$(run_script schedule 1 failure)
     rerun "$rc" "one qualifying leg, $v $a"
-    assert_call "  ... reading that leg's log" "^api repos/\{owner\}/\{repo\}/actions/jobs/$(leg_id "$v" "$a")/logs$"
+    assert_call "  ... reading that leg's log" "^api repos/\{owner\}/\{repo\}/actions/jobs/$(leg_id "$v" "$a")/logs --allow-escape-sequences$"
 done <<< "$ALL_LEGS"
 
 # Two qualifying legs.
@@ -237,8 +245,8 @@ reset_markers; std_listing "noble arm64
 resolute amd64"
 rc=$(run_script schedule 1 failure)
 rerun "$rc" "two qualifying legs"
-assert_call "  ... reading the first leg's log"  '^api repos/\{owner\}/\{repo\}/actions/jobs/102/logs$'
-assert_call "  ... and the second leg's log"     '^api repos/\{owner\}/\{repo\}/actions/jobs/103/logs$'
+assert_call "  ... reading the first leg's log"  '^api repos/\{owner\}/\{repo\}/actions/jobs/102/logs --allow-escape-sequences$'
+assert_call "  ... and the second leg's log"     '^api repos/\{owner\}/\{repo\}/actions/jobs/103/logs --allow-escape-sequences$'
 
 # --- No-rerun decisions before any gh call ---------------------------------
 
@@ -281,7 +289,7 @@ while IFS= read -r step; do
         "$(leg resolute amd64 success)" "$(leg resolute arm64 success)" \
         "$(publish_job failure 'Require all four verified digests')" "$GREEN_KEEPALIVE" "$GREEN_NOTIFY"
     rc=$(run_script schedule 1 failure)
-    step_re=$(printf '%s' "$step" | sed 's/[][\.*^$()+?{}|]/\\&/g')
+    step_re=$(ere_quote "$step")
     no_rerun "$rc" "a build leg failed at '$step'" "build \(noble, amd64\).*'$step_re'"
 done <<< "$(build_steps noble amd64)"
 
@@ -290,7 +298,7 @@ while IFS= read -r step; do
     [ "$step" = 'Require all four verified digests' ] && continue
     reset_markers; std_listing "resolute arm64" failure "$step"
     rc=$(run_script schedule 1 failure)
-    step_re=$(printf '%s' "$step" | sed 's/[][\.*^$()+?{}|]/\\&/g')
+    step_re=$(ere_quote "$step")
     no_rerun "$rc" "publish failed at '$step'" "publish.*'$step_re'"
 done <<< "$PUBLISH_STEPS"
 
@@ -320,8 +328,7 @@ rc=$(run_script schedule 1 failure)
 no_rerun "$rc" "a leg whose log lacks the mirror line" 'build \(noble, arm64\).*log'
 
 # A failed keepalive, and a failed notify, each beside a qualifying leg.
-for j in "301 keepalive" "302 notify"; do
-    read -r jid jname <<< "$j"
+for jname in keepalive notify; do
     reset_markers
     jobs=("$(leg noble amd64 failure)" "$(leg noble arm64 success)"
           "$(leg resolute amd64 success)" "$(leg resolute arm64 success)"
@@ -338,26 +345,31 @@ done
 reset_markers; std_listing "noble amd64"; : > "$WORK/view.fail"
 rc=$(run_script schedule 1 failure)
 assert_rc_nonzero  "gh failing on the listing exits non-zero" "$rc"
+assert_out         "  ... reporting the failed listing call" '^::error::gh run view failed for run 555'
 assert_rerun_calls "  ... and makes no rerun call" 0
 
 reset_markers; std_listing "noble amd64"; : > "$WORK/logs/101.fail"
 rc=$(run_script schedule 1 failure)
 assert_rc_nonzero  "gh failing on a leg's log exits non-zero" "$rc"
+assert_out         "  ... reporting which log" "^::error::could not read the log of job 'build \\(noble, amd64\\)' \\(101\\)"
 assert_rerun_calls "  ... and makes no rerun call" 0
 
 reset_markers; : > "$WORK/jobs.json"
 rc=$(run_script schedule 1 failure)
 assert_rc_nonzero  "a zero-byte listing exits non-zero" "$rc"
+assert_out         "  ... reporting the empty listing" '^::error::the jobs listing for run 555 is empty'
 assert_rerun_calls "  ... and makes no rerun call" 0
 
 reset_markers; printf 'not json at all' > "$WORK/jobs.json"
 rc=$(run_script schedule 1 failure)
 assert_rc_nonzero  "an unparseable listing exits non-zero" "$rc"
+assert_out         "  ... reporting the parse failure" '^::error::the jobs listing for run 555 could not be parsed'
 assert_rerun_calls "  ... and makes no rerun call" 0
 
 reset_markers; std_listing "noble amd64"; : > "$WORK/rerun.fail"
 rc=$(run_script schedule 1 failure)
 assert_rc_nonzero  "gh run rerun failing exits non-zero" "$rc"
+assert_out         "  ... reporting the failed rerun call" '^::error::gh run rerun 555 --failed failed'
 assert_rerun_calls "  ... after exactly one rerun call" 1
 
 # --- Usage ----------------------------------------------------------------

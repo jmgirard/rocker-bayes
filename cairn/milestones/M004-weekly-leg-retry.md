@@ -110,7 +110,7 @@ side effects of `notify` stay in their existing candidate rows.
       fixtures on a real listing (`gh run view 34127399018 --json jobs`). Read
       the step names from `docker.yml` with the matrix values filled in. Run it
       with no script and see it fail.
-- [ ] T2: Write `.github/retry-decision.sh` (arguments: run id, event,
+- [x] T2: Write `.github/retry-decision.sh` (arguments: run id, event,
       attempt, conclusion) until the suite passes. Run shellcheck at `-S info`
       and get no findings.
 - [ ] T3: Add `.github/workflows/rebuild-retry.yml` per AC3. Add the suite to
@@ -139,6 +139,8 @@ side effects of `notify` stay in their existing candidate rows.
 - 2026-09-13: implement gate chose reading leg logs through the job-log API (`gh api repos/{owner}/{repo}/actions/jobs/<id>/logs`) over `gh run view --log-failed`, which can print nothing when it cannot map step log files to steps.
 - 2026-09-13: implement gate chose starting the retry job on every docker.yml completion and letting the script decide, over a job-level `if` that would duplicate the event rule.
 - 2026-09-13: T1 done: `test_retry_decision.sh` builds fixtures from docker.yml step names; with no script it fails 85 assertions.
+- 2026-09-13: T2 done: `retry-decision.sh` passes the suite (139 assertions) and shellcheck 0.11.0 `-x -S info` (run through Docker, none installed locally). Mutating the log check, the build-step check, the publish-step check, the attempt check, or `--attempt` each fails the suite.
+- 2026-09-13: T2 found that gh 2.97.0 and later refuse to print a job log holding terminal escape sequences; the log call passes `--allow-escape-sequences`, and the suite asserts it. With it, the failed 2026-09-07 leg's log (job 101759190487) reads and holds the mirror line. Runner image ubuntu-24.04 lists gh 2.100.0.
 
 ## Decisions
 
