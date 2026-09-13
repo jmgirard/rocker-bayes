@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M005: Superseded CI runs stop acting
 
-- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** high   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** M004   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -98,7 +98,7 @@ records the rule and its exception to GP2.
 
 - AC1 → T1, T2
 - AC2 → T1, T2
-- AC3 → T3, T5
+- AC3 → T3, T5, T7
 - AC4 → T4, T5
 - AC5 → T4, T5
 - AC6 → T1, T2, T3
@@ -138,6 +138,11 @@ records the rule and its exception to GP2.
 - [x] T6: Update the Conventions and Architecture sections of
       `cairn/DESIGN.md`: the freshness rule and its GP2 exception, the pull
       request concurrency groups, and the fifth suite.
+- [ ] T7: (review O1) Make the `fresh` step find the default branch without
+      `github.event.repository`, which scheduled runs may lack, for example
+      with `git ls-remote --symref origin HEAD`. Refuse an empty branch
+      argument in `fresh` with an `::error::`, and add a suite case for it.
+      Re-run the suites, shellcheck, actionlint, and a `test_mode` dispatch.
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates. -->
@@ -162,6 +167,7 @@ records the rule and its exception to GP2.
 - 2026-09-13: implement complete, status `review`. The branch changes no Dockerfile or build context, so the profile's hadolint and build gate was not rerun locally; drill run 34779532789 ran hadolint and the noble build green on `da7cbd7`. The only commit after that is the claim-correction commit, which changes comments and messages alone.
 - 2026-09-13: review started. All seven criteria have fresh evidence and the consistency gate passed. The three-lens review is running.
 - 2026-09-13: three-lens review returned 8 [O] findings and no [S] conflicts. O1 (empty default branch on scheduled runs) is unconfirmed and put to the gate.
+- 2026-09-13: review returned to in-progress (defect return 1). The user judged review O1 a load-bearing defect: if scheduled runs carry no `github.event.repository`, `fresh` exits 1 on every weekly publish. Logged as T7.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
@@ -200,3 +206,12 @@ Independent review (user-facing tier, three lenses, 2026-09-13). Dispositions ar
 - [O] O8 (low): `${out}` goes into `::warning::` without escaping `%`, CR, or LF.
 - [S] blame lens: no conflict with past intent. Noted: a fetch failure in the new step fails publish at a step `retry-decision.sh` does not retry, which matches M004's "anything else is left for a person".
 - [S] prior-review lens: no reintroduced or contradicted finding. The `gh` probe returned no PR review comments.
+
+Gate dispositions (2026-09-13):
+
+- O1: fix now, as a return to in-progress (T7).
+- O2: follow-up, absorbed into the ROADMAP row "A failed push build of `docker.yml` alerts no one".
+- O3, O4, O5, O6, O7: follow-up, one new ROADMAP candidate row for publish guard hardening.
+- O8: rejected, because file names that contain `%`, CR, or LF are unlikely in this repository.
+- Blame lens note on retry and fetch failure: noted, no action.
+- Prior-review lens: no findings.
