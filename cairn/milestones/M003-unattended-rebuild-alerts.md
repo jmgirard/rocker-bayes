@@ -1,6 +1,6 @@
 # M003: Unattended-rebuild alerts and schedule keepalive
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** M001, M002
 - **Driving RR:** —
@@ -105,7 +105,7 @@ from a separate `workflow_run` workflow stays a candidate row.
       the date committed alongside it. Make the three runs of AC4, one with an
       empty date so the lookup fills it. Record the issue URL and the run
       URLs, then remove the trigger.
-- [ ] T8: Add the `notify` job and the `notify` dispatch input to
+- [x] T8: Add the `notify` job and the `notify` dispatch input to
       `docker.yml`. Remove `retry-on-failure`, `.github/retry-decision.sh`, its
       suite, and its step in `pr-ci.yml`. Drive one forced keepalive failure in
       test mode, and repeat the run if a build or publish job fails. Record the
@@ -155,6 +155,7 @@ from a separate `workflow_run` workflow stays a candidate row.
 - 2026-09-13: review return 1 (defect): AC5 fails. GitHub refuses `gh run rerun` from `retry-on-failure` while that job runs (scheduled runs 34127399018 and 32007984150). No retry fires, and `notify` with `wait=true` leaves a failed build leg unreported. AC1-AC4, AC6, AC7 verified. 16 review findings logged in Review, untriaged. Status back to in-progress.
 - 2026-09-13: amendment (user decision, narrowing after return 1): AC5 drops the retry. notify names every other job, reports every attempt, and the file has no `retry-on-failure` job or `gh run rerun` call. Scope In removes `.github/retry-decision.sh` and adds the job's removal. Scope Out adds a `workflow_run` retry as a candidate row. AC5 already has two re-audit lines, so no reader ran and the wording went to the user. T8 reopened and T6 now names three suites. The other 15 findings stay for the review gate.
 - 2026-09-13: T8 (partial): removed `retry-on-failure`, `RETRY_CAP`, notify's wait branch, `.github/retry-decision.sh`, its suite, and its `pr-ci.yml` line. Comments in `docker.yml` and `rebuild-gap.yml`, DESIGN, the M001 rerun lesson (corrected), and the F2 retry candidate row follow. Run 34127399018's log reads "cannot be rerun; This workflow is already running". actionlint 1.7.7, shellcheck 0.11.0 and hadolint 2.12.0 exit 0, the four remaining suites pass, and the `grep -cE 'retry-on-failure|gh run rerun'` over `docker.yml` prints 0. Live run pending.
+- 2026-09-13: T8 done. No ci-failure issue was open. Dispatch https://github.com/jmgirard/rocker-bayes/actions/runs/34772606155 on 541300a (test_mode, notify, keepalive_threshold `fifty`): all four legs and publish succeeded, and publish logged the test-mode no-tag line. keepalive exited 2 on "not a non-negative integer: 'fifty'". notify succeeded and opened https://github.com/jmgirard/rocker-bayes/issues/10 titled "Weekly run failed: keepalive" with body "The scheduled run failed in: keepalive". #10 is left open. Claim audit not re-run: its one pass ran before the return, and the return added only comment lines in `docker.yml` and `rebuild-gap.yml`. Status set to review.
 
 ## Decisions
 
