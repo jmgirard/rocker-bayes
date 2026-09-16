@@ -17,8 +17,8 @@ fast installs and no compiling.
 
 | Tag                 | Base image                | Architectures | CmdStan     |
 | ------------------- | ------------------------- | ------------- | ----------- |
-| `latest`, `noble`   | `jmgirard/rstudio2u:noble`    | amd64, arm64  | 2.39.0  |
-| `resolute`          | `jmgirard/rstudio2u:resolute` | amd64, arm64  | 2.39.0  |
+| `latest`, `noble`   | `jmgirard/rstudio2u:noble`    | amd64, arm64  | 2.40.0  |
+| `resolute`          | `jmgirard/rstudio2u:resolute` | amd64, arm64  | 2.40.0  |
 
 The R and RStudio versions are whatever the underlying
 [rstudio2u](https://github.com/jmgirard/rstudio2u) base ships. All tags are built
@@ -167,7 +167,7 @@ Build a small image on top of rocker-bayes so everyone gets the same packages
 preinstalled. Pin an immutable tag (see below) for reproducibility:
 
 ```dockerfile
-FROM jmgirard/rocker-bayes:noble-cmdstan2.39.0
+FROM jmgirard/rocker-bayes:noble-cmdstan2.40.0
 
 # install.packages() uses bspm here too, so these are fast binary installs
 RUN Rscript -e 'install.packages(c("projpred", "loo", "priorsense"))'
@@ -187,7 +187,7 @@ everyone should get an identical environment, pin an **immutable** tag instead:
 | Tag pattern           | Example                   | Frozen at                    |
 | --------------------- | ------------------------- | ---------------------------- |
 | `<variant>-<date>`    | `noble-2026-07-05`        | everything, as of that build |
-| `<variant>-cmdstan<v>`| `noble-cmdstan2.39.0`     | that CmdStan version         |
+| `<variant>-cmdstan<v>`| `noble-cmdstan2.40.0`     | that CmdStan version         |
 
 Use one in `docker run`, in `docker-compose.yml`, or as the `FROM` line of a
 derivative image and it will not change under you. Browse the
