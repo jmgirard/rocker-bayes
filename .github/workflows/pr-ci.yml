@@ -61,6 +61,7 @@ jobs:
           bash ./.github/tests/test_rebuild_gap.sh
           bash ./.github/tests/test_retry_decision.sh
           bash ./.github/tests/test_publish_guard.sh
+          bash ./.github/tests/test_cmdstan_pin.sh
 
   build-smoke:
     name: build and smoke-test noble (amd64)

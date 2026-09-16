@@ -18,8 +18,8 @@ LABEL org.label-schema.license="MIT" \
 # Build configuration
 # ---------------------------------------------------------------------------
 # CmdStan version to install. Pin a specific release to override, e.g.:
-#   docker build --build-arg CMDSTAN_VERSION=2.39.0 .
-ARG CMDSTAN_VERSION="2.39.0"
+#   docker build --build-arg CMDSTAN_VERSION=2.40.0 .
+ARG CMDSTAN_VERSION="2.40.0"
 ENV CMDSTAN_VERSION=${CMDSTAN_VERSION}
 
 # ---------------------------------------------------------------------------
