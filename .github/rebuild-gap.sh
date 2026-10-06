@@ -3,8 +3,9 @@
 # Decide whether too long has passed since a scheduled docker.yml rebuild last
 # succeeded, and raise the `ci-failure` issue if it has. Ported from
 # jmgirard/rstudio2u. Called by .github/workflows/rebuild-gap.yml, which reduces
-# the newest successful scheduled docker.yml run to a date and hands this script
-# that date, today, and a threshold. The rule lives here so
+# the newest successful scheduled docker.yml run to a date through
+# .github/last-success.sh and hands this script that date, today, and a
+# threshold. The rule lives here so
 # .github/tests/test_rebuild_gap.sh can test it offline.
 #
 # docker.yml's `notify` job reports on a run that happened. A run that never
