@@ -11,7 +11,8 @@ name: Check the weekly rebuild is not stale
 #
 # The rule is in .github/rebuild-gap.sh, tested offline by
 # .github/tests/test_rebuild_gap.sh. The step below hands it a date, today, and
-# a threshold.
+# a threshold. The date comes from .github/last-success.sh, tested offline by
+# .github/tests/test_last_success.sh.
 
 on:
   # Tuesdays at 07:00 UTC, a day after docker.yml's Monday 07:00 rebuild. Weekly
@@ -59,31 +60,20 @@ jobs:
             last_success="$LAST_SUCCESS"
           # The newest successful scheduled docker.yml run, and only that. A
           # push or dispatch build proves someone was here, not that the
-          # unattended lane still works.
+          # unattended lane still works. The step fetches a page of scheduled
+          # runs with no --status filter and .github/last-success.sh picks the
+          # newest green one itself, because the API's answer to
+          # `--status success --limit 1` on 2026-10-06 was a run from 2026-08-03.
           elif ! gh run list --workflow docker.yml --event schedule \
-                 --status success --limit 1 --json createdAt \
-                 --jq '.[0].createdAt // empty' > created_at.txt; then
+                 --limit 100 --json createdAt,conclusion,event > runs.json; then
             # The lookup failed. That is neither a measured gap nor a clean
             # result, so it goes to the script as the `unknown` sentinel.
             echo "::warning::gh run list failed; reporting an unreadable rebuild history"
             last_success=unknown
           else
-            created_at="$(cat created_at.txt)"
-            if [ -z "$created_at" ]; then
-              # The query worked and matched nothing: no successful scheduled
-              # run is on record.
-              last_success=none
-            elif [[ $created_at =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]]; then
-              # createdAt is RFC 3339 in UTC, so the date is the part before
-              # the T.
-              last_success="${created_at%%T*}"
-            else
-              # An answer the step cannot parse would reach the script as a
-              # bad date and end the run at exit 2 with nothing raised. Report
-              # it as an unreadable history instead.
-              echo "::warning::gh run list returned an unparseable createdAt ('$created_at'); reporting an unreadable rebuild history"
-              last_success=unknown
-            fi
+            # A date, or `none` (no successful scheduled run in the newest
+            # 100), or `unknown` (an answer the script cannot read).
+            last_success="$(bash ./.github/last-success.sh < runs.json)"
             echo "last successful scheduled rebuild, looked up: $last_success"
           fi
           today=$(date -u +%Y-%m-%d)
