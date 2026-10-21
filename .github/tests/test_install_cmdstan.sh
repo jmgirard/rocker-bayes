@@ -49,18 +49,22 @@ EOF
 cp "$STUBS/mkdir" "$STUBS/chown"
 chmod +x "$STUBS"/*
 
-# run_case <dir> <env|arg|empty|unset> [value]
+# run_case <dir> <env|arg|both|empty|unset> [value] [function]
 #   env    CMDSTAN_VERSION exported with the value, as the Dockerfile ENV does
-#   arg    the value passed as the step's first argument, variable unset
+#   arg    the value passed as the first argument, variable unset
+#   both   the value passed as the first argument, variable exported as 9.9.9
 #   empty  CMDSTAN_VERSION exported as "", no argument
 #   unset  CMDSTAN_VERSION unset, no argument
+# The function called is install_cmdstan_step unless a fourth argument names
+# another, such as main.
 run_case() {
-  local dir="$1" mode="$2" v="${3-}"
+  local dir="$1" mode="$2" v="${3-}" fn="${4:-install_cmdstan_step}"
   mkdir -p "$dir"
   (
     export STUB_LOG="$dir"
     case "$mode" in
       env)   export CMDSTAN_VERSION="$v" ;;
+      both)  export CMDSTAN_VERSION="9.9.9" ;;
       empty) export CMDSTAN_VERSION="" ;;
       *)     unset CMDSTAN_VERSION ;;
     esac
@@ -69,11 +73,10 @@ run_case() {
     PATH="$STUBS"
     # shellcheck source=scripts/install_bayes.sh
     source "$SCRIPT"
-    if [ "$mode" = arg ]; then
-      install_cmdstan_step "$v"
-    else
-      install_cmdstan_step
-    fi
+    case "$mode" in
+      arg|both) "$fn" "$v" ;;
+      *)        "$fn" ;;
+    esac
   ) >"$dir/stdout" 2>"$dir/stderr"
   echo "$?" >"$dir/status"
 }
@@ -91,6 +94,10 @@ fi
 base_n="$(cat "$BASE/n")"
 if ! grep -qF 'Sys.getenv("CMDSTAN_VERSION")' "$BASE/argv.1"; then
   fail "the R program does not read Sys.getenv(\"CMDSTAN_VERSION\")"
+fi
+printf '%s\n' "mkdir -p /home/rstudio/.cmdstan" "chown -R rstudio /home/rstudio/.cmdstan" >"$BASE/calls.expected"
+if ! cmp -s "$BASE/calls.expected" "$BASE/calls"; then
+  fail "the step's mkdir and chown calls are not the two expected: $(cat "$BASE/calls" 2>/dev/null)"
 fi
 
 # Each value after the first carries at least one character that would break
@@ -141,24 +148,32 @@ for idx in "${!VALUES[@]}"; do
   check_case "$WORK/arg.$idx" "value $idx as the first argument" "$v"
 done
 
-# An empty or missing version stops the step with the script's own message
-# before R starts. bash's own "unbound variable" error does not count.
-for mode in empty unset; do
-  dir="$WORK/$mode"
-  run_case "$dir" "$mode"
-  if [ "$(cat "$dir/status")" = 0 ]; then
-    fail "$mode: step exited 0"
-  fi
-  if [ -f "$dir/n" ]; then
-    fail "$mode: R was called"
-  fi
-  if ! grep -qF 'CMDSTAN_VERSION is empty' "$dir/stderr"; then
-    fail "$mode: stderr lacks 'CMDSTAN_VERSION is empty': $(head -c 300 "$dir/stderr")"
-  fi
+# The first argument wins over the environment.
+run_case "$WORK/both" both "2.40.0"
+check_case "$WORK/both" "argument over an environment of 9.9.9" "2.40.0"
+
+# An empty or missing version stops with the script's own message before R
+# starts, both in the step and at the top of main, which would otherwise run
+# R for the package install first. bash's own "unbound variable" error does
+# not count.
+for fn in install_cmdstan_step main; do
+  for mode in empty unset; do
+    dir="$WORK/$fn.$mode"
+    run_case "$dir" "$mode" "" "$fn"
+    if [ "$(cat "$dir/status")" = 0 ]; then
+      fail "$fn $mode: exited 0"
+    fi
+    if [ -f "$dir/n" ]; then
+      fail "$fn $mode: R was called"
+    fi
+    if ! grep -qF 'CMDSTAN_VERSION is empty' "$dir/stderr"; then
+      fail "$fn $mode: stderr lacks 'CMDSTAN_VERSION is empty': $(head -c 300 "$dir/stderr")"
+    fi
+  done
 done
 
 if [ "$fails" -eq 0 ]; then
-  echo "PASS: ${#VALUES[@]} values from the environment and as an argument reach R unchanged; empty and unset stop before R"
+  echo "PASS: ${#VALUES[@]} values from the environment and as an argument reach R unchanged, the argument wins, and empty and unset stop the step and main before R"
   exit 0
 fi
 echo "$fails failure(s)"

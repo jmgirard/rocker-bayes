@@ -41,8 +41,9 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
 - **Image build**: `Dockerfile` (build args `BASE_TAG`, `CMDSTAN_VERSION`) and
   `scripts/install_bayes.sh` (R package installs via bspm, CmdStan download and
   compile). Its CmdStan step exports `CMDSTAN_VERSION`, and R reads it with
-  `Sys.getenv()`. An empty version stops the step before R starts. The main
-  body runs only when the script is executed, not sourced.
+  `Sys.getenv()`. An empty or unset version stops the script before the R
+  package install starts. The main body runs only when the script is
+  executed, not sourced.
 - **Local run**: `docker-compose.yml` (localhost-only port bind, named home
   volume, `RS_PORT` / `RS_PASS` from `.env`).
 - **Launchers**: `start_*` / `stop_*` files plus `launcher_common.sh`; the

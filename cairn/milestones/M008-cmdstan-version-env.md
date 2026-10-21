@@ -139,3 +139,22 @@ Evidence gathered 2026-10-20 at branch head d47cc11; default branch had not move
 - AC4: `docker build -t rocker-bayes:dev .` at d47cc11 exit 0 on arm64, with the `COPY scripts` and `install_bayes.sh` layers CACHED from the T2 build, whose log shows the download of `cmdstan-2.40.0-linux-arm64.tar.gz`. `.github/smoke-test.sh rocker-bayes:dev` exit 0, all three phases PASS, and phase 3 printed `cmdstan version: 2.40.0`.
 - AC5: `hadolint/hadolint:v2.12.0` on the Dockerfile exit 0 with no output; `koalaman/shellcheck:v0.11.0 -x -S info scripts/install_bayes.sh .github/tests/test_install_cmdstan.sh` exit 0 with no output.
 - gate: `cairn_validate.py` all checks passed. No principle text changed, so `cairn_impact` was skipped. Profile checks: docker build and hadolint clean (AC4, AC5); the diff does not touch the Dockerfile, so the base pin `jmgirard/rstudio2u:${BASE_TAG}` and its layers are unchanged and no secret is added; `.dockerignore` present and excludes `.git`, `.github`, and `cairn`; changelog slot is "none" (release notes go in the GitHub release, D-002).
+- spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug #1: the empty-version check runs only after the slow R package install — fix now (check moved to the top of `main` through `resolve_cmdstan_version`; suite asserts `main` stops before R)
+- diff-bug #2: no test that the first argument wins over the environment — fix now (`both` case; swapping the precedence turns it red)
+- diff-bug #3: the mkdir and chown calls are logged but never asserted — fix now (baseline compares the two calls byte for byte)
+- diff-bug #4: the step changes the caller's global `CMDSTAN_VERSION` — reject, false: the only callers are the Dockerfile RUN, whose process ends, and the suite, which runs each case in a subshell
+- diff-bug #5: the suite file is mode 100644 — fix now (100755, like five of the other seven suites)
+- diff-bug #6: an unset variable also prints "is empty" — fix now (message now says "is empty or unset")
+- diff-bug #7: an R startup file could override the value — reject, false: no `Renviron*` or `Rprofile.site` in the image mentions CMDSTAN (grep exit 1), and AC4 printed 2.40.0
+- diff-bug #8: the R stub hard-codes `#!/bin/bash` — reject, false: the script under test has the same shebang, and the runner and macOS both have /bin/bash
+- diff-bug #9: DESIGN says the step stops "before R starts", but R already ran for packages — fix now (DESIGN now says before the package install)
+- blame-history #1: run as `sh install_bayes.sh` on dash, the guard skips the install and exits 0 — reject, false: dash in rocker-bayes:dev stops with "Bad substitution", exit 2
+- blame-history #2: the pr-ci comment and DESIGN no longer list the suites by name — reject, planned change: the copied list had already drifted (five named, seven run), so it became a pointer
+- prior-review #1: the empty-version check runs after the package install — fix now (same fix as diff-bug #1)
+- prior-review #2: the guard means `main` never runs except by direct execution — reject, false: `bash scripts/install_bayes.sh` runs `main`, dash fails loudly, and skipping on `source` is the plan
+- prior-review #3: the suite file is not executable — fix now (same fix as diff-bug #5)
+- prior-review #4: renaming the job may break a required status check — reject, false: `gh api` reports main unprotected and no rulesets
+- ripple #1: the ROADMAP candidate row still says the script interpolates — reject, planned change: post-merge hygiene removes the row
+- ripple #2: DESIGN "these scripts" (Conventions, alerts bullet) could read as excluding the new suite — reject, false: the sentence is in the alerts bullet and names the alert scripts
+- planted after the fixes, each restored: `main` without its early check → 2 failures (R called in `main` empty and unset); precedence swapped to `${CMDSTAN_VERSION:-$1}` → 1 failure (the `both` case).

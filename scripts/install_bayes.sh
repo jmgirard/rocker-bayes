@@ -31,15 +31,21 @@ retry() {
 # Install CmdStan (adding flags for ARM64 warnings and O3 optimization)
 # https://discourse.mc-stan.org/t/warnings-when-compiling-cmdstan-code-on-linux-arm64/37320/2
 # The version is the first argument, else CMDSTAN_VERSION from the environment
-# (the Dockerfile ENV sets it). R reads it with Sys.getenv() and never sees it
-# spliced into its code, so no value can rewrite the install_cmdstan() call.
-install_cmdstan_step() {
+# (the Dockerfile ENV sets it). It is exported, and the step stops when it is
+# empty or unset.
+resolve_cmdstan_version() {
   CMDSTAN_VERSION="${1:-${CMDSTAN_VERSION:-}}"
   if [ -z "${CMDSTAN_VERSION}" ]; then
-    echo "install_bayes.sh: CMDSTAN_VERSION is empty; set the Dockerfile ARG or pass a CmdStan release such as 2.40.0" >&2
+    echo "install_bayes.sh: CMDSTAN_VERSION is empty or unset; set the Dockerfile ARG or pass a CmdStan release such as 2.40.0" >&2
     return 1
   fi
   export CMDSTAN_VERSION
+}
+
+# R reads the version with Sys.getenv() and never sees it spliced into its
+# code, so no value can rewrite the install_cmdstan() call.
+install_cmdstan_step() {
+  resolve_cmdstan_version "$@" || return 1
   mkdir -p /home/rstudio/.cmdstan
   R -q -e '
     cmdstanr::install_cmdstan(
@@ -53,6 +59,10 @@ install_cmdstan_step() {
 }
 
 main() {
+  # Check the version before the package install, so an empty one fails in
+  # seconds rather than after the slowest stage of the build.
+  resolve_cmdstan_version "$@" || return 1
+
   # Install R packages
   retry R -q -e '
     install.packages(
