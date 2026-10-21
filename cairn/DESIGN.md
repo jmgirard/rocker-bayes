@@ -50,7 +50,9 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   Windows `.bat` files are stored with CRLF line endings (see `.gitattributes`).
 - **CI / publish**: `.github/workflows/docker.yml` builds each architecture on
   a native runner and pushes it by digest. Each leg then pulls that digest
-  back, asserts the architecture, and runs `.github/smoke-test.sh` against it.
+  back, asserts the architecture, checks with `.github/publish-guard.sh os`
+  that the image's `/etc/os-release` codename equals the leg's variant name,
+  and runs `.github/smoke-test.sh` against it.
   The smoke test's bspm phase fails when dpkg, or R's library path in the
   install session, already holds its probe package before the install, so a
   pass shows a package that arrived as an apt binary during that run.
@@ -71,7 +73,8 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   script has a suite in `.github/tests/`.
 - **Pre-merge checks**: `.github/workflows/pr-ci.yml` lints the Dockerfile,
   then builds and boots noble amd64 with the same `smoke-test.sh` the publish
-  gate runs. It never logs in and never publishes. Its `script-tests` job runs
+  gate runs. It does not run the publish gate's architecture or Ubuntu
+  release checks. It never logs in and never publishes. Its `script-tests` job runs
   the offline suites in `.github/tests/` that it lists by name, among them
   `test_install_cmdstan.sh`, which sources `scripts/install_bayes.sh` with
   stubbed commands. `.github/workflows/lint.yml` runs a pinned
@@ -100,7 +103,9 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
 - A weekly scheduled CI rebuild (no cache) picks up base-image updates; push
   builds use the GitHub Actions cache.
 - **No tag moves until every leg is verified.** Each build leg smoke-tests the
-  exact digest it pushed. A leg uploads its digest only after that smoke test
+  exact digest it pushed. Before the smoke test, the leg checks that the
+  image's Ubuntu codename equals its variant name, so a matrix row whose
+  `base_tag` names the other release fails. A leg uploads its digest only after that smoke test
   passes. The publish job requires all four digests, and it checks both
   assembled manifest lists before it attaches any tag. A broken leg in either
   variant therefore holds both variants' tags back (GP4, GP8). The `test_mode`

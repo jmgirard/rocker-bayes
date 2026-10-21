@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       test_mode:
-        description: "Exercise the whole lane without publishing: every leg builds, pushes its layers by digest, is pulled back and smoke-tested, then the publish job assembles both manifest lists, checks them, prints the tag list it would apply, and attaches nothing."
+        description: "Exercise the whole lane without publishing: every leg builds, pushes its layers by digest, is pulled back, has its architecture and Ubuntu release checked, and is smoke-tested, then the publish job assembles both manifest lists, checks them, prints the tag list it would apply, and attaches nothing."
         type: boolean
         default: false
       keepalive_threshold:
@@ -37,7 +37,8 @@ jobs:
   # One leg per (variant, architecture), each on a runner of that architecture,
   # so nothing is emulated and the CmdStan compile runs at native speed. Each
   # leg pushes its layers WITHOUT a tag, pulls that exact digest back, proves it
-  # is the architecture the leg claims, and smoke-tests it. The bytes that get
+  # is the architecture and the Ubuntu release the leg claims, and smoke-tests
+  # it. The bytes that get
   # tested are the bytes that ship. An untagged push is invisible to users: no
   # moving tag moves until the publish job assembles the manifest lists, which
   # it only completes when all four legs passed.
@@ -75,9 +76,9 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       # Every ref pushes by digest now, not just the default branch: the
-      # pull-back, the architecture assertions, and the smoke test all read the
-      # pushed image, so a branch run that skipped the push could not exercise
-      # the gate it exists to prove.
+      # pull-back, the architecture assertions, the Ubuntu release check, and
+      # the smoke test all read the pushed image, so a branch run that skipped
+      # the push could not exercise the gate it exists to prove.
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
         with:
@@ -145,6 +146,22 @@ jobs:
           fi
           echo "image is ${{ matrix.arch }} ($got_arch / $got_uname): $ref"
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
+      # Prove the image runs the Ubuntu release its variant names. The digest
+      # ships under this variant's tags, but the build reads base_tag, a
+      # separate matrix field, so a row whose base_tag names the other release
+      # would otherwise publish that release's bytes under this variant's
+      # tags. The rule is in .github/publish-guard.sh, tested offline by
+      # .github/tests/test_publish_guard.sh.
+      - name: Assert the image's Ubuntu release is ${{ matrix.variant }}
+        run: |
+          set -euo pipefail
+          ref="${{ steps.pulled.outputs.ref }}"
+          docker run --rm --entrypoint cat "$ref" /etc/os-release > /tmp/os-release || {
+            echo "::error::could not read /etc/os-release from $ref"
+            exit 1
+          }
+          bash ./.github/publish-guard.sh os /tmp/os-release "${{ matrix.variant }}"
 
       # A non-zero exit here fails this leg, and because the publish job
       # requires all four digests, blocks every tag from moving. The CmdStan
