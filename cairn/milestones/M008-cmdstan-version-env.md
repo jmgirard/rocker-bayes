@@ -124,6 +124,7 @@ release candidates use other forms.
 - 2026-10-20: T4 done: hadolint v2.12.0 clean; shellcheck 0.11.0 `-x -S info` clean on both scripts; `.github/smoke-test.sh rocker-bayes:dev` exit 0, all three phases PASS, phase 3 printed `cmdstan version: 2.40.0`.
 - 2026-10-20: claim audit: 20 claims read, 2 corrected — .github/tests/test_install_cmdstan.sh (the export claim now says only the first-argument cases prove the script's export; "each value" now says "each value after the first"). Also fixed two stale labels it found outside the added lines: the `script-tests` header comment and job name in `pr-ci.yml`, renamed "offline script suites" (no branch protection or ruleset requires the old name).
 - 2026-10-20: implement complete; status → review.
+- 2026-10-20: step-7 approval: m008-cmdstan-version-env approved for merge
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
