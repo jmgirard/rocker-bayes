@@ -47,3 +47,19 @@ nothing consistent, but that discarded a human-readable history rather than
 fixing it. Docker date tags answer "what did I run"; they do not answer "what
 changed and when did it matter". Semver on the recipe answers the second
 question without duplicating the tag list or the package roster (GP1).
+
+### D-003 The docker.yml push paths filter leaves out `.github/tests/**`
+
+**Date:** 2026-10-20
+
+**Decision.** `.github/tests/**` stays out of the `docker.yml` push `paths`
+filter. The candidate row "Add tests to the docker.yml paths filter" is
+dropped.
+
+**Rationale.** `docker.yml` runs none of the `.github/tests` suites, so a run
+started by a test-only change would test nothing the change touched.
+`pr-ci.yml` triggers on `.github/tests/**` and runs every suite before merge.
+Adding the path would rebuild all four legs and re-point the tags for a
+test-only merge. The `fresh` gate compares this same path list, so a
+test-only commit on the default branch would also mark an older run as stale
+and keep it from attaching tags.
