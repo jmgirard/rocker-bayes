@@ -9,12 +9,13 @@ _Last hygiene check: 2026-10-20 (M008 merged as #21: row done and archived, its 
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
+| M009 | Assert each leg's OS matches its variant | planned | — | high | milestones/M009-leg-os-codename.md |
 | M008 | Pass CMDSTAN_VERSION to R via Sys.getenv | done | — | high | milestones/archive/M008-cmdstan-version-env.md |
 | M007 | Cover a broken C++ toolchain in smoke | done | — | high | milestones/archive/M007-smoke-cxx-toolchain.md |
 | M006 | Assert smoke packages arrive this run | done | — | high | milestones/archive/M006-smoke-pkg-arrives.md |
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
-- [high] Assert each leg's OS matches its variant: Nothing asserts a leg's digest was built from the base tag its variant claims. A matrix edit setting `base_tag: noble` on a resolute row passes every gate and ships noble bytes under the resolute tag. Read an OS-release or base label out of the pulled image, as the arch assertion reads `{{.Architecture}}` — added 2026-09-12 — M001 review F14
+- [high] Assert each leg's OS matches its variant: Nothing asserts a leg's digest was built from the base tag its variant claims. A matrix edit setting `base_tag: noble` on a resolute row passes every gate and ships noble bytes under the resolute tag. Read an OS-release or base label out of the pulled image, as the arch assertion reads `{{.Architecture}}` — added 2026-09-12 — M001 review F14 — started M009
 - [high] Give old home volumes the new CmdStan: CmdStan is compiled into `/home/rstudio/.cmdstan`, which the compose home volume captures on first run; an image update does not refresh CmdStan for existing users until the volume is wiped. Move it outside the home directory or refresh at start — added 2026-09-03 — cairn/DESIGN.md Architecture
 - Check CmdStan matches the version tag: Nothing asserts that the CmdStan inside a built image is the version its `<variant>-cmdstan<v>` tag names. Smoke phase 3 prints `cmdstan_version()` and compares it with nothing. Compare it with the Dockerfile pin passed in from CI, not with the image's own `CMDSTAN_VERSION` ENV, which comes from the same build arg — added 2026-10-20 — M008 plan gate
 - Alert on a failed docker.yml push build: A failed push build of `docker.yml` alerts no one, because `notify` runs only on scheduled runs and opted-in dispatches. A broken recipe merged to main leaves the tags on the older image with no issue opened. A green stale run also closes an open ci-failure issue and counts as a rebuild in `rebuild-gap`, even when the newer push build failed — added 2026-09-13 — M005 plan, M005 review O2
