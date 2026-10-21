@@ -1,6 +1,6 @@
 # M006: Assert smoke packages arrive this run
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -60,7 +60,7 @@ locally).
 
 ## Tasks
 
-- [ ] T1: In `.github/smoke-test.sh` phase 2, add the dpkg absence read before
+- [x] T1: In `.github/smoke-test.sh` phase 2, add the dpkg absence read before
       the install, guarded so a failing read cannot end the script under
       `set -e` before its FAIL line prints. Add the `find.package()` check at
       the top of the existing root Rscript block, with a stage marker so the
@@ -69,14 +69,14 @@ locally).
       in a container against the file inside the repo checkout (no local
       shellcheck; Docker Desktop does not share the scratchpad). Run the script
       under macOS bash 3.2 as well as bash 5 where the two differ.
-- [ ] T2: Start Docker Desktop, run `hadolint Dockerfile` in a container, and
+- [x] T2: Start Docker Desktop, run `hadolint Dockerfile` in a container, and
       build `rocker-bayes:dev` from the branch (arm64). In that image, compare
       `installed.packages()` with `dpkg -l 'r-cran-*'`. Planned controls:
       `brms` for the dpkg case and `cmdstanr` for the R library case. If a read
       shows either is not of its kind, pick a package of that kind from the
       comparison and log the swap. If `praise` is already in the image, change
       the default probe to an absent package with an r2u binary and log it.
-- [ ] T3: Run the AC2 default case and the AC3 and AC4 controls against
+- [x] T3: Run the AC2 default case and the AC3 and AC4 controls against
       `rocker-bayes:dev`. Log each exit status and FAIL or PASS line, and check
       each failure's identity (which check fired), not the line alone.
 - [x] T4: Update the DESIGN.md CI / publish bullet in one clause to say phase 2
@@ -100,6 +100,11 @@ locally).
 - 2026-10-20: question set (implement stop): download koalaman/shellcheck:v0.11.0 and hadolint/hadolint:v2.12.0 for local lint — granted.
 - 2026-10-20: T1 checkpoint: absence checks, new FAIL lines, header comment, and PASS line in `.github/smoke-test.sh`. shellcheck 0.11.0 `-S info` exit 0, hadolint exit 0, `bash -n` clean. The bash 3.2 and bash 5 runs wait for the image (T3); T1 stays open until then.
 - 2026-10-20: T4 done out of order while the image builds: one sentence added to the DESIGN.md CI / publish bullet after the smoke-test clause.
+- 2026-10-20: T2: `docker build --pull -t rocker-bayes:dev .` exit 0, image a46c72b6ce29 (arm64); hadolint v2.12.0 exit 0. Reads in that image: `praise` no dpkg entry, no `find.package()` path; `brms` `Status: install ok installed`, path /usr/lib/R/site-library/brms; `cmdstanr` no dpkg entry, path /usr/local/lib/R/site-library/cmdstanr; `oolong` absent from both. Planned controls kept, default probe kept. `.libPaths()` in root Rscript: /usr/local/lib/R/site-library, /usr/lib/R/site-library, /usr/lib/R/library.
+- 2026-10-20: T3 runs against a46c72b6ce29 under macOS /bin/bash 3.2.57 (the only bash on this host; the PR's CI run is the bash 5 run, and the new code uses no arrays). Default: exit 0, three phase PASS lines, phase 2 PASS line says praise was absent before the install; the log shows apt fetching `r-cran-praise_1.0.0-1.ca2404.1` from r2u.
+- 2026-10-20: T3 controls, each exit 1. `brms`: dpkg-check FAIL line (shell check fired; no Rscript ran). `cmdstanr`: R-library-check FAIL line after `found before the install: /usr/local/lib/R/site-library/cmdstanr`. `oolong`: passed both absence checks, built from source (`DONE (oolong)`), then the existing "r-cran-oolong absent" line. Extra: `nosuchpkgm006` gave "not available" and the existing "install or load ... failed" line, so exit 3 does not swallow other failures.
+- 2026-10-20: T3 checked the T1 comment's claim: in a throwaway container, `dpkg -r binutils-common` left `Status: deinstall ok config-files` and `dpkg -s` exited 0.
+- 2026-10-20: claim audit: not owed — internal tier.
 
 ## Decisions
 
