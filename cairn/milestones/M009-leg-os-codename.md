@@ -42,7 +42,7 @@ matches the version tag" candidate row.
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: `.github/publish-guard.sh os <os-release-file> <variant>` reads the
+- [x] AC1: `.github/publish-guard.sh os <os-release-file> <variant>` reads the
       first line of the file that starts with `VERSION_CODENAME=`, strips one
       pair of surrounding double or single quotes from its value, and exits 0,
       printing the codename, when the result equals `<variant>`. It exits 1
@@ -53,17 +53,17 @@ matches the version tag" candidate row.
       argument exits 1 with bash's usage message, as the script's other
       subcommands do. Evidence: `bash .github/tests/test_publish_guard.sh`
       passes.
-- [ ] AC2: In `.github/workflows/docker.yml`, a separate build-job step with
+- [x] AC2: In `.github/workflows/docker.yml`, a separate build-job step with
       no `if:` and no `continue-on-error`, placed between the `pulled` step
       and the smoke test, reads `/etc/os-release` from
       `${{ steps.pulled.outputs.ref }}` and passes it to `publish-guard.sh os`
       with `${{ matrix.variant }}` as the variant; a non-zero guard exit fails
       the step. Evidence: the branch diff of `docker.yml`.
-- [ ] AC3: A `test_mode=true` dispatch of `docker.yml` on the milestone branch
+- [x] AC3: A `test_mode=true` dispatch of `docker.yml` on the milestone branch
       ends green, and each of its four build legs passes the `os` check with
       a codename equal to that leg's variant. Evidence: the run URL and each
       leg's accept line.
-- [ ] AC4: A `test_mode=true` dispatch of `docker.yml` from a throwaway branch
+- [x] AC4: A `test_mode=true` dispatch of `docker.yml` from a throwaway branch
       whose only change from the milestone branch swaps `base_tag` on all four
       matrix rows (noble rows get `resolute`, resolute rows get `noble`) fails
       all four legs at the `os` check with the mismatch line, and its publish
@@ -71,7 +71,7 @@ matches the version tag" candidate row.
       final `docker.yml` sets `base_tag` equal to `variant` on all four matrix
       rows. Evidence: the run URL, the four mismatch lines, and the publish
       job's digest-count error.
-- [ ] AC5: shellcheck 0.11.0 run as `shellcheck -x -S info` reports nothing on
+- [x] AC5: shellcheck 0.11.0 run as `shellcheck -x -S info` reports nothing on
       `.github/publish-guard.sh` and `.github/tests/test_publish_guard.sh`.
 
 ## Coverage
@@ -141,3 +141,12 @@ matches the version tag" candidate row.
 
 ## Review
 <!-- owner: review · exclusive. -->
+
+Review pass 1, 2026-10-20, on aa55732 (main db5712f unmoved since the cut; no PR yet; Copilot round off).
+
+- AC1: `bash .github/tests/test_publish_guard.sh` → 46 passed, 0 failed, including the 15 `os` cases (bare, double- and single-quoted accepts; both mismatch directions; `noble2`, `nob`; unbalanced quote; first of two lines; UBUNTU_CODENAME only; empty bare and `""`; missing file; missing and empty variant). Direct runs: a noble file as `noble` exits 0 printing "the image's Ubuntu codename is noble, as its variant names"; as `resolute` exits 1 with "::error::the image's Ubuntu codename is 'noble', but this leg's variant is 'resolute'"; with no variant exits 1 with bash's "usage: publish-guard.sh os <os-release-file> <variant>".
+- AC2: `git diff main...HEAD -- .github/workflows/docker.yml` adds one step, "Assert the image's Ubuntu release is ${{ matrix.variant }}", seventh of the build job's ten steps, after "Pull back the pushed image and assert its architecture" (`id: pulled`) and before "Smoke-test …". It carries no `if:` and no `continue-on-error`, reads `ref="${{ steps.pulled.outputs.ref }}"`, and ends with `bash ./.github/publish-guard.sh os /tmp/os-release "${{ matrix.variant }}"` under `set -euo pipefail`, so the guard's exit 1 is the step's exit status; a failed `docker run` read exits 1 with its own `::error::` line.
+- AC3: https://github.com/jmgirard/rocker-bayes/actions/runs/39540604852 (workflow_dispatch, test_mode=true, branch m009-leg-os-codename at f1638b8) concluded success. The new step concluded success on all four build legs, and their logs read "the image's Ubuntu codename is noble, as its variant names" (noble amd64, noble arm64) and "… is resolute, as its variant names" (resolute amd64, resolute arm64). The commits after f1638b8 change the guard only in its missing-file message and add four lines to a test fixture (`git diff f1638b8 HEAD -- .github/`), so the accept path this run executed is the one on the branch head.
+- AC4: https://github.com/jmgirard/rocker-bayes/actions/runs/39540616541 (workflow_dispatch, test_mode=true, branch m009-planted-os at df8b607, whose parent is f1638b8 and whose diff from it is 4 changed lines in docker.yml swapping base_tag on all four rows) concluded failure. All four build legs failed at the new step, with smoke, export and upload skipped: noble amd64 and arm64 "the image's Ubuntu codename is 'resolute', but this leg's variant is 'noble'", resolute amd64 and arm64 "… is 'noble', but this leg's variant is 'resolute'". Publish failed with "expected 4 verified digests, found 0 - a build leg failed or was skipped, so no tag was attached". `git ls-remote --heads origin m009-planted-os` prints nothing, and the branch head's docker.yml rows read noble/noble, noble/noble, resolute/resolute, resolute/resolute (variant/base_tag).
+- AC5: `docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 -x -S info .github/publish-guard.sh .github/tests/test_publish_guard.sh` printed nothing and exited 0.
+- Gate: `cairn_validate.py` all checks passed (exit 0). No DESIGN.md principle text changed, so `cairn_impact` was skipped. Profile consistency-gate: `hadolint/hadolint:v2.12.0` on the Dockerfile exited 0 with no output; the branch changes nothing in the build context (`git diff main...HEAD -- Dockerfile .dockerignore scripts/` is empty), and both dispatches built all four legs from a clean context with `no-cache`; base pin, secrets, and `.dockerignore` are unchanged; changelog slot is "none" and the image's contents do not change, so no release-note entry is owed.
