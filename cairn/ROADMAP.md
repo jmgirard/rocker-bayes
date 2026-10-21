@@ -9,12 +9,13 @@ _Last hygiene check: 2026-10-20 (M006 merged as #19: row done and archived, its 
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
+| M007 | Cover a broken C++ toolchain in smoke | planned | — | high | milestones/M007-smoke-cxx-toolchain.md |
 | M006 | Assert smoke packages arrive this run | done | — | high | milestones/archive/M006-smoke-pkg-arrives.md |
 | M005 | Superseded CI runs stop acting | done | M004 | high | milestones/archive/M005-superseded-runs.md |
 | M004 | Rerun a weekly build that failed on the r2u mirror | done | M003 | high | milestones/archive/M004-weekly-leg-retry.md |
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
-- [high] Cover a broken C++ toolchain in smoke: The compile control fails at stanc parse time, so no control covers a broken C++ toolchain — added 2026-09-12 — M001 review F3, F12, split 2026-10-20
+- [high] Cover a broken C++ toolchain in smoke: The compile control fails at stanc parse time, so no control covers a broken C++ toolchain — added 2026-09-12 — M001 review F3, F12, split 2026-10-20 — started M007
 - [high] Add tests to the docker.yml paths filter: `.github/tests/**` is absent from the `docker.yml` push paths filter, so a change to `test_publish_guard.sh` alone starts no publish-lane run. `pr-ci.yml` runs the suite since M005 — added 2026-09-12 — M001 review F8, M003 review N5
 - [high] Pass CMDSTAN_VERSION to R via Sys.getenv: `scripts/install_bayes.sh` still builds the `install_cmdstan()` call by interpolating `CMDSTAN_VERSION` into R source. The M002 quoting fix stops whitespace from splitting it, but a value carrying a double quote still rewrites the call. Read it with `Sys.getenv()` instead, the convention `smoke-test.sh` already follows — added 2026-09-12 — M002 review
 - [high] Assert each leg's OS matches its variant: Nothing asserts a leg's digest was built from the base tag its variant claims. A matrix edit setting `base_tag: noble` on a resolute row passes every gate and ships noble bytes under the resolute tag. Read an OS-release or base label out of the pulled image, as the arch assertion reads `{{.Architecture}}` — added 2026-09-12 — M001 review F14
@@ -38,3 +39,4 @@ _Last hygiene check: 2026-10-20 (M006 merged as #19: row done and archived, its 
 - [low] Prune untagged manifests from dispatches: Every branch dispatch pushes four untagged manifests to the production Docker Hub repository and nothing prunes them. This is the storage cost the M001 plan gate named as its own falsification condition — added 2026-09-12 — M001 review, blame lens item 1
 - [low] Tell phase 2 exit 3 from package quit: smoke phase 2 reads Rscript exit status 3 as "found by `find.package()` before the install". A package whose `.onLoad` or `.onAttach` calls `quit(status = 3)` during `library()` would be reported as already in the image — added 2026-10-20 — M006 review diff-bug #6
 - [low] Sync README to the Docker Hub page: Docker Hub description sync: a workflow that copies README.md to the Docker Hub page on push to main. Needs a Docker Hub token with read, write and delete scope — added 2026-09-11 — rstudio2u .github/workflows/dockerhub-description.yml
+- [parked] Run the broken compiler control in CI: M007 proves once, locally, that smoke phase 3 fails on its C++ build line when the compiler is broken. A `pr-ci.yml` step could build that broken-compiler image and run the control on every pull request, for about 1 to 3 minutes more per run. Promote when a smoke-test change breaks the C++ build FAIL line and ships unnoticed — added 2026-10-20 — M007 plan gate
