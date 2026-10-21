@@ -7,8 +7,10 @@
 # the script in a subshell whose PATH holds only stubs for R, mkdir, and
 # chown, then calls the step. Any other command fails as "not found", so
 # nothing here touches the host. The R stub is a child process, so it sees
-# CMDSTAN_VERSION only when the script exported it. It records its argument
-# list and that variable to files, which this suite compares byte for byte.
+# CMDSTAN_VERSION only when the variable is exported. The first-argument cases
+# unset it first, so they show that the script exports it. The stub records
+# its argument list and that variable to files, which this suite compares
+# byte for byte.
 #
 # Usage: bash .github/tests/test_install_cmdstan.sh
 #
@@ -91,8 +93,8 @@ if ! grep -qF 'Sys.getenv("CMDSTAN_VERSION")' "$BASE/argv.1"; then
   fail "the R program does not read Sys.getenv(\"CMDSTAN_VERSION\")"
 fi
 
-# Each value carries one character that would break or rewrite R source if it
-# were spliced in: a double quote, a single quote, a backslash, a backtick,
+# Each value after the first carries at least one character that would break
+# or rewrite R source if it were spliced in: a double quote, a single quote, a backslash, a backtick,
 # a command substitution, a space, a glob, a newline, a trailing space.
 # shellcheck disable=SC1003,SC2016  # the unexpanded metacharacters are the test
 VALUES=(

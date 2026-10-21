@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M008: Pass CMDSTAN_VERSION to R via Sys.getenv
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** high   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -89,7 +89,7 @@ release candidates use other forms.
       trailing newlines. Only the first-argument case with the variable
       unset proves the script's own export, so the test exports nothing
       there. Show the suite red against the current script.
-- [ ] T2: Restructure `scripts/install_bayes.sh` per AC1 and AC3 (the step
+- [x] T2: Restructure `scripts/install_bayes.sh` per AC1 and AC3 (the step
       reads `${1:-${CMDSTAN_VERSION:-}}`, so `set -u` cannot pre-empt the
       script's own message). Suite green. Plant each defect and see the
       suite go red, then restore: the old `"'"${CMDSTAN_VERSION}"'"`
@@ -97,7 +97,7 @@ release candidates use other forms.
 - [x] T3: Add the suite to `pr-ci.yml`'s `script-tests` job. Correct
       `cairn/DESIGN.md` "Pre-merge checks", which says five suites, to the
       list `pr-ci.yml` runs, read from that file.
-- [ ] T4: Run the pinned shellcheck as `shellcheck -x -S info` (add a
+- [x] T4: Run the pinned shellcheck as `shellcheck -x -S info` (add a
       `# shellcheck source=` directive for the sourced script) and
       `hadolint Dockerfile`. Build noble locally and run the smoke test.
 
@@ -120,6 +120,10 @@ release candidates use other forms.
 - 2026-10-20: T1 done: suite written; against the current script it fails at the baseline with status 127, `apt-get: command not found` (no source guard, so sourcing ran the main body against the stubs). Step function named `install_cmdstan_step`; the suite also asserts the baseline R program contains `Sys.getenv("CMDSTAN_VERSION")`.
 - 2026-10-20: T2 code done: step function plus source guard; `main` body re-indented. Suite green on bash 3.2 (macOS) and bash 5.2 (inside rocker-bayes:dev). Plants, each restored: old interpolation → 19 failures (argv differs for all 9 non-baseline values in both modes, and the Sys.getenv check); export removed → 10 failures, every first-argument case; empty check removed → 6 failures, all empty/unset assertions. Shellcheck 0.11.0 `-x -S info` clean after one reasoned SC1003/SC2016 disable on the value list. Tick waits on the local docker build.
 - 2026-10-20: T3 done: `pr-ci.yml` script-tests runs the suite; all eight listed suites pass locally. DESIGN "Pre-merge checks" now points at the job's own list instead of a count (minor amendment: a pointer per the derived-claims rule, not a copied list), and "Image build" describes the CmdStan step. The `pr-ci.yml` paths comment that listed six suites now points at the job.
+- 2026-10-20: T2 ticked: local `docker build -t rocker-bayes:dev .` (arm64) exited 0; the build log shows the R code with `version = Sys.getenv("CMDSTAN_VERSION")` and the download of `cmdstan-2.40.0-linux-arm64.tar.gz`.
+- 2026-10-20: T4 done: hadolint v2.12.0 clean; shellcheck 0.11.0 `-x -S info` clean on both scripts; `.github/smoke-test.sh rocker-bayes:dev` exit 0, all three phases PASS, phase 3 printed `cmdstan version: 2.40.0`.
+- 2026-10-20: claim audit: 20 claims read, 2 corrected — .github/tests/test_install_cmdstan.sh (the export claim now says only the first-argument cases prove the script's export; "each value" now says "each value after the first"). Also fixed two stale labels it found outside the added lines: the `script-tests` header comment and job name in `pr-ci.yml`, renamed "offline script suites" (no branch protection or ruleset requires the old name).
+- 2026-10-20: implement complete; status → review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
