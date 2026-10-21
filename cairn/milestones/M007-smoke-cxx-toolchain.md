@@ -1,6 +1,6 @@
 # M007: Cover a broken C++ toolchain in smoke
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -79,7 +79,7 @@ own candidate rows).
       exit status and FAIL or PASS line. Check each failure's identity, not
       the line alone: AC3 fails on the stanc error at the `no_such_type`
       declaration, and AC4's output carries the stub's message.
-- [ ] T4: Update the DESIGN.md CI / publish bullet in one clause to say phase
+- [x] T4: Update the DESIGN.md CI / publish bullet in one clause to say phase
       3 prints separate FAIL lines for a program stanc rejects and for a
       failed C++ build.
 
@@ -104,6 +104,9 @@ own candidate rows).
 - 2026-10-20: T3 first AC4 run exited 1 on the C++ build line, but its output lacked the stub message: cmdstanr 0.9.0 keeps the failed make's stderr on the condition (`e$stderr`) and does not print it. The `stage:cxx` handler now prints `e$stderr` before its marker. Shellcheck 0.11.0 `-S info` still clean, `/bin/bash` 3.2 still parses the file.
 - 2026-10-20: T3 runs on the final script, no `SMOKE_*` variables in the environment. AC2 against `rocker-bayes:dev`: exit 0, three phase PASS lines, theta mean 0.3988 against 0.4020. AC3 (`SMOKE_STAN_FILE=.github/smoke-fixtures/does-not-compile.stan`): exit 1, "FAIL: phase 3 (cmdstan) - stanc rejected does-not-compile.stan", after `stage:stanc` and a stanc syntax error at line 6 (`no_such_type theta;`). AC4 against `rocker-bayes:dev-broken-cxx`: exit 1, "FAIL: phase 3 (cmdstan) - bernoulli.stan passed stanc but the C++ build failed", after "Stan program is syntactically correct", `stage:cxx`, and the stub message. Make stopped at `make/program:20` because Stan Math's `compiler_flags` reads `CXX_VERSION` from `$(CXX) -dumpversion`, which the stub broke.
 - 2026-10-20: T3 extra control beyond AC4, so the C++ build line is shown for a failed compile and not only for the version probe: `rocker-bayes:dev-broken-cxx2` keeps `-dumpversion` working and fails every other compiler call. Exit 1 with the same C++ build FAIL line, after the stub message for the model compile and `make: *** [make/program:83: .../model-*.o] Error 1`.
+- 2026-10-20: T4 added one sentence to the DESIGN.md CI / publish bullet: the CmdStan phase runs stanc before the C++ build and prints a separate FAIL line for each.
+- 2026-10-20: claim audit: not owed — internal tier.
+- 2026-10-20: all tasks done; verify slot clean (hadolint exit 0, branch image built, shellcheck 0.11.0 `-S info` exit 0); status set to review.
 
 ## Decisions
 

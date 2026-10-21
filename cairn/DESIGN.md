@@ -51,6 +51,8 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   The smoke test's bspm phase fails when dpkg, or R's library path in the
   install session, already holds its probe package before the install, so a
   pass shows a package that arrived as an apt binary during that run.
+  Its CmdStan phase runs stanc before the C++ build and prints a separate
+  FAIL line for a program stanc rejects and for a failed C++ build.
   One publish job requires all four verified digests. It assembles both
   variants' manifest lists and checks each with `.github/publish-guard.sh`.
   It then runs the guard's `fresh` check against the default branch. Only
