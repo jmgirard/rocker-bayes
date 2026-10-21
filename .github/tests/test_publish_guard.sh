@@ -321,6 +321,104 @@ sha="$(git -C "$d/run" rev-parse HEAD)"
 CHECK_DIR="$d/run" check "fresh: an empty branch name is an error" 1 "::error::no branch name" \
   fresh "$DOCKER_YML" "$sha" origin ""
 
+# --- os: is the leg's image the Ubuntu release its variant names? ------------
+
+osr() {
+  local f="${WORK}/os-release-$1"
+  cat > "$f"
+  printf '%s' "$f"
+}
+
+# Silent case: the file as Ubuntu 24.04 ships it, read from a noble build of
+# this image. If this one is not accepted every leg fails and the refusals
+# below prove nothing.
+real_noble="$(osr real-noble <<'EOF'
+PRETTY_NAME="Ubuntu 24.04.4 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04.4 LTS (Noble Numbat)"
+VERSION_CODENAME=noble
+ID=ubuntu
+ID_LIKE=debian
+UBUNTU_CODENAME=noble
+LOGO=ubuntu-logo
+EOF
+)"
+check "os: Ubuntu's own noble file is accepted as noble" 0 "codename is noble" os "$real_noble" noble
+
+# os-release allows the value bare or in either kind of quotes.
+dq="$(osr dq <<'EOF'
+VERSION_CODENAME="resolute"
+EOF
+)"
+check "os: a double-quoted value is accepted" 0 "codename is resolute" os "$dq" resolute
+sq="$(osr sq <<'EOF'
+VERSION_CODENAME='noble'
+EOF
+)"
+check "os: a single-quoted value is accepted" 0 "codename is noble" os "$sq" noble
+
+# The defect this check exists for, in both directions: the wrong base built
+# under a variant's name.
+check "os: a noble image under the resolute variant is refused" 1 \
+  "codename is 'noble', but this leg's variant is 'resolute'" os "$real_noble" resolute
+check "os: a resolute image under the noble variant is refused" 1 \
+  "codename is 'resolute', but this leg's variant is 'noble'" os "$dq" noble
+
+# The comparison is whole-value, not a prefix or substring match.
+longer="$(osr longer <<'EOF'
+VERSION_CODENAME=noble2
+EOF
+)"
+check "os: a value the variant is a prefix of is refused" 1 \
+  "codename is 'noble2', but this leg's variant is 'noble'" os "$longer" noble
+shorter="$(osr shorter <<'EOF'
+VERSION_CODENAME=nob
+EOF
+)"
+check "os: a value that is part of the variant is refused" 1 \
+  "codename is 'nob', but this leg's variant is 'noble'" os "$shorter" noble
+
+# An unbalanced quote is not stripped, so the value keeps it and differs.
+# printf, not a heredoc: bash 3.2 misparses an unbalanced quote in a heredoc
+# inside $(...).
+unbalanced="$(printf 'VERSION_CODENAME="noble\n' | osr unbalanced)"
+check "os: an unbalanced quote is compared as it stands" 1 \
+  "codename is '\"noble', but this leg's variant is 'noble'" os "$unbalanced" noble
+
+# The first VERSION_CODENAME line decides, so a later matching line does not
+# rescue a file whose first one differs.
+two="$(osr two <<'EOF'
+VERSION_CODENAME=jammy
+VERSION_CODENAME=noble
+EOF
+)"
+check "os: the first of two codename lines decides" 1 \
+  "codename is 'jammy', but this leg's variant is 'noble'" os "$two" noble
+
+# No VERSION_CODENAME value at all: the release is unknown, which is a refusal,
+# not a pass. UBUNTU_CODENAME is not read in its place.
+ubuntu_only="$(osr ubuntu-only <<'EOF'
+NAME="Ubuntu"
+UBUNTU_CODENAME=noble
+EOF
+)"
+check "os: a file with only UBUNTU_CODENAME is refused" 1 "no VERSION_CODENAME value" os "$ubuntu_only" noble
+empty_bare="$(osr empty-bare <<'EOF'
+VERSION_CODENAME=
+EOF
+)"
+check "os: an empty value is refused" 1 "no VERSION_CODENAME value" os "$empty_bare" noble
+empty_q="$(osr empty-q <<'EOF'
+VERSION_CODENAME=""
+EOF
+)"
+check "os: an empty quoted value is refused" 1 "no VERSION_CODENAME value" os "$empty_q" noble
+
+check "os: a missing file is refused" 1 "::error::the os-release file" os "${WORK}/absent-os-release" noble
+check "os: a missing variant is a usage error" 1 "usage: publish-guard.sh os" os "$real_noble"
+check "os: an empty variant is a usage error" 1 "usage: publish-guard.sh os" os "$real_noble" ""
+
 # --- summary -----------------------------------------------------------------
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

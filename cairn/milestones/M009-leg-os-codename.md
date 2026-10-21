@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M009: Assert each leg's OS matches its variant
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** high   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP4, GP8   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — the check decides which bytes ship under the `noble` and `resolute` tags users pull   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m009-leg-os-codename   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -86,7 +86,7 @@ matches the version tag" candidate row.
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits) -->
 
-- [ ] T1: Tests first. Add `os` cases to `.github/tests/test_publish_guard.sh`,
+- [x] T1: Tests first. Add `os` cases to `.github/tests/test_publish_guard.sh`,
       each asserting exit status and message: bare `noble` match; double-quoted
       `resolute` match; single-quoted match; a noble file checked as resolute;
       values holding the variant as a prefix or part (`noble2`, `nob`); two
@@ -128,6 +128,8 @@ matches the version tag" candidate row.
 - 2026-10-20: plan gate chose `VERSION_CODENAME` from the pulled image's `/etc/os-release` over the base's `org.opencontainers.image.version` label because the label holds a version number (24.04, 26.04) that needs a codename map and is metadata the base author sets; falsified by an rstudio2u image whose os-release codename differs from the Ubuntu release its apt sources name.
 - 2026-10-20: plan gate chose comparing with `matrix.variant` over `matrix.base_tag` because the variant names the digest artifact and the tags while base_tag is the build input under test; falsified by a variant whose name is not an Ubuntu codename.
 - 2026-10-20: plan gate chose a `publish-guard.sh` subcommand over an inline YAML check like the architecture assertion because the offline suite can drive the refusal cases without a build; falsified by a CI failure of the new step that the offline suite cannot reproduce.
+- 2026-10-20: started /milestone-implement on branch m009-leg-os-codename, cut from main at db5712f.
+- 2026-10-20: T1: 15 `os` cases added to test_publish_guard.sh (also an unbalanced-quote case and an empty-variant case); all 15 fail before T2 with the dispatcher's usage error, 31 existing cases pass. The unbalanced-quote fixture uses printf because bash 3.2 misparses it in a heredoc inside `$(...)`.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
