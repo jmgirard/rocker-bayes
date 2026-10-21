@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-10-21 (M009 merged as #22: row done and archived, its candidate graduated, one review row added, M006 row pruned, one lesson added; validate green)_
+_Last hygiene check: 2026-10-21 (M010 merged as #23: row done and archived, its candidate graduated, four review rows added, two rows extended, M007 row pruned, three lessons added; validate green)_
 
 ## Milestones
 
@@ -9,13 +9,11 @@ _Last hygiene check: 2026-10-21 (M009 merged as #22: row done and archived, its 
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M010 | Give old home volumes the new CmdStan | review | — | high | milestones/M010-cmdstan-out-of-home.md |
+| M010 | Give old home volumes the new CmdStan | done | — | high | milestones/archive/M010-cmdstan-out-of-home.md |
 | M009 | Assert each leg's OS matches its variant | done | — | high | milestones/archive/M009-leg-os-codename.md |
 | M008 | Pass CMDSTAN_VERSION to R via Sys.getenv | done | — | high | milestones/archive/M008-cmdstan-version-env.md |
-| M007 | Cover a broken C++ toolchain in smoke | done | — | high | milestones/archive/M007-smoke-cxx-toolchain.md |
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
-- [high] Give old home volumes the new CmdStan: CmdStan is compiled into `/home/rstudio/.cmdstan`, which the compose home volume captures on first run; an image update does not refresh CmdStan for existing users until the volume is wiped. Move it outside the home directory or refresh at start — added 2026-09-03 — cairn/DESIGN.md Architecture — started M010
 - Fix the package persistence claim: README.md's "Packages installed this way persist in the home volume" (the bspm section) is false. As `rstudio`, `.libPaths()` starts at the staff-writable `/usr/local/lib/R/site-library`, and bspm installs apt binaries under `/usr/lib/R/site-library`. Both are outside `/home/rstudio`, so installed packages are lost when the container is recreated or the image updates. Correct the text, or give the user library a home in the volume — added 2026-10-20 — M010 claim audit, M010 review blame-history #2, ripple #1
 - Keep CmdStan runtime files writable: Files a session writes into `/opt/cmdstan`, such as `main_threads.o` and precompiled headers, take that user's umask 022 modes, so a second staff user cannot rebuild them. Settings that `cmdstan_make_local()` writes to `make/local` now sit in the container layer and are lost on an update, where they used to persist in the home volume — added 2026-10-20 — M010 review diff-bug #6
 - Smoke a threaded CmdStan build in CI: Phase 3 compiles without `stan_threads`, so a lost group write bit on `/opt/cmdstan`, which a threaded build needs for `main_threads.o`, passes CI. M010 checked it by hand only — added 2026-10-20 — M010 review blame-history #1
