@@ -39,9 +39,12 @@ else
   : >"$STUB_LOG/env.$n.unset"
 fi
 EOF
-for cmd in mkdir chown; do
-  printf '#!/bin/bash\nprintf "%%s\\n" "%s $*" >>"$STUB_LOG/calls"\n' "$cmd" >"$STUBS/$cmd"
-done
+# mkdir and chown stubs log their arguments and do nothing else.
+cat >"$STUBS/mkdir" <<'EOF'
+#!/bin/bash
+printf '%s\n' "${0##*/} $*" >>"$STUB_LOG/calls"
+EOF
+cp "$STUBS/mkdir" "$STUBS/chown"
 chmod +x "$STUBS"/*
 
 # run_case <dir> <env|arg|empty|unset> [value]
@@ -91,6 +94,7 @@ fi
 # Each value carries one character that would break or rewrite R source if it
 # were spliced in: a double quote, a single quote, a backslash, a backtick,
 # a command substitution, a space, a glob, a newline, a trailing space.
+# shellcheck disable=SC1003,SC2016  # the unexpanded metacharacters are the test
 VALUES=(
   '2.40.0'
   '2.40.0", dir = "/tmp'

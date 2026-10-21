@@ -118,6 +118,7 @@ release candidates use other forms.
 - 2026-10-20: plan gate chose an offline suite over image builds with quote-bearing build args, because each build is a cold CmdStan compile; falsified by a stubbed pass whose real build fails on one of the ten values.
 - 2026-10-20: implement started on branch m008-cmdstan-version-env; linters run from the local `koalaman/shellcheck:v0.11.0` and `hadolint/hadolint:v2.12.0` images.
 - 2026-10-20: T1 done: suite written; against the current script it fails at the baseline with status 127, `apt-get: command not found` (no source guard, so sourcing ran the main body against the stubs). Step function named `install_cmdstan_step`; the suite also asserts the baseline R program contains `Sys.getenv("CMDSTAN_VERSION")`.
+- 2026-10-20: T2 code done: step function plus source guard; `main` body re-indented. Suite green on bash 3.2 (macOS) and bash 5.2 (inside rocker-bayes:dev). Plants, each restored: old interpolation → 19 failures (argv differs for all 9 non-baseline values in both modes, and the Sys.getenv check); export removed → 10 failures, every first-argument case; empty check removed → 6 failures, all empty/unset assertions. Shellcheck 0.11.0 `-x -S info` clean after one reasoned SC1003/SC2016 disable on the value list. Tick waits on the local docker build.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
