@@ -79,7 +79,7 @@ locally).
 - [ ] T3: Run the AC2 default case and the AC3 and AC4 controls against
       `rocker-bayes:dev`. Log each exit status and FAIL or PASS line, and check
       each failure's identity (which check fired), not the line alone.
-- [ ] T4: Update the DESIGN.md CI / publish bullet in one clause to say phase 2
+- [x] T4: Update the DESIGN.md CI / publish bullet in one clause to say phase 2
       asserts the probe package was absent before the install.
 
 ## Work log
@@ -99,6 +99,7 @@ locally).
 - 2026-10-20: T1 choice: the R library check signals through Rscript exit status 3 rather than a stdout stage marker, so install output still streams live; the dpkg check counts only a `Status: install ok installed` line.
 - 2026-10-20: question set (implement stop): download koalaman/shellcheck:v0.11.0 and hadolint/hadolint:v2.12.0 for local lint — granted.
 - 2026-10-20: T1 checkpoint: absence checks, new FAIL lines, header comment, and PASS line in `.github/smoke-test.sh`. shellcheck 0.11.0 `-S info` exit 0, hadolint exit 0, `bash -n` clean. The bash 3.2 and bash 5 runs wait for the image (T3); T1 stays open until then.
+- 2026-10-20: T4 done out of order while the image builds: one sentence added to the DESIGN.md CI / publish bullet after the smoke-test clause.
 
 ## Decisions
 
