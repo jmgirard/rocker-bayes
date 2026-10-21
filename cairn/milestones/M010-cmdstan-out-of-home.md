@@ -58,7 +58,7 @@ the old folder, and how to use a CmdStan of one's own.
 - [x] AC2: An image built from this branch has no `/home/rstudio/.cmdstan`
       path (`docker run --rm --entrypoint test <image> ! -e /home/rstudio/.cmdstan`
       exits 0), so a new home volume gets no `.cmdstan` folder.
-- [ ] AC3: `.github/smoke-test.sh`, with its new phase, passes every phase on
+- [x] AC3: `.github/smoke-test.sh`, with its new phase, passes every phase on
       all four legs of a `docker.yml` `test_mode` dispatch run from this
       branch, and on a noble image built locally from this branch.
 - [x] AC4: In each of two containers started from this branch's image, one
@@ -223,3 +223,4 @@ Pass 2 evidence at c07d906, image rebuilt from it (build context unchanged since
 - AC7: `test_install_cmdstan.sh` exit 0; hadolint v2.15.1 (the image hadolint-action v3.5.0 uses) exit 0; shellcheck v0.11.0 `-x -S info` over the 22 tracked `*.sh`/`*.command` files exit 0; actionlint 1.7.7 on pr-ci.yml exit 0.
 - Gate: cairn_validate all checks passed. Profile consistency-gate: the base is pinned by tag (`jmgirard/rstudio2u:${BASE_TAG}`, unchanged), no secrets in ENV or COPY (the new ENV is a path), `.dockerignore` unchanged, and the changelog slot is none (D-002). No DESIGN.md principle changed, so `cairn_impact` was skipped.
 - Not probed: the refusal of an existing `-home` volume, which needs a PID known in advance.
+- AC3 (four-leg half): test_mode run https://github.com/jmgirard/rocker-bayes/actions/runs/39547269294 on c97ceba succeeded. noble and resolute on amd64 and arm64 each printed "PASS: phase 4 (old home) - ... 2.40.0 at /opt/cmdstan/cmdstan-2.40.0" and "PASS: smoke test (server up + bspm binary + cmdstan + old home) succeeded". c97ceba differs from c07d906 only in cairn/.
