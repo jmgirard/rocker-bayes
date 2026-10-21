@@ -12,9 +12,8 @@ services:
       - ROOT=true
       - DISABLE_AUTH=true
     volumes:
-      # Persist the user's home directory (files, settings, and installed R
-      # packages) so work survives `docker compose down`, image updates, and
-      # pruning. The named volume is pre-populated from the image on first run.
+      # Persist the user's home directory (files and settings) so work
+      # survives `docker compose down`, image updates, and pruning. The named volume is pre-populated from the image on first run.
       # CmdStan lives in the image at /opt/cmdstan, outside this volume.
       - rstudio_home:/home/rstudio
 

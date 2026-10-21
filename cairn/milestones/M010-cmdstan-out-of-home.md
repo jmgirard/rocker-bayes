@@ -171,6 +171,8 @@ the old folder, and how to use a CmdStan of one's own.
 - 2026-10-20: T4 done (noble arm64, this Mac): build ok; smoke passed all four phases, phase 4 reporting /opt/cmdstan/cmdstan-2.40.0 and 2.40.0, the Dockerfile pin; AC2 command exit 0; /opt/cmdstan is root:staff drwxrwsr-x.
 - 2026-10-20: T4 AC4: threaded compile and sample passed as rstudio uid 1002 and as uid 1501 (`USERID=1501`), each writing main_threads.o into /opt/cmdstan; AC5: with `CMDSTAN` in ~/.Renviron pointing at a stub cmdstan-2.39.0, `cmdstan_path()` reported that directory.
 - 2026-10-20: T5 done: README note and two FAQ entries, compose comment, DESIGN Image build, CI and Architecture lines; the simple-english lint total on README.md is 39 on main and on the branch, so the added lines add none.
+- 2026-10-20: T6 started: branch pushed; docker.yml dispatched with test_mode=true, run https://github.com/jmgirard/rocker-bayes/actions/runs/39545142917.
+- 2026-10-20: claim audit: 24 claims read, 1 corrected — README.md, docker-compose.yml (the rewrapped volume note said installed R packages persist in the home volume; they install to the site library, so "and installed R packages" was dropped; the same claim in older README text became the candidate row "Fix the package persistence claim").
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->

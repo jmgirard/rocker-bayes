@@ -95,8 +95,8 @@ The launchers just wrap the Docker Compose commands below, so Docker Desktop mus
 be installed and running.
 
 > **Your work is saved.** The Compose setup stores the home directory (your
-> files, settings, and installed R packages) in a Docker named volume, so it
-> survives stopping, restarting, and even updating to a newer image. CmdStan
+> files and settings) in a Docker named volume, so it survives stopping,
+> restarting, and even updating to a newer image. CmdStan
 > lives in the image at `/opt/cmdstan`, outside that volume, so an update also
 > brings the image's CmdStan. To wipe the volume and start completely fresh,
 > run `docker compose down -v`.
