@@ -38,7 +38,8 @@
 #       ships under, so a matrix row whose base_tag names another release would
 #       otherwise publish that release's bytes under this variant's tags. The
 #       first VERSION_CODENAME= line decides. One pair of surrounding double or
-#       single quotes is removed; any other value is compared as it stands.
+#       single quotes is removed; any other value is compared as it stands,
+#       so a trailing space or carriage return makes it a mismatch.
 #
 # digests, manifest, and os print a GitHub Actions ::error:: line and exit 1 on
 # failure. paths and fresh do the same on a read error, and fresh does the
@@ -190,9 +191,13 @@ cmd_os() {
   [ -f "$file" ] || die "the os-release file $file does not exist or is not a regular file, so the image's Ubuntu release is unknown"
 
   # grep exits 1 when no line matches. That case is the empty value refused
-  # below, so it must not end the script under set -e first.
-  local line value
-  line="$(grep -m 1 '^VERSION_CODENAME=' "$file" || true)"
+  # below, so it must not end the script under set -e first. Any other status
+  # is a failed read, reported as such rather than as a missing value.
+  local line value status=0
+  line="$(grep -m 1 '^VERSION_CODENAME=' "$file")" || status=$?
+  if [ "$status" -gt 1 ]; then
+    die "could not read the os-release file $file, so the image's Ubuntu release is unknown"
+  fi
   value="${line#VERSION_CODENAME=}"
   case "$value" in
     \"*\") value="${value#\"}"; value="${value%\"}" ;;

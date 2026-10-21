@@ -420,6 +420,17 @@ EOF
 check "os: an empty quoted value is refused" 1 "no VERSION_CODENAME value" os "$empty_q" noble
 
 check "os: a missing file is refused" 1 "::error::the os-release file" os "${WORK}/absent-os-release" noble
+
+# A file that exists but cannot be read is a read error, not a missing value.
+# root reads it anyway, so the case is skipped there rather than passed.
+unreadable="$(printf 'VERSION_CODENAME=noble\n' | osr unreadable)"
+chmod 000 "$unreadable"
+if [ -r "$unreadable" ]; then
+  printf 'skip %s\n' "os: an unreadable file is a read error (this user can read a mode-000 file)"
+else
+  check "os: an unreadable file is a read error" 1 "::error::could not read the os-release file" os "$unreadable" noble
+fi
+chmod 600 "$unreadable"
 check "os: a missing variant is a usage error" 1 "usage: publish-guard.sh os" os "$real_noble"
 check "os: an empty variant is a usage error" 1 "usage: publish-guard.sh os" os "$real_noble" ""
 

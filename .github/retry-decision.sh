@@ -13,8 +13,8 @@
 # gives up. The only other job allowed to have failed is publish, and only at
 # its "Require all four verified digests" step, which a short digest count
 # fails whenever a leg failed. Anything else (a push or dispatch, a second
-# attempt, a failed smoke test, a failed keepalive or notify) is left for a
-# person.
+# attempt, a failed architecture or Ubuntu release check, a failed smoke test,
+# a failed keepalive or notify) is left for a person.
 #
 # A rerun of the failed jobs reruns their dependents too (publish, notify),
 # and publish reads the digests the green legs uploaded on attempt 1. Those

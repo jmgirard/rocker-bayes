@@ -73,7 +73,8 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   script has a suite in `.github/tests/`.
 - **Pre-merge checks**: `.github/workflows/pr-ci.yml` lints the Dockerfile,
   then builds and boots noble amd64 with the same `smoke-test.sh` the publish
-  gate runs. It never logs in and never publishes. Its `script-tests` job runs
+  gate runs. It does not run the publish gate's architecture or Ubuntu
+  release checks. It never logs in and never publishes. Its `script-tests` job runs
   the offline suites in `.github/tests/` that it lists by name, among them
   `test_install_cmdstan.sh`, which sources `scripts/install_bayes.sh` with
   stubbed commands. `.github/workflows/lint.yml` runs a pinned
