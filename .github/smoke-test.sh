@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Boot a rocker-bayes image and confirm it works before CI attaches any tag.
-# Three phases, each printing one PASS line:
+# Four phases, each printing one PASS line:
 #
 #   1. server up   - RStudio Server answers on 8787 (healthcheck, or a direct
 #                    port probe when the image declares none).
@@ -13,15 +13,20 @@
 #                    samples, and returns that mean. stanc runs before the C++
 #                    build, so a program stanc rejects and a broken C++
 #                    toolchain each get their own FAIL line.
+#   4. old home    - a second container, whose home is a volume holding a stale
+#                    ~/.cmdstan as an older image left it, still gets the
+#                    image's CmdStan from cmdstanr, through Renviron.site as an
+#                    RStudio session does.
 #
-# Exit 0 only when all three phases pass. Each failure prints one line starting
+# Exit 0 only when all four phases pass. Each failure prints one line starting
 # with "FAIL:" that names the phase, so CI triage can read the reason off that
 # line. A failure is also followed by a tail of the container log.
 #
 # Usage: .github/smoke-test.sh <image-ref>
 #
 # Env:
-#   SMOKE_TIMEOUT    seconds to wait for server health          (default 300)
+#   SMOKE_TIMEOUT    seconds to wait for server health, applied (default 300)
+#                    to each of phase 1 and phase 4
 #   SMOKE_PORT       host port to publish container 8787 on     (default 8787)
 #   SMOKE_PKG        CRAN package for the bspm binary check,    (default praise)
 #                    one the image must not already carry
@@ -46,6 +51,11 @@ THETA_REF="${SMOKE_THETA_REF:-0.4019608}"
 THETA_TOL="0.05"
 
 NAME="rocker-bayes-smoke-$$"
+# Phase 4's container and home volume. The script makes both and removes only
+# these, never a volume it did not create, such as compose's rstudio_home.
+OLD_NAME="${NAME}-oldhome"
+HOME_VOL="${NAME}-home"
+HOME_VOL_MADE=0
 SMOKE_OK=0
 
 if [ ! -f "$STAN_FILE" ]; then
@@ -61,8 +71,15 @@ cleanup() {
   if [ "$SMOKE_OK" != "1" ]; then
     echo "--- container logs (tail) ---"
     docker logs --tail 50 "$NAME" 2>&1 || true
+    if docker inspect "$OLD_NAME" >/dev/null 2>&1; then
+      echo "--- phase 4 container logs (tail) ---"
+      docker logs --tail 50 "$OLD_NAME" 2>&1 || true
+    fi
   fi
-  docker rm -f "$NAME" >/dev/null 2>&1 || true
+  docker rm -f "$NAME" "$OLD_NAME" >/dev/null 2>&1 || true
+  if [ "$HOME_VOL_MADE" = "1" ] && ! docker volume rm "$HOME_VOL" >/dev/null 2>&1; then
+    echo "WARN: could not remove the phase 4 volume $HOME_VOL; remove it with: docker volume rm $HOME_VOL"
+  fi
 }
 trap cleanup EXIT
 
@@ -85,7 +102,7 @@ has_healthcheck() {
 }
 
 # --- Phase 1: server up -----------------------------------------------------
-echo "==> [1/3] server up"
+echo "==> [1/4] server up"
 status="n/a"
 deadline=$(( $(date +%s) + TIMEOUT ))
 while :; do
@@ -133,7 +150,7 @@ done
 # the r2u binary path worked: a silent source compile also ends with a
 # loadable package, but with no apt entry.
 apt_pkg="r-cran-$(printf '%s' "$PKG" | tr '[:upper:]' '[:lower:]')"
-echo "==> [2/3] bspm binary install ($PKG -> $apt_pkg)"
+echo "==> [2/4] bspm binary install ($PKG -> $apt_pkg)"
 
 # Print the package's dpkg state, the last word of the Status line (installed,
 # unpacked, config-files, ...), or nothing when dpkg has no record of it.
@@ -215,10 +232,10 @@ esac
 echo "PASS: phase 2 (bspm binary) - $PKG was absent from the image before the install, installed as $apt_pkg, and loads"
 
 # --- Phase 3: CmdStan --------------------------------------------------------
-# Runs as the rstudio user with an explicit HOME, because CmdStan is installed
-# under /home/rstudio/.cmdstan and cmdstanr finds it by looking there. Root
-# would look in /root and report no CmdStan at all.
-echo "==> [3/3] cmdstan compile and sample ($STAN_BASE)"
+# Runs as the rstudio user with an explicit HOME, as an RStudio session does.
+# CmdStan lives in /opt/cmdstan, and cmdstanr finds it through the image's
+# CMDSTAN variable.
+echo "==> [3/4] cmdstan compile and sample ($STAN_BASE)"
 if ! docker exec -u rstudio -e HOME=/home/rstudio "$NAME" Rscript -e '
   suppressMessages(library(cmdstanr))
   path <- tryCatch(cmdstanr::cmdstan_path(), error = function(e) "")
@@ -323,6 +340,133 @@ if [ "$stan_status" -ne 0 ]; then
 fi
 echo "PASS: phase 3 (cmdstan) - model compiled, sampled, and matched the reference posterior mean"
 
-echo "PASS: smoke test (server up + bspm binary + cmdstan) succeeded"
+# --- Phase 4: old home volume ------------------------------------------------
+# Docker copies the image's home into a named volume only while the volume is
+# empty, so a home volume that an older image filled keeps that image's
+# ~/.cmdstan through every update. Seed a volume of this script's own with a
+# stale cmdstan-2.36.0, through a mount at a path the image does not fill, and
+# boot a second container with that volume as its home. cmdstanr must still
+# report the image's CmdStan. CMDSTAN is removed from the R process, so the
+# value has to come from Renviron.site, which is where an RStudio session gets
+# it. The container publishes no port, so it cannot collide with phase 1's.
+echo "==> [4/4] old home volume"
+# docker volume create succeeds on a volume that already exists, which would
+# hand this phase a home it did not seed, so an existing one is refused and
+# left alone.
+if docker volume inspect "$HOME_VOL" >/dev/null 2>&1; then
+  echo "FAIL: phase 4 (old home) - a volume named $HOME_VOL already exists; this run did not create it, so it is left in place"
+  exit 1
+fi
+if ! docker volume create "$HOME_VOL" >/dev/null; then
+  echo "FAIL: phase 4 (old home) - could not create the home volume $HOME_VOL"
+  exit 1
+fi
+HOME_VOL_MADE=1
+if ! docker run --rm --entrypoint bash -v "${HOME_VOL}:/seed" "$IMAGE" -c '
+    mkdir -p /seed/.cmdstan/cmdstan-2.36.0
+    printf "CMDSTAN_VERSION := 2.36.0\n" >/seed/.cmdstan/cmdstan-2.36.0/makefile
+    chown -R rstudio:rstudio /seed
+  '; then
+  echo "FAIL: phase 4 (old home) - could not seed the home volume $HOME_VOL"
+  exit 1
+fi
+if ! docker run -d --name "$OLD_NAME" -v "${HOME_VOL}:/home/rstudio" "$IMAGE" >/dev/null; then
+  echo "FAIL: phase 4 (old home) - could not start a container from $IMAGE on the seeded volume"
+  exit 1
+fi
+
+# The base writes Renviron.site while the container starts, before the server
+# comes up, so a container whose server answers has it. With no HEALTHCHECK,
+# the server is probed from inside the container, since this one publishes no
+# port.
+deadline=$(( $(date +%s) + TIMEOUT ))
+while :; do
+  running="$(docker inspect --format '{{.State.Running}}' "$OLD_NAME" 2>/dev/null || echo false)"
+  if [ "$running" != "true" ]; then
+    echo "FAIL: phase 4 (old home) - the container on the seeded volume exited before becoming healthy"
+    exit 1
+  fi
+  status="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$OLD_NAME" 2>/dev/null || echo unknown)"
+  case "$status" in
+    healthy) break ;;
+    none)
+      if docker exec "$OLD_NAME" wget -q -O /dev/null http://localhost:8787/ >/dev/null 2>&1; then
+        break
+      fi
+      ;;
+    unhealthy)
+      echo "FAIL: phase 4 (old home) - the container on the seeded volume reported unhealthy"
+      exit 1
+      ;;
+  esac
+  if [ "$(date +%s)" -ge "$deadline" ]; then
+    echo "FAIL: phase 4 (old home) - the container on the seeded volume was not healthy within ${TIMEOUT}s (last status: ${status})"
+    exit 1
+  fi
+  sleep 3
+done
+
+# The phase means nothing unless this container sees the stale folder that
+# cmdstanr would pick without CMDSTAN.
+if ! docker exec -u rstudio "$OLD_NAME" test -f /home/rstudio/.cmdstan/cmdstan-2.36.0/makefile; then
+  echo "FAIL: phase 4 (old home) - the container does not see the seeded /home/rstudio/.cmdstan/cmdstan-2.36.0"
+  exit 1
+fi
+
+# Print a variable of the container, or "?" when the read itself failed.
+# printenv exits 1 for an unset variable, the status a failed docker exec also
+# gives, so the unset case is mapped to success inside the container.
+container_env() {
+  docker exec "$OLD_NAME" sh -c "printenv $1 || true" 2>/dev/null || echo "?"
+}
+want_path="$(container_env CMDSTAN)"
+want_ver="$(container_env CMDSTAN_VERSION)"
+if [ "$want_path" = "?" ] || [ "$want_ver" = "?" ]; then
+  echo "FAIL: phase 4 (old home) - could not read CMDSTAN and CMDSTAN_VERSION from the container"
+  exit 1
+fi
+set +e
+old_out="$(docker exec -u rstudio -e HOME=/home/rstudio "$OLD_NAME" env -u CMDSTAN Rscript -e '
+  suppressMessages(library(cmdstanr))
+  path <- tryCatch(cmdstanr::cmdstan_path(), error = function(e) "")
+  ver <- tryCatch(cmdstanr::cmdstan_version(), error = function(e) "")
+  cat("path=", path, "\n", sep = "")
+  cat("version=", ver, "\n", sep = "")
+' 2>&1)"
+old_status=$?
+set -e
+printf '%s\n' "$old_out"
+got_path="$(printf '%s\n' "$old_out" | sed -n 's/^path=//p' | tail -n 1)"
+got_ver="$(printf '%s\n' "$old_out" | sed -n 's/^version=//p' | tail -n 1)"
+if [ "$old_status" -ne 0 ]; then
+  echo "FAIL: phase 4 (old home) - cmdstanr could not be asked for its CmdStan path and version"
+  exit 1
+fi
+if [ -z "$want_ver" ]; then
+  echo "FAIL: phase 4 (old home) - the image sets no CMDSTAN_VERSION to compare with"
+  exit 1
+fi
+if [ "$got_ver" != "$want_ver" ]; then
+  echo "FAIL: phase 4 (old home) - with a stale ~/.cmdstan in the home volume, cmdstanr picked CmdStan ${got_ver:-none} at ${got_path:-no path}, not the image's $want_ver"
+  exit 1
+fi
+case "$want_path" in
+  "")
+    echo "FAIL: phase 4 (old home) - the image sets no CMDSTAN"
+    exit 1
+    ;;
+  /opt/cmdstan/*) ;;
+  *)
+    echo "FAIL: phase 4 (old home) - the image's CMDSTAN ($want_path) is not under /opt/cmdstan/"
+    exit 1
+    ;;
+esac
+if [ "$got_path" != "$want_path" ]; then
+  echo "FAIL: phase 4 (old home) - cmdstanr reports $got_path, not the image's CMDSTAN $want_path"
+  exit 1
+fi
+echo "PASS: phase 4 (old home) - with a stale ~/.cmdstan in the home volume, cmdstanr reports the image's CmdStan $want_ver at $want_path"
+
+echo "PASS: smoke test (server up + bspm binary + cmdstan + old home) succeeded"
 SMOKE_OK=1
 exit 0

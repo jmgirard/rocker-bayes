@@ -95,9 +95,10 @@ The launchers just wrap the Docker Compose commands below, so Docker Desktop mus
 be installed and running.
 
 > **Your work is saved.** The Compose setup stores the home directory (your
-> files, settings, installed R packages, and compiled CmdStan toolchain) in a
-> Docker named volume, so it survives stopping, restarting, and even updating to
-> a newer image. To wipe it and start completely fresh, run
+> files and settings) in a Docker named volume, so it survives stopping,
+> restarting, and even updating to a newer image. CmdStan lives in the image at
+> `/opt/cmdstan`, outside that volume, so an update also brings the image's
+> CmdStan. To wipe the volume and start completely fresh, run
 > `docker compose down -v`.
 
 ### Option 1: Pull and run from Docker Hub
@@ -260,6 +261,43 @@ from a terminal, `RS_PORT=8888 docker compose up -d` also does the job.) With
 **How do I update to the latest version?**
 `docker compose pull` (the launchers do this for you) or
 `docker pull jmgirard/rocker-bayes`. Your work in the home volume is preserved.
+
+**My home volume has a `.cmdstan` folder. Do I still need it?**
+Older images compiled CmdStan into `~/.cmdstan`, and a home volume made by one
+of them keeps that copy. This image no longer reads it: cmdstanr uses the
+image's CmdStan in `/opt/cmdstan`, which the `CMDSTAN` variable points to. To
+see how much space the folder takes, run this in the RStudio **Terminal**:
+
+```
+du -sh ~/.cmdstan
+```
+
+Warning: the folder can also hold a CmdStan of your own. If you ran
+`cmdstanr::install_cmdstan()` yourself, or if your `~/.Renviron` points
+`CMDSTAN` into `~/.cmdstan`, that CmdStan is in this folder. Deleting the folder
+deletes it too. Models you compiled with an older image also load a library
+from this folder, so they stop running once it is gone. Recompile each one
+with `cmdstan_model("model.stan", force_recompile = TRUE)`, or delete its
+compiled file next to the `.stan` file. If no CmdStan of your own is in the
+folder, you can delete it:
+
+```
+rm -rf ~/.cmdstan
+```
+
+**Can I use a different CmdStan version?**
+Yes. Install it with `cmdstanr::install_cmdstan()`, which puts it in
+`~/.cmdstan`. Then add a line to `~/.Renviron` that names its folder, for
+example:
+
+```
+CMDSTAN=/home/rstudio/.cmdstan/cmdstan-2.41.0
+```
+
+Restart R (**Session > Restart R**) to use it. R reads `~/.Renviron` after the
+image's own setting, so your line wins. A derivative image that installs its own
+CmdStan must also set `CMDSTAN`, for example with an `ENV CMDSTAN=...` line in
+its Dockerfile. Otherwise cmdstanr keeps using the CmdStan in `/opt/cmdstan`.
 
 **How do I reset everything / reclaim disk space?**
 `docker compose down -v` removes the container and its home volume (this deletes
