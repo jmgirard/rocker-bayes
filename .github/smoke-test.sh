@@ -251,13 +251,12 @@ stan_out="$(docker exec -u rstudio -e HOME=/home/rstudio \
   # Compile before looking for the data file. Compiling needs no data, and a
   # missing data file must never stand in for a program that does not compile.
   # stanc runs on its own first, so a failure in the C++ build that follows
-  # points at the toolchain rather than at the Stan program.
-  mod <- tryCatch(
-    {
-      m <- cmdstanr::cmdstan_model(stan, compile = FALSE)
-      m$check_syntax()
-      m
-    },
+  # comes from the build step and not from the stanc check of the program.
+  # Creating the model object runs neither, so it stays outside both stages: a
+  # failure there takes the line for a run that reached no stage marker.
+  mod <- cmdstanr::cmdstan_model(stan, compile = FALSE)
+  tryCatch(
+    mod$check_syntax(),
     error = function(e) {
       cat("stage:stanc\n")
       stop(conditionMessage(e), call. = FALSE)
@@ -266,9 +265,14 @@ stan_out="$(docker exec -u rstudio -e HOME=/home/rstudio \
   invisible(tryCatch(
     mod$compile(),
     error = function(e) {
-      # cmdstanr keeps the stderr of the failed make on the condition and does
-      # not print it, so print it here for whoever reads the CI log.
-      if (length(e$stderr) == 1 && nzchar(e$stderr)) cat(e$stderr, "\n")
+      # When make fails while cmdstanr reads CmdStan flags, before the build
+      # starts, the error keeps the stderr of make and nothing prints it. Print it
+      # here for whoever reads the CI log.
+      err <- e[["stderr"]]
+      if (is.character(err)) {
+        err <- err[!is.na(err) & nzchar(err)]
+        if (length(err) > 0) cat(err, sep = "\n")
+      }
       cat("stage:cxx\n")
       stop(conditionMessage(e), call. = FALSE)
     }
@@ -309,7 +313,7 @@ printf '%s\n' "$stan_out"
 if [ "$stan_status" -ne 0 ]; then
   case "$stan_out" in
     *"stage:data"*)    echo "FAIL: phase 3 (cmdstan) - no data file beside $STAN_BASE" ;;
-    *"stage:stanc"*)   echo "FAIL: phase 3 (cmdstan) - stanc rejected $STAN_BASE" ;;
+    *"stage:stanc"*)   echo "FAIL: phase 3 (cmdstan) - stanc failed on $STAN_BASE" ;;
     *"stage:cxx"*)     echo "FAIL: phase 3 (cmdstan) - $STAN_BASE passed stanc but the C++ build failed" ;;
     *"stage:sample"*)  echo "FAIL: phase 3 (cmdstan) - the model compiled but sampling failed" ;;
     *"stage:mean"*)    echo "FAIL: phase 3 (cmdstan) - the posterior mean is not within $THETA_TOL of $THETA_REF" ;;
