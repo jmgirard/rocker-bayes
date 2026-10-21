@@ -175,6 +175,7 @@ the old folder, and how to use a CmdStan of one's own.
 - 2026-10-20: claim audit: 24 claims read, 1 corrected — README.md, docker-compose.yml (the rewrapped volume note said installed R packages persist in the home volume; they install to the site library, so "and installed R packages" was dropped; the same claim in older README text became the candidate row "Fix the package persistence claim").
 - 2026-10-20: T6 done: run 39545142917 on 0d10372 succeeded; noble and resolute on amd64 and arm64 each printed "PASS: phase 4 (old home)" with /opt/cmdstan/cmdstan-2.40.0 and "PASS: smoke test (... + old home)"; publish ran in test_mode, notify skipped. 01ddecd after it changes only README.md, docker-compose.yml and cairn/, which are outside the build context.
 - 2026-10-20: implement done; status set to review.
+- 2026-10-21: step-7 approval: m010-cmdstan-out-of-home approved for merge, on condition that a fresh test_mode run of all four legs passes first (the user chose "Rerun builds, then merge").
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
