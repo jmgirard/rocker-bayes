@@ -97,7 +97,7 @@ matches the version tag" candidate row.
       the header and its case in the dispatcher (publish-guard.sh:177-183).
       Run the suite green, then shellcheck 0.11.0 `-x -S info` on both files,
       run in its container against the files in the repo checkout.
-- [ ] T3: Add the step to `docker.yml` after the `pulled` step
+- [x] T3: Add the step to `docker.yml` after the `pulled` step
       (docker.yml:125-147), reading the file with
       `docker run --rm --entrypoint cat "$ref" /etc/os-release` and guarding
       the read as the M001 `set -e` lesson says. Update the build-job comment
@@ -131,6 +131,7 @@ matches the version tag" candidate row.
 - 2026-10-20: started /milestone-implement on branch m009-leg-os-codename, cut from main at db5712f.
 - 2026-10-20: T1: 15 `os` cases added to test_publish_guard.sh (also an unbalanced-quote case and an empty-variant case); all 15 fail before T2 with the dispatcher's usage error, 31 existing cases pass. The unbalanced-quote fixture uses printf because bash 3.2 misparses it in a heredoc inside `$(...)`.
 - 2026-10-20: T2: `cmd_os` added to publish-guard.sh with its header usage block and dispatcher case; the suite passes 46/46 on macOS bash 3.2, and shellcheck 0.11.0 `-x -S info` (container, repo checkout) reports nothing on both files. Messages: accept "the image's Ubuntu codename is <v>, as its variant names"; mismatch "the image's Ubuntu codename is '<got>', but this leg's variant is '<want>'".
+- 2026-10-20: T3: step "Assert the image's Ubuntu release is <variant>" added after `pulled` in docker.yml, reading `steps.pulled.outputs.ref` and failing with its own `::error::` line if the `docker run` read fails; build-job comment and the two DESIGN.md passages updated. actionlint 1.7.7 (container, with its shellcheck pass) reports nothing on docker.yml; `publish-guard.sh paths` still reads the push filter. Decided: a separate step rather than more lines in `pulled`, so the step name says which check failed.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
