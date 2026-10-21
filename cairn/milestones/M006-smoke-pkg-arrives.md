@@ -29,24 +29,24 @@ locally).
 
 ## Acceptance criteria
 
-- [ ] AC1: Before phase 2 of `.github/smoke-test.sh` installs `SMOKE_PKG`, it
+- [x] AC1: Before phase 2 of `.github/smoke-test.sh` installs `SMOKE_PKG`, it
       runs two absence checks: `dpkg -s r-cran-<pkg>` reports no installed
       entry, and `find.package()` returns no path across `.libPaths()` in the
       same root Rscript session that runs the install. When either check finds
       the package, the script exits 1 with a FAIL line that names phase 2, says
       the package was already in the image, and names which check found it.
       That line differs from the two existing phase 2 FAIL lines.
-- [ ] AC2: Against an image built from this branch, a run with `SMOKE_PKG`
+- [x] AC2: Against an image built from this branch, a run with `SMOKE_PKG`
       unset exits 0 with the three phase PASS lines, and its phase 2 PASS line
       says `praise` was absent from the image before the install.
-- [ ] AC3: Against the same image, a `SMOKE_PKG` that `dpkg -s` shows installed
+- [x] AC3: Against the same image, a `SMOKE_PKG` that `dpkg -s` shows installed
       exits 1 with the AC1 FAIL line naming the dpkg check. A `SMOKE_PKG` that
       `installed.packages()` lists but `dpkg -l 'r-cran-*'` does not exits 1
       with the AC1 FAIL line naming the R library check.
-- [ ] AC4: Against the same image, `SMOKE_PKG=oolong` (absent from the image,
+- [x] AC4: Against the same image, `SMOKE_PKG=oolong` (absent from the image,
       no r2u binary) passes the AC1 absence checks and then exits 1 with the
       existing "did not install as an apt binary" FAIL line.
-- [ ] AC5: The `verify` slot is clean: `hadolint Dockerfile` reports nothing,
+- [x] AC5: The `verify` slot is clean: `hadolint Dockerfile` reports nothing,
       the branch image builds, and shellcheck 0.11.0 at `-S info` reports
       nothing on `.github/smoke-test.sh`.
 
@@ -105,7 +105,17 @@ locally).
 - 2026-10-20: T3 controls, each exit 1. `brms`: dpkg-check FAIL line (shell check fired; no Rscript ran). `cmdstanr`: R-library-check FAIL line after `found before the install: /usr/local/lib/R/site-library/cmdstanr`. `oolong`: passed both absence checks, built from source (`DONE (oolong)`), then the existing "r-cran-oolong absent" line. Extra: `nosuchpkgm006` gave "not available" and the existing "install or load ... failed" line, so exit 3 does not swallow other failures.
 - 2026-10-20: T3 checked the T1 comment's claim: in a throwaway container, `dpkg -r binutils-common` left `Status: deinstall ok config-files` and `dpkg -s` exited 0.
 - 2026-10-20: claim audit: not owed — internal tier.
+- 2026-10-20: review checkpoint: AC1–AC5 evidence recorded and ticked, consistency gate clean; four review lenses running, findings not yet settled.
 
 ## Decisions
 
 ## Review
+
+Fresh evidence 2026-10-20 on branch head 97d9fe9, synced with origin/main (0 behind). Image `rocker-bayes:dev` rebuilt from cache, Id b30a5a3dad77, arm64, run under macOS /bin/bash 3.2.57; container user root.
+
+- **AC1 verified.** `.github/smoke-test.sh:138` reads `dpkg -s r-cran-<pkg>` before the install and line 141 fails on a `Status: install ok installed` entry, naming the dpkg check. Lines 152–155 run `find.package()` in the same root Rscript that runs `install.packages(pkg)` at line 157, and exit 3. Line 165 fails on that status, naming the R library check. Both lines say the package was already in the image and differ from the existing lines 169 ("install or load ... failed") and 174 ("did not install as an apt binary"). The AC3 runs below exercise both branches.
+- **AC2 verified.** `SMOKE_PKG` unset: exit 0 with the three phase PASS lines and the summary PASS line. Phase 2 reads `praise was absent from the image before the install, installed as r-cran-praise, and loads`; the log shows `Get:1 https://r2u.stat.illinois.edu/ubuntu noble/main all r-cran-praise all 1.0.0-1.ca2404.1`.
+- **AC3 verified.** `SMOKE_PKG=brms` (T2: `r-cran-brms` `install ok installed`): exit 1, the line-141 FAIL line naming the dpkg check. `SMOKE_PKG=cmdstanr` (T2: in `installed.packages()`, no dpkg entry): exit 1, R printed `found before the install: /usr/local/lib/R/site-library/cmdstanr`, then the line-165 FAIL line naming the R library check.
+- **AC4 verified.** `SMOKE_PKG=oolong`: no absence FAIL line; the log shows `installing *source* package 'oolong'`, then exit 1 with `oolong did not install as an apt binary (r-cran-oolong absent)`.
+- **AC5 verified.** hadolint v2.12.0 on `Dockerfile` exit 0 with no output; `docker build -t rocker-bayes:dev .` exit 0; shellcheck v0.11.0 `-S info` on `.github/smoke-test.sh` exit 0 with no output.
+- **Consistency gate.** `cairn_validate.py`: all checks passed. No IP/GP text changed, so `cairn_impact` was skipped. Profile checks: build and hadolint clean (AC5); base pinned by the explicit tag `jmgirard/rstudio2u:${BASE_TAG}` (default `noble`, unchanged); the diff adds no credential strings; `.dockerignore` present and excludes `.git`, `.github`, and `cairn`; changelog slot is `none` and the change is CI-only (no release under D-002).
