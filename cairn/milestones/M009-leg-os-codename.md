@@ -152,8 +152,8 @@ Review pass 1, 2026-10-20, on aa55732 (main db5712f unmoved since the cut; no PR
 - AC5: `docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 -x -S info .github/publish-guard.sh .github/tests/test_publish_guard.sh` printed nothing and exited 0.
 - Gate: `cairn_validate.py` all checks passed (exit 0). No DESIGN.md principle text changed, so `cairn_impact` was skipped. Profile consistency-gate: `hadolint/hadolint:v2.12.0` on the Dockerfile exited 0 with no output; the branch changes nothing in the build context (`git diff main...HEAD -- Dockerfile .dockerignore scripts/` is empty), and both dispatches built all four legs from a clean context with `no-cache`; base pin, secrets, and `.dockerignore` are unchanged; changelog slot is "none" and the image's contents do not change, so no release-note entry is owed.
 - spawned: diff-bug, blame-history, prior-review, ripple
-- diff-bug #1: a CRLF or trailing-space value is refused with a message whose quoted value looks like the variant, and the header does not say such values count as a mismatch — fix now (header states it; the refusal itself is AC1's planned behavior)
-- diff-bug #2: `grep … || true` swallows grep's exit 2, so an unreadable file is reported as "has no VERSION_CODENAME value" — fix now (own read-error message and a test case)
+- diff-bug #1: a CRLF or trailing-space value is refused with a message whose quoted value looks like the variant, and the header does not say such values count as a mismatch — fix now (header states it; the refusal itself is AC1's planned behavior), fixed 10e237e
+- diff-bug #2: `grep … || true` swallows grep's exit 2, so an unreadable file is reported as "has no VERSION_CODENAME value" — fix now (own read-error message and a test case), fixed 10e237e
 - diff-bug #3: leading-whitespace lines, `"noble" ` and nested quotes are refused with no test pinning it — reject, planned change: AC1 compares any other shape as it stands, and each refuses
 - diff-bug #4: the step writes `/tmp/os-release`, not `$RUNNER_TEMP` — reject, false for this repo: GitHub-hosted runners only, one job per runner, same `/tmp` convention as `/tmp/digests`
 - diff-bug #5: a failure of the new step is never auto-retried — reject, planned: retry-decision.sh reruns only the mirror symptom at the build step
@@ -164,12 +164,12 @@ Review pass 1, 2026-10-20, on aa55732 (main db5712f unmoved since the cut; no PR
 - diff-bug #10: expression interpolation is safe — reject, reports no defect
 - diff-bug #11: the accept message reads oddly — reject, style
 - blame-history #1: pr-ci.yml does not run the check — reject, planned change: declined at the plan gate (work-log line committed in db5712f)
-- blame-history #2: docker.yml:21 test_mode description omits the new step — fix now (same as ripple #1)
+- blame-history #2: docker.yml:21 test_mode description omits the new step — fix now (same as ripple #1), fixed 10e237e
 - blame-history #3: comment wrap at docker.yml:40-42 — reject, style (same as diff-bug #7)
-- prior-review #1: trailing space or CR stays in the value — fix now (same as diff-bug #1)
+- prior-review #1: trailing space or CR stays in the value — fix now (same as diff-bug #1), fixed 10e237e
 - prior-review #2: no test covers the step's `docker run` read-failure branch — follow-up, new candidate row "Test the os step's read failure"
-- ripple #1: docker.yml:21 test_mode description says each leg "is pulled back and smoke-tested" — fix now
-- ripple #2: docker.yml:78-80 lists the readers of the pushed image without the new step — fix now
-- ripple #3: retry-decision.sh:14-17 lists what is left for a person without the new step — fix now
-- ripple #4: DESIGN.md pre-merge lane text could read as parity with the publish gate — fix now (says the lane has no Ubuntu release check)
+- ripple #1: docker.yml:21 test_mode description says each leg "is pulled back and smoke-tested" — fix now, fixed 10e237e
+- ripple #2: docker.yml:78-80 lists the readers of the pushed image without the new step — fix now, fixed 10e237e
+- ripple #3: retry-decision.sh:14-17 lists what is left for a person without the new step — fix now, fixed 10e237e
+- ripple #4: DESIGN.md pre-merge lane text could read as parity with the publish gate — fix now (says the lane has no Ubuntu release check), fixed 10e237e
 - Return floor: no finding shows a criterion failing; no status change.
