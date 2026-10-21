@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M010: Give old home volumes the new CmdStan
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** high   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -142,7 +142,7 @@ the old folder, and how to use a CmdStan of one's own.
       and derived-image notes. Fix the `docker-compose.yml` volume comment.
       Update DESIGN.md's Image build family and Architecture to say CmdStan
       lives in `/opt/cmdstan` and is found through `CMDSTAN`.
-- [ ] T6: Push the branch and start one `docker.yml` dispatch with
+- [x] T6: Push the branch and start one `docker.yml` dispatch with
       `test_mode=true` from it (granted at the plan gate). Record the run URL
       and each leg's smoke result.
 
@@ -173,6 +173,8 @@ the old folder, and how to use a CmdStan of one's own.
 - 2026-10-20: T5 done: README note and two FAQ entries, compose comment, DESIGN Image build, CI and Architecture lines; the simple-english lint total on README.md is 39 on main and on the branch, so the added lines add none.
 - 2026-10-20: T6 started: branch pushed; docker.yml dispatched with test_mode=true, run https://github.com/jmgirard/rocker-bayes/actions/runs/39545142917.
 - 2026-10-20: claim audit: 24 claims read, 1 corrected — README.md, docker-compose.yml (the rewrapped volume note said installed R packages persist in the home volume; they install to the site library, so "and installed R packages" was dropped; the same claim in older README text became the candidate row "Fix the package persistence claim").
+- 2026-10-20: T6 done: run 39545142917 on 0d10372 succeeded; noble and resolute on amd64 and arm64 each printed "PASS: phase 4 (old home)" with /opt/cmdstan/cmdstan-2.40.0 and "PASS: smoke test (... + old home)"; publish ran in test_mode, notify skipped. 01ddecd after it changes only README.md, docker-compose.yml and cairn/, which are outside the build context.
+- 2026-10-20: implement done; status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->

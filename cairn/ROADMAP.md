@@ -9,7 +9,7 @@ _Last hygiene check: 2026-10-21 (M009 merged as #22: row done and archived, its 
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M010 | Give old home volumes the new CmdStan | in-progress | — | high | milestones/M010-cmdstan-out-of-home.md |
+| M010 | Give old home volumes the new CmdStan | review | — | high | milestones/M010-cmdstan-out-of-home.md |
 | M009 | Assert each leg's OS matches its variant | done | — | high | milestones/archive/M009-leg-os-codename.md |
 | M008 | Pass CMDSTAN_VERSION to R via Sys.getenv | done | — | high | milestones/archive/M008-cmdstan-version-env.md |
 | M007 | Cover a broken C++ toolchain in smoke | done | — | high | milestones/archive/M007-smoke-cxx-toolchain.md |
