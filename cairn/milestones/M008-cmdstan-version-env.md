@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M008: Pass CMDSTAN_VERSION to R via Sys.getenv
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** high   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP3   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — people build the image with `--build-arg CMDSTAN_VERSION=…`   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m008-cmdstan-version-env   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -78,7 +78,7 @@ release candidates use other forms.
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits) -->
 
-- [ ] T1: Write `.github/tests/test_install_cmdstan.sh` in the style of
+- [x] T1: Write `.github/tests/test_install_cmdstan.sh` in the style of
       `test_cmdstan_pin.sh` (`set -uo pipefail`, count failures). Put
       executable stubs for `R`, `mkdir`, and `chown` in a temporary
       directory, and run each case in a subshell that sources the script
@@ -116,6 +116,8 @@ release candidates use other forms.
 - 2026-10-20: plan gate chose sourcing the script with stubs on a stub-only PATH over a static grep of the R source, because grep checks one spelling and not what R receives; falsified by a defect that changes R's argv or environment while the suite passes.
 - 2026-10-20: plan gate chose sourcing with a guard over running the whole script with PATH stubs, because a stub gap would run `rm -rf /tmp/*` and apt-get on the host; falsified by the guard keeping the main body from running in the image build.
 - 2026-10-20: plan gate chose an offline suite over image builds with quote-bearing build args, because each build is a cold CmdStan compile; falsified by a stubbed pass whose real build fails on one of the ten values.
+- 2026-10-20: implement started on branch m008-cmdstan-version-env; linters run from the local `koalaman/shellcheck:v0.11.0` and `hadolint/hadolint:v2.12.0` images.
+- 2026-10-20: T1 done: suite written; against the current script it fails at the baseline with status 127, `apt-get: command not found` (no source guard, so sourcing ran the main body against the stubs). Step function named `install_cmdstan_step`; the suite also asserts the baseline R program contains `Sys.getenv("CMDSTAN_VERSION")`.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
