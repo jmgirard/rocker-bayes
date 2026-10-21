@@ -69,7 +69,7 @@ own candidate rows).
       block. Run shellcheck 0.11.0 at `-S info` in a container against the
       file inside the repo checkout. Run the script under macOS bash 3.2 as
       well as bash 5 where the two differ.
-- [ ] T2: Start Docker Desktop, run `hadolint Dockerfile` in a container, and
+- [x] T2: Start Docker Desktop, run `hadolint Dockerfile` in a container, and
       build `rocker-bayes:dev` from the branch (arm64). Inside it, find the
       file that `g++` resolves to and the compiler CmdStan's make calls. Build
       a derived image that replaces that file with a stub that prints a fixed
@@ -100,6 +100,7 @@ own candidate rows).
 - 2026-10-20: no release notes: a CI-only change with no recipe change gets no release under D-002.
 - 2026-10-20: implement started on branch m007-smoke-cxx-toolchain, cut from main at fa3fed2; tree clean.
 - 2026-10-20: T1 split phase 3's compile into `cmdstan_model(compile = FALSE)` plus `$check_syntax()` under `stage:stanc`, then `$compile()` under `stage:cxx`, wrapped in `invisible()` so the model object does not print. FAIL lines: "stanc rejected <file>" and "<file> passed stanc but the C++ build failed". Shellcheck 0.11.0 `-S info` clean, `/bin/bash` 3.2 parses the file. The edited lines add no bash 3.2 vs 5 difference (no arrays, no new `set -u` reads).
+- 2026-10-20: T2 `hadolint Dockerfile` (hadolint/hadolint container) exit 0 with no output. `rocker-bayes:dev` built from the branch, arm64, created 2026-10-21T01:53Z UTC, base layers from cache. In it `g++` resolves to `/usr/bin/aarch64-linux-gnu-g++-13`, and CmdStan 2.40.0's `make print-CXX` gives `CXX = g++`. `rocker-bayes:dev-broken-cxx` (Dockerfile on stdin) overwrites the resolved file with a stub that prints "smoke control: C++ compiler disabled" and exits 1. In it `g++ --version` printed the stub message and exited 1, and `bin/stanc --version` printed `stanc3 v2.40.0` and exited 0.
 
 ## Decisions
 
