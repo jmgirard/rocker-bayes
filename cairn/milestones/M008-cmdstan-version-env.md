@@ -38,13 +38,13 @@ release candidates use other forms.
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: In `scripts/install_bayes.sh`, the CmdStan step is a function that
+- [x] AC1: In `scripts/install_bayes.sh`, the CmdStan step is a function that
       takes the version as its first argument, falls back to the
       environment's `CMDSTAN_VERSION`, and exports `CMDSTAN_VERSION`. The R
       code it runs calls `cmdstanr::install_cmdstan()` with
       `version = Sys.getenv("CMDSTAN_VERSION")`, and the script's main body
       calls the step only when the script is executed, not sourced.
-- [ ] AC2: For each of ten values (`2.40.0`, and one value each holding a
+- [x] AC2: For each of ten values (`2.40.0`, and one value each holding a
       double quote, a single quote, a backslash, a backtick, `$(...)`, a
       space, a `*`, a newline, and a trailing space), the CmdStan step calls
       `R` with argument lists identical to those of the `2.40.0` call, and
@@ -53,16 +53,16 @@ release candidates use other forms.
       environment and when it comes as the step's first argument with
       `CMDSTAN_VERSION` unset. Evidence: `.github/tests/test_install_cmdstan.sh`
       passes offline.
-- [ ] AC3: With `CMDSTAN_VERSION` empty, and again with it unset, and no first
+- [x] AC3: With `CMDSTAN_VERSION` empty, and again with it unset, and no first
       argument, the CmdStan step exits non-zero before it calls `R` and prints
       a line on stderr containing `CMDSTAN_VERSION is empty`. Evidence: the
       AC2 suite asserts both conditions for each of the two cases.
-- [ ] AC4: A noble image built from the branch on this Mac's architecture with
+- [x] AC4: A noble image built from the branch on this Mac's architecture with
       `docker build -t rocker-bayes:dev .` passes
       `.github/smoke-test.sh rocker-bayes:dev`, and its phase 3 output
       contains `cmdstan version: 2.40.0`, the version the Dockerfile `ARG`
       pins.
-- [ ] AC5: `hadolint Dockerfile` reports no violations, and shellcheck 0.11.0
+- [x] AC5: `hadolint Dockerfile` reports no violations, and shellcheck 0.11.0
       run as `shellcheck -x -S info` reports nothing on
       `scripts/install_bayes.sh` and `.github/tests/test_install_cmdstan.sh`.
 
@@ -130,3 +130,12 @@ release candidates use other forms.
 
 ## Review
 <!-- owner: review · exclusive -->
+
+Evidence gathered 2026-10-20 at branch head d47cc11; default branch had not moved (0 commits behind origin/main).
+
+- AC1: `scripts/install_bayes.sh:36` defines `install_cmdstan_step`; line 37 reads `${1:-${CMDSTAN_VERSION:-}}`, line 42 exports `CMDSTAN_VERSION`, line 47 passes `version = Sys.getenv("CMDSTAN_VERSION")`, line 93 calls the step from `main`, and line 106 runs `main` only when `${BASH_SOURCE[0]}` equals `$0`.
+- AC2: `bash .github/tests/test_install_cmdstan.sh` exit 0 on macOS bash 3.2, "PASS: 10 values from the environment and as an argument reach R unchanged". Its discrimination was shown at T2 (work log): the old interpolation turns 18 argv checks red, and removing the export turns all 10 first-argument cases red.
+- AC3: the same run passes the empty and unset cases: non-zero exit, no R call, and stderr containing `CMDSTAN_VERSION is empty` (the message at `scripts/install_bayes.sh:39`). With the check removed at T2, all 6 of those assertions failed.
+- AC4: `docker build -t rocker-bayes:dev .` at d47cc11 exit 0 on arm64, with the `COPY scripts` and `install_bayes.sh` layers CACHED from the T2 build, whose log shows the download of `cmdstan-2.40.0-linux-arm64.tar.gz`. `.github/smoke-test.sh rocker-bayes:dev` exit 0, all three phases PASS, and phase 3 printed `cmdstan version: 2.40.0`.
+- AC5: `hadolint/hadolint:v2.12.0` on the Dockerfile exit 0 with no output; `koalaman/shellcheck:v0.11.0 -x -S info scripts/install_bayes.sh .github/tests/test_install_cmdstan.sh` exit 0 with no output.
+- gate: `cairn_validate.py` all checks passed. No principle text changed, so `cairn_impact` was skipped. Profile checks: docker build and hadolint clean (AC4, AC5); the diff does not touch the Dockerfile, so the base pin `jmgirard/rstudio2u:${BASE_TAG}` and its layers are unchanged and no secret is added; `.dockerignore` present and excludes `.git`, `.github`, and `cairn`; changelog slot is "none" (release notes go in the GitHub release, D-002).
