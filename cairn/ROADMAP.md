@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-10-20 (M006 merged as #19: row done and archived, its candidate graduated, M003 row pruned, one candidate added, two lessons added; validate green)_
+_Last hygiene check: 2026-10-20 (M007 merged as #20: row done and archived, its candidate graduated, M004 row pruned, one candidate added, parked CI-control row left parked, two lessons added; validate green)_
 
 ## Milestones
 
@@ -9,13 +9,11 @@ _Last hygiene check: 2026-10-20 (M006 merged as #19: row done and archived, its 
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M007 | Cover a broken C++ toolchain in smoke | review | — | high | milestones/M007-smoke-cxx-toolchain.md |
+| M007 | Cover a broken C++ toolchain in smoke | done | — | high | milestones/archive/M007-smoke-cxx-toolchain.md |
 | M006 | Assert smoke packages arrive this run | done | — | high | milestones/archive/M006-smoke-pkg-arrives.md |
 | M005 | Superseded CI runs stop acting | done | M004 | high | milestones/archive/M005-superseded-runs.md |
-| M004 | Rerun a weekly build that failed on the r2u mirror | done | M003 | high | milestones/archive/M004-weekly-leg-retry.md |
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
-- [high] Cover a broken C++ toolchain in smoke: The compile control fails at stanc parse time, so no control covers a broken C++ toolchain — added 2026-09-12 — M001 review F3, F12, split 2026-10-20 — started M007
 - [high] Add tests to the docker.yml paths filter: `.github/tests/**` is absent from the `docker.yml` push paths filter, so a change to `test_publish_guard.sh` alone starts no publish-lane run. `pr-ci.yml` runs the suite since M005 — added 2026-09-12 — M001 review F8, M003 review N5
 - [high] Pass CMDSTAN_VERSION to R via Sys.getenv: `scripts/install_bayes.sh` still builds the `install_cmdstan()` call by interpolating `CMDSTAN_VERSION` into R source. The M002 quoting fix stops whitespace from splitting it, but a value carrying a double quote still rewrites the call. Read it with `Sys.getenv()` instead, the convention `smoke-test.sh` already follows — added 2026-09-12 — M002 review
 - [high] Assert each leg's OS matches its variant: Nothing asserts a leg's digest was built from the base tag its variant claims. A matrix edit setting `base_tag: noble` on a resolute row passes every gate and ships noble bytes under the resolute tag. Read an OS-release or base label out of the pulled image, as the arch assertion reads `{{.Architecture}}` — added 2026-09-12 — M001 review F14
