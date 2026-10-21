@@ -107,6 +107,7 @@ locally).
 - 2026-10-20: claim audit: not owed — internal tier.
 - 2026-10-20: review checkpoint: AC1–AC5 evidence recorded and ticked, consistency gate clean; four review lenses running, findings not yet settled.
 - 2026-10-20: review settled 15 findings: 10 fixed in a6bbeae, 1 to a candidate row, 4 rejected. No criterion failed, so no return. AC1–AC5 re-verified on a6bbeae.
+- 2026-10-20: step-7 approval: m006-smoke-pkg-arrives approved for merge
 
 ## Decisions
 
