@@ -187,7 +187,7 @@ cmd_os() {
   local usage="usage: publish-guard.sh os <os-release-file> <variant>"
   local file="${1:?$usage}" variant="${2:?$usage}"
 
-  [ -f "$file" ] || die "the os-release file $file does not exist, so the image's Ubuntu release is unknown"
+  [ -f "$file" ] || die "the os-release file $file does not exist or is not a regular file, so the image's Ubuntu release is unknown"
 
   # grep exits 1 when no line matches. That case is the empty value refused
   # below, so it must not end the script under set -e first.

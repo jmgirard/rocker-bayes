@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M009: Assert each leg's OS matches its variant
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** high   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -134,6 +134,7 @@ matches the version tag" candidate row.
 - 2026-10-20: T3: step "Assert the image's Ubuntu release is <variant>" added after `pulled` in docker.yml, reading `steps.pulled.outputs.ref` and failing with its own `::error::` line if the `docker run` read fails; build-job comment and the two DESIGN.md passages updated. actionlint 1.7.7 (container, with its shellcheck pass) reports nothing on docker.yml; `publish-guard.sh paths` still reads the push filter. Decided: a separate step rather than more lines in `pulled`, so the step name says which check failed.
 - 2026-10-20: T4: test_mode dispatch https://github.com/jmgirard/rocker-bayes/actions/runs/39540604852 on f1638b8 ended success; each of the four legs printed "the image's Ubuntu codename is <variant>, as its variant names"; publish found all 4 digests and attached nothing (fresh verdict stale on a branch run, as expected).
 - 2026-10-20: T5: throwaway branch m009-planted-os (one commit swapping base_tag on all four rows) dispatched as https://github.com/jmgirard/rocker-bayes/actions/runs/39540616541, ended failure; all four legs failed at the new step with the mismatch line (noble legs: 'resolute' vs 'noble'; resolute legs: 'noble' vs 'resolute'), smoke, export and upload skipped; publish failed with "expected 4 verified digests, found 0". Branch deleted locally and on origin; the milestone branch's four rows read base_tag = variant.
+- 2026-10-20: claim audit: 42 claims read, 2 corrected — .github/tests/test_publish_guard.sh (real_noble fixture restored to the image's full 13-line file, so its comment holds), .github/publish-guard.sh (missing-file message now says "does not exist or is not a regular file"); the same reader re-read both as true. These edits postdate the T4/T5 runs on f1638b8 and change neither the accept nor the mismatch message; suite 46/46 and shellcheck clean after them.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->

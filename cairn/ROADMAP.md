@@ -9,7 +9,7 @@ _Last hygiene check: 2026-10-20 (M008 merged as #21: row done and archived, its 
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M009 | Assert each leg's OS matches its variant | in-progress | — | high | milestones/M009-leg-os-codename.md |
+| M009 | Assert each leg's OS matches its variant | review | — | high | milestones/M009-leg-os-codename.md |
 | M008 | Pass CMDSTAN_VERSION to R via Sys.getenv | done | — | high | milestones/archive/M008-cmdstan-version-env.md |
 | M007 | Cover a broken C++ toolchain in smoke | done | — | high | milestones/archive/M007-smoke-cxx-toolchain.md |
 | M006 | Assert smoke packages arrive this run | done | — | high | milestones/archive/M006-smoke-pkg-arrives.md |
