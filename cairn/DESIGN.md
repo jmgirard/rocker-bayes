@@ -48,8 +48,9 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
 - **CI / publish**: `.github/workflows/docker.yml` builds each architecture on
   a native runner and pushes it by digest. Each leg then pulls that digest
   back, asserts the architecture, and runs `.github/smoke-test.sh` against it.
-  The smoke test's bspm phase fails when its probe package is already in the
-  image before the install, so a pass shows a package bspm fetched that run.
+  The smoke test's bspm phase fails when dpkg, or R's library path in the
+  install session, already holds its probe package before the install, so a
+  pass shows a package that arrived as an apt binary during that run.
   One publish job requires all four verified digests. It assembles both
   variants' manifest lists and checks each with `.github/publish-guard.sh`.
   It then runs the guard's `fresh` check against the default branch. Only

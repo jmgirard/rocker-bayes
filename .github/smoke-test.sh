@@ -21,7 +21,8 @@
 # Env:
 #   SMOKE_TIMEOUT    seconds to wait for server health          (default 300)
 #   SMOKE_PORT       host port to publish container 8787 on     (default 8787)
-#   SMOKE_PKG        CRAN package for the bspm binary check     (default praise)
+#   SMOKE_PKG        CRAN package for the bspm binary check,    (default praise)
+#                    one the image must not already carry
 #   SMOKE_STAN_FILE  Stan program for phase 3                   (default the
 #                    bundled .github/smoke-fixtures/bernoulli.stan)
 #   SMOKE_THETA_REF  analytic posterior mean to compare against (default
@@ -122,30 +123,53 @@ done
 
 # --- Phase 2: bspm binary install -------------------------------------------
 # Request a CRAN package and confirm it loads AND arrived as an apt binary.
-# The dpkg check is the part that proves the r2u binary path worked: without
-# it a silent source compile also ends with a loadable package.
-#
-# The package must also be absent before the install. A package the image
-# already carries passes the load and the dpkg check with nothing fetched, so
-# a run on it says nothing about bspm. Two checks look for it first: dpkg, for
-# an apt binary, and find.package() in the R session that runs the install,
-# for a copy that R can load but apt does not know about.
+# The package must be absent before the install, because a package the image
+# already carries passes the load and the dpkg check with nothing fetched. Two
+# checks look for it first: dpkg, for an apt binary, and find.package() in the
+# R session that runs the install, for a copy that R can load but apt does not
+# know about. With both clear, the dpkg check after the install is what proves
+# the r2u binary path worked: a silent source compile also ends with a
+# loadable package, but with no apt entry.
 apt_pkg="r-cran-$(printf '%s' "$PKG" | tr '[:upper:]' '[:lower:]')"
 echo "==> [2/3] bspm binary install ($PKG -> $apt_pkg)"
-# Guarded so a failed exec reads as "no entry" instead of ending the script
-# under set -e with no FAIL line. dpkg -s also succeeds for a removed package
-# that left its config files behind, so only an installed status counts.
-pre_status="$(docker exec "$NAME" dpkg -s "$apt_pkg" 2>/dev/null || true)"
-case "$pre_status" in
-  *"Status: install ok installed"*)
-    echo "FAIL: phase 2 (bspm binary) - $PKG was already in the image before the install (dpkg check: $apt_pkg is installed); set SMOKE_PKG to a package the image lacks"
+
+# Print the package's dpkg state, the last word of the Status line (installed,
+# unpacked, config-files, ...), or nothing when dpkg has no record of it.
+# Print "?" when the read itself failed. docker exec exits 1 for a container
+# that is gone, the same status dpkg -s gives for an unknown package, so only
+# dpkg's own "is not installed" message counts as no record. dpkg -s also
+# succeeds for a removed package that left its config files behind, which is
+# why callers read the state rather than the exit status.
+dpkg_state() {
+  local out rc=0
+  out="$(docker exec "$NAME" dpkg -s "$1" 2>&1)" || rc=$?
+  if [ "$rc" -eq 0 ]; then
+    printf '%s\n' "$out" | sed -n 's/^Status: .* //p'
+  else
+    case "$out" in
+      *"is not installed"*) ;;
+      *) echo "?" ;;
+    esac
+  fi
+}
+
+pre_state="$(dpkg_state "$apt_pkg")"
+case "$pre_state" in
+  ""|not-installed|config-files) ;;
+  "?")
+    echo "FAIL: phase 2 (bspm binary) - could not read the dpkg status of $apt_pkg before the install"
+    exit 1
+    ;;
+  *)
+    echo "FAIL: phase 2 (bspm binary) - $PKG was already in the image before the install (dpkg check: $apt_pkg is $pre_state); set SMOKE_PKG to a package the image lacks"
     exit 1
     ;;
 esac
 # PKG reaches R through the environment, never by string interpolation into the
 # -e source: a value carrying a quote would otherwise run arbitrary R here.
-# Exit status 3 means find.package() found the package before the install. Any
-# other failure exits 1, so the two get different FAIL lines.
+# Exit status 3 means find.package() found the package before the install.
+# Every other non-zero status, from R or from docker exec, takes the install
+# failure line.
 set +e
 docker exec -e SMOKE_PKG_NAME="$PKG" "$NAME" Rscript -e '
   pkg <- Sys.getenv("SMOKE_PKG_NAME")
@@ -162,7 +186,7 @@ set -e
 case "$install_status" in
   0) ;;
   3)
-    echo "FAIL: phase 2 (bspm binary) - $PKG was already in the image before the install (R library check: find.package() found it in .libPaths()); set SMOKE_PKG to a package the image lacks"
+    echo "FAIL: phase 2 (bspm binary) - $PKG was already in the image before the install (R library check: find.package() found it); set SMOKE_PKG to a package the image lacks"
     exit 1
     ;;
   *)
@@ -170,10 +194,22 @@ case "$install_status" in
     exit 1
     ;;
 esac
-if ! docker exec "$NAME" dpkg -s "$apt_pkg" >/dev/null 2>&1; then
-  echo "FAIL: phase 2 (bspm binary) - $PKG did not install as an apt binary ($apt_pkg absent)"
-  exit 1
-fi
+post_state="$(dpkg_state "$apt_pkg")"
+case "$post_state" in
+  installed) ;;
+  "?")
+    echo "FAIL: phase 2 (bspm binary) - could not read the dpkg status of $apt_pkg after the install"
+    exit 1
+    ;;
+  "")
+    echo "FAIL: phase 2 (bspm binary) - $PKG did not install as an apt binary ($apt_pkg absent)"
+    exit 1
+    ;;
+  *)
+    echo "FAIL: phase 2 (bspm binary) - $PKG did not install as an apt binary ($apt_pkg is $post_state)"
+    exit 1
+    ;;
+esac
 echo "PASS: phase 2 (bspm binary) - $PKG was absent from the image before the install, installed as $apt_pkg, and loads"
 
 # --- Phase 3: CmdStan --------------------------------------------------------
