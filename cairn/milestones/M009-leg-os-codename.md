@@ -103,10 +103,10 @@ matches the version tag" candidate row.
       the read as the M001 `set -e` lesson says. Update the build-job comment
       (docker.yml:37-43) and the two `cairn/DESIGN.md` passages named in
       Scope.
-- [ ] T4: Push the milestone branch and run
+- [x] T4: Push the milestone branch and run
       `gh workflow run docker.yml --ref <branch> -f test_mode=true`, leaving
       `notify` false. Record the run URL and each leg's accept line.
-- [ ] T5: Cut a throwaway branch from the milestone branch, swap `base_tag` on
+- [x] T5: Cut a throwaway branch from the milestone branch, swap `base_tag` on
       all four rows, push it, and dispatch it the same way. Record the run URL,
       the four mismatch lines, and the digest-count error. Delete the branch
       locally and on the remote. This run writes the noble and resolute gha
@@ -132,6 +132,8 @@ matches the version tag" candidate row.
 - 2026-10-20: T1: 15 `os` cases added to test_publish_guard.sh (also an unbalanced-quote case and an empty-variant case); all 15 fail before T2 with the dispatcher's usage error, 31 existing cases pass. The unbalanced-quote fixture uses printf because bash 3.2 misparses it in a heredoc inside `$(...)`.
 - 2026-10-20: T2: `cmd_os` added to publish-guard.sh with its header usage block and dispatcher case; the suite passes 46/46 on macOS bash 3.2, and shellcheck 0.11.0 `-x -S info` (container, repo checkout) reports nothing on both files. Messages: accept "the image's Ubuntu codename is <v>, as its variant names"; mismatch "the image's Ubuntu codename is '<got>', but this leg's variant is '<want>'".
 - 2026-10-20: T3: step "Assert the image's Ubuntu release is <variant>" added after `pulled` in docker.yml, reading `steps.pulled.outputs.ref` and failing with its own `::error::` line if the `docker run` read fails; build-job comment and the two DESIGN.md passages updated. actionlint 1.7.7 (container, with its shellcheck pass) reports nothing on docker.yml; `publish-guard.sh paths` still reads the push filter. Decided: a separate step rather than more lines in `pulled`, so the step name says which check failed.
+- 2026-10-20: T4: test_mode dispatch https://github.com/jmgirard/rocker-bayes/actions/runs/39540604852 on f1638b8 ended success; each of the four legs printed "the image's Ubuntu codename is <variant>, as its variant names"; publish found all 4 digests and attached nothing (fresh verdict stale on a branch run, as expected).
+- 2026-10-20: T5: throwaway branch m009-planted-os (one commit swapping base_tag on all four rows) dispatched as https://github.com/jmgirard/rocker-bayes/actions/runs/39540616541, ended failure; all four legs failed at the new step with the mismatch line (noble legs: 'resolute' vs 'noble'; resolute legs: 'noble' vs 'resolute'), smoke, export and upload skipped; publish failed with "expected 4 verified digests, found 0". Branch deleted locally and on origin; the milestone branch's four rows read base_tag = variant.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
