@@ -94,7 +94,7 @@ release candidates use other forms.
       script's own message). Suite green. Plant each defect and see the
       suite go red, then restore: the old `"'"${CMDSTAN_VERSION}"'"`
       interpolation, the export removed, the empty check removed.
-- [ ] T3: Add the suite to `pr-ci.yml`'s `script-tests` job. Correct
+- [x] T3: Add the suite to `pr-ci.yml`'s `script-tests` job. Correct
       `cairn/DESIGN.md` "Pre-merge checks", which says five suites, to the
       list `pr-ci.yml` runs, read from that file.
 - [ ] T4: Run the pinned shellcheck as `shellcheck -x -S info` (add a
@@ -119,6 +119,7 @@ release candidates use other forms.
 - 2026-10-20: implement started on branch m008-cmdstan-version-env; linters run from the local `koalaman/shellcheck:v0.11.0` and `hadolint/hadolint:v2.12.0` images.
 - 2026-10-20: T1 done: suite written; against the current script it fails at the baseline with status 127, `apt-get: command not found` (no source guard, so sourcing ran the main body against the stubs). Step function named `install_cmdstan_step`; the suite also asserts the baseline R program contains `Sys.getenv("CMDSTAN_VERSION")`.
 - 2026-10-20: T2 code done: step function plus source guard; `main` body re-indented. Suite green on bash 3.2 (macOS) and bash 5.2 (inside rocker-bayes:dev). Plants, each restored: old interpolation → 19 failures (argv differs for all 9 non-baseline values in both modes, and the Sys.getenv check); export removed → 10 failures, every first-argument case; empty check removed → 6 failures, all empty/unset assertions. Shellcheck 0.11.0 `-x -S info` clean after one reasoned SC1003/SC2016 disable on the value list. Tick waits on the local docker build.
+- 2026-10-20: T3 done: `pr-ci.yml` script-tests runs the suite; all eight listed suites pass locally. DESIGN "Pre-merge checks" now points at the job's own list instead of a count (minor amendment: a pointer per the derived-claims rule, not a copied list), and "Image build" describes the CmdStan step. The `pr-ci.yml` paths comment that listed six suites now points at the job.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->

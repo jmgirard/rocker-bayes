@@ -19,8 +19,7 @@ on:
       - "scripts/**"
       - ".github/workflows/**"
       - ".github/*.sh"
-      # The unit suites for the alert, keepalive, rebuild-gap, last-success,
-      # retry, and publish guard scripts, run by the script-tests job below.
+      # The offline suites, run by the script-tests job below.
       - ".github/tests/**"
       # The fixtures the smoke test reads. docker.yml watches them too, and a
       # change to bernoulli.data.json moves the posterior mean the test
@@ -63,6 +62,7 @@ jobs:
           bash ./.github/tests/test_retry_decision.sh
           bash ./.github/tests/test_publish_guard.sh
           bash ./.github/tests/test_cmdstan_pin.sh
+          bash ./.github/tests/test_install_cmdstan.sh
 
   build-smoke:
     name: build and smoke-test noble (amd64)

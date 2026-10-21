@@ -40,7 +40,9 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
 
 - **Image build**: `Dockerfile` (build args `BASE_TAG`, `CMDSTAN_VERSION`) and
   `scripts/install_bayes.sh` (R package installs via bspm, CmdStan download and
-  compile).
+  compile). Its CmdStan step exports `CMDSTAN_VERSION`, and R reads it with
+  `Sys.getenv()`. An empty version stops the step before R starts. The main
+  body runs only when the script is executed, not sourced.
 - **Local run**: `docker-compose.yml` (localhost-only port bind, named home
   volume, `RS_PORT` / `RS_PASS` from `.env`).
 - **Launchers**: `start_*` / `stop_*` files plus `launcher_common.sh`; the
@@ -69,9 +71,9 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
 - **Pre-merge checks**: `.github/workflows/pr-ci.yml` lints the Dockerfile,
   then builds and boots noble amd64 with the same `smoke-test.sh` the publish
   gate runs. It never logs in and never publishes. Its `script-tests` job runs
-  five suites: `test_ci_failure_issue.sh`, `test_keepalive.sh`,
-  `test_rebuild_gap.sh`, `test_retry_decision.sh`, and
-  `test_publish_guard.sh`. `.github/workflows/lint.yml` runs a pinned
+  the offline suites in `.github/tests/` that it lists by name, among them
+  `test_install_cmdstan.sh`, which sources `scripts/install_bayes.sh` with
+  stubbed commands. `.github/workflows/lint.yml` runs a pinned
   shellcheck over every tracked `*.sh` and `*.command` file. Both workflows
   declare a concurrency group keyed on the workflow and the pull request
   number with `cancel-in-progress: true`, so a new push cancels that pull
