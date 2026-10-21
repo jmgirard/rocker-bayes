@@ -31,7 +31,16 @@
 #       nothing differs, 3 ("stale:", naming the tip commit) when something
 #       does, and 2 when the fetch fails.
 #
-# digests and manifest print a GitHub Actions ::error:: line and exit 1 on
+#   publish-guard.sh os <os-release-file> <variant>
+#       Read the image's /etc/os-release, saved to a file, and require that its
+#       VERSION_CODENAME equals the variant name. The variants are named after
+#       Ubuntu codenames, and the variant decides which tags a leg's digest
+#       ships under, so a matrix row whose base_tag names another release would
+#       otherwise publish that release's bytes under this variant's tags. The
+#       first VERSION_CODENAME= line decides. One pair of surrounding double or
+#       single quotes is removed; any other value is compared as it stands.
+#
+# digests, manifest, and os print a GitHub Actions ::error:: line and exit 1 on
 # failure. paths and fresh do the same on a read error, and fresh does the
 # same on an empty or missing branch name. Any other missing argument prints
 # bash's own usage message and exits 1.
@@ -174,10 +183,34 @@ cmd_fresh() {
   esac
 }
 
+cmd_os() {
+  local usage="usage: publish-guard.sh os <os-release-file> <variant>"
+  local file="${1:?$usage}" variant="${2:?$usage}"
+
+  [ -f "$file" ] || die "the os-release file $file does not exist, so the image's Ubuntu release is unknown"
+
+  # grep exits 1 when no line matches. That case is the empty value refused
+  # below, so it must not end the script under set -e first.
+  local line value
+  line="$(grep -m 1 '^VERSION_CODENAME=' "$file" || true)"
+  value="${line#VERSION_CODENAME=}"
+  case "$value" in
+    \"*\") value="${value#\"}"; value="${value%\"}" ;;
+    \'*\') value="${value#\'}"; value="${value%\'}" ;;
+  esac
+
+  [ -n "$value" ] || die "$file has no VERSION_CODENAME value, so the image's Ubuntu release is unknown"
+  if [ "$value" != "$variant" ]; then
+    die "the image's Ubuntu codename is '$value', but this leg's variant is '$variant'"
+  fi
+  echo "the image's Ubuntu codename is $value, as its variant names"
+}
+
 case "${1:-}" in
   digests)  shift; cmd_digests "$@" ;;
   manifest) shift; cmd_manifest "$@" ;;
   paths)    shift; cmd_paths "$@" ;;
   fresh)    shift; cmd_fresh "$@" ;;
-  *)        die "usage: publish-guard.sh {digests <dir> <count>|manifest <json> <label>|paths <workflow>|fresh <workflow> <sha> <remote> <branch>}" ;;
+  os)       shift; cmd_os "$@" ;;
+  *)        die "usage: publish-guard.sh {digests <dir> <count>|manifest <json> <label>|paths <workflow>|fresh <workflow> <sha> <remote> <branch>|os <os-release-file> <variant>}" ;;
 esac

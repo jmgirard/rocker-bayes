@@ -93,7 +93,7 @@ matches the version tag" candidate row.
       `VERSION_CODENAME=` lines where only the second matches (refused); only a
       `UBUNTU_CODENAME=` line (refused); an empty value, bare and `""`; a
       missing file. See the new cases fail before T2.
-- [ ] T2: Add `cmd_os` to `.github/publish-guard.sh`, with its usage block in
+- [x] T2: Add `cmd_os` to `.github/publish-guard.sh`, with its usage block in
       the header and its case in the dispatcher (publish-guard.sh:177-183).
       Run the suite green, then shellcheck 0.11.0 `-x -S info` on both files,
       run in its container against the files in the repo checkout.
@@ -130,6 +130,7 @@ matches the version tag" candidate row.
 - 2026-10-20: plan gate chose a `publish-guard.sh` subcommand over an inline YAML check like the architecture assertion because the offline suite can drive the refusal cases without a build; falsified by a CI failure of the new step that the offline suite cannot reproduce.
 - 2026-10-20: started /milestone-implement on branch m009-leg-os-codename, cut from main at db5712f.
 - 2026-10-20: T1: 15 `os` cases added to test_publish_guard.sh (also an unbalanced-quote case and an empty-variant case); all 15 fail before T2 with the dispatcher's usage error, 31 existing cases pass. The unbalanced-quote fixture uses printf because bash 3.2 misparses it in a heredoc inside `$(...)`.
+- 2026-10-20: T2: `cmd_os` added to publish-guard.sh with its header usage block and dispatcher case; the suite passes 46/46 on macOS bash 3.2, and shellcheck 0.11.0 `-x -S info` (container, repo checkout) reports nothing on both files. Messages: accept "the image's Ubuntu codename is <v>, as its variant names"; mismatch "the image's Ubuntu codename is '<got>', but this leg's variant is '<want>'".
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
