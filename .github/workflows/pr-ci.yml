@@ -19,8 +19,7 @@ on:
       - "scripts/**"
       - ".github/workflows/**"
       - ".github/*.sh"
-      # The unit suites for the alert, keepalive, rebuild-gap, last-success,
-      # retry, and publish guard scripts, run by the script-tests job below.
+      # The offline suites, run by the script-tests job below.
       - ".github/tests/**"
       # The fixtures the smoke test reads. docker.yml watches them too, and a
       # change to bernoulli.data.json moves the posterior mean the test
@@ -42,11 +41,12 @@ concurrency:
 
 jobs:
   # The offline suites for the scripts docker.yml, rebuild-gap.yml, and
-  # rebuild-retry.yml call without anyone watching. They stub gh and git, or
-  # build throwaway git repositories, and need no image, so they run as their
-  # own job and report in seconds rather than after a build.
+  # rebuild-retry.yml call without anyone watching, plus the CmdStan pin and
+  # the CmdStan step of scripts/install_bayes.sh. They stub commands (gh, git,
+  # R), build throwaway git repositories, or read files, and need no image, so
+  # they run as their own job and report in seconds rather than after a build.
   script-tests:
-    name: alert and keepalive script suites
+    name: offline script suites
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -63,6 +63,7 @@ jobs:
           bash ./.github/tests/test_retry_decision.sh
           bash ./.github/tests/test_publish_guard.sh
           bash ./.github/tests/test_cmdstan_pin.sh
+          bash ./.github/tests/test_install_cmdstan.sh
 
   build-smoke:
     name: build and smoke-test noble (amd64)

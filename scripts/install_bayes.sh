@@ -2,9 +2,6 @@
 
 set -e
 
-# Build ARGs
-CMDSTAN_VERSION=${1:-${CMDSTAN_VERSION}}
-
 # apt retry/timeout settings for the r2u mirror come from the base image
 # (/etc/apt/apt.conf.d/80-retries); do not overwrite them here.
 
@@ -31,60 +28,91 @@ retry() {
   done
 }
 
-# Install R packages
-retry R -q -e '
-  install.packages(
-    pkgs = c(
-      "bayesplot",
-      "BayesFactor",
-      "blavaan",
-      "bridgesampling",
-      "brms",
-      "data.table",
-      "easystats",
-      "effects",
-      "emmeans",
-      "ggeffects",
-      "loo",
-      "marginaleffects",
-      "ordbetareg",
-      "patchwork",
-      "posterior",
-      "priorsense",
-      "projpred",
-      "rstan",
-      "rstanarm",
-      "shinystan",
-      "tidybayes",
-      "tidyverse"
-    )
-  )
-  install.packages(
-    pkgs = "cmdstanr",
-    repos = c(
-      "https://stan-dev.r-universe.dev",
-      getOption("repos")
-    )
-  )
-'
-
 # Install CmdStan (adding flags for ARM64 warnings and O3 optimization)
 # https://discourse.mc-stan.org/t/warnings-when-compiling-cmdstan-code-on-linux-arm64/37320/2
-mkdir -p /home/rstudio/.cmdstan
-R -q -e '
-  cmdstanr::install_cmdstan(
-    dir = "/home/rstudio/.cmdstan",
-    version = "'"${CMDSTAN_VERSION}"'",
-    cpp_options = list("CXXFLAGS+= -Wno-psabi -O3")
-  )
-  cmdstanr::set_cmdstan_path("/home/rstudio/.cmdstan")
-'
-chown -R rstudio /home/rstudio/.cmdstan
+# The version is the first argument, else CMDSTAN_VERSION from the environment
+# (the Dockerfile ENV sets it). It is exported, and the step stops when it is
+# empty or unset.
+resolve_cmdstan_version() {
+  CMDSTAN_VERSION="${1:-${CMDSTAN_VERSION:-}}"
+  if [ -z "${CMDSTAN_VERSION}" ]; then
+    echo "install_bayes.sh: CMDSTAN_VERSION is empty or unset; set the Dockerfile ARG or pass a CmdStan release such as 2.40.0" >&2
+    return 1
+  fi
+  export CMDSTAN_VERSION
+}
 
-# Clean up
-apt-get clean
-rm -rf /tmp/*
+# R reads the version with Sys.getenv() and never sees it spliced into its
+# code, so no value can rewrite the install_cmdstan() call.
+install_cmdstan_step() {
+  resolve_cmdstan_version "$@" || return 1
+  mkdir -p /home/rstudio/.cmdstan
+  R -q -e '
+    cmdstanr::install_cmdstan(
+      dir = "/home/rstudio/.cmdstan",
+      version = Sys.getenv("CMDSTAN_VERSION"),
+      cpp_options = list("CXXFLAGS+= -Wno-psabi -O3")
+    )
+    cmdstanr::set_cmdstan_path("/home/rstudio/.cmdstan")
+  '
+  chown -R rstudio /home/rstudio/.cmdstan
+}
 
-# Fix permissions for all newly installed packages
-chown -R root:staff /usr/local/lib/R/site-library /usr/lib/R/site-library
-chmod -R g+ws /usr/local/lib/R/site-library /usr/lib/R/site-library
+main() {
+  # Check the version before the package install, so an empty one fails in
+  # seconds rather than after the slowest stage of the build.
+  resolve_cmdstan_version "$@" || return 1
+
+  # Install R packages
+  retry R -q -e '
+    install.packages(
+      pkgs = c(
+        "bayesplot",
+        "BayesFactor",
+        "blavaan",
+        "bridgesampling",
+        "brms",
+        "data.table",
+        "easystats",
+        "effects",
+        "emmeans",
+        "ggeffects",
+        "loo",
+        "marginaleffects",
+        "ordbetareg",
+        "patchwork",
+        "posterior",
+        "priorsense",
+        "projpred",
+        "rstan",
+        "rstanarm",
+        "shinystan",
+        "tidybayes",
+        "tidyverse"
+      )
+    )
+    install.packages(
+      pkgs = "cmdstanr",
+      repos = c(
+        "https://stan-dev.r-universe.dev",
+        getOption("repos")
+      )
+    )
+  '
+
+  install_cmdstan_step "$@"
+
+  # Clean up
+  apt-get clean
+  rm -rf /tmp/*
+
+  # Fix permissions for all newly installed packages
+  chown -R root:staff /usr/local/lib/R/site-library /usr/lib/R/site-library
+  chmod -R g+ws /usr/local/lib/R/site-library /usr/lib/R/site-library
+}
+
+# Run only when executed. .github/tests/test_install_cmdstan.sh sources this
+# file to call install_cmdstan_step on its own.
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  main "$@"
+fi
