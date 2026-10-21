@@ -96,10 +96,10 @@ be installed and running.
 
 > **Your work is saved.** The Compose setup stores the home directory (your
 > files and settings) in a Docker named volume, so it survives stopping,
-> restarting, and even updating to a newer image. CmdStan
-> lives in the image at `/opt/cmdstan`, outside that volume, so an update also
-> brings the image's CmdStan. To wipe the volume and start completely fresh,
-> run `docker compose down -v`.
+> restarting, and even updating to a newer image. CmdStan lives in the image at
+> `/opt/cmdstan`, outside that volume, so an update also brings the image's
+> CmdStan. To wipe the volume and start completely fresh, run
+> `docker compose down -v`.
 
 ### Option 1: Pull and run from Docker Hub
 
@@ -275,7 +275,11 @@ du -sh ~/.cmdstan
 Warning: the folder can also hold a CmdStan of your own. If you ran
 `cmdstanr::install_cmdstan()` yourself, or if your `~/.Renviron` points
 `CMDSTAN` into `~/.cmdstan`, that CmdStan is in this folder. Deleting the folder
-deletes it too. If neither is true, you can delete the folder:
+deletes it too. Models you compiled with an older image also load a library
+from this folder, so they stop running once it is gone. Recompile each one
+with `cmdstan_model("model.stan", force_recompile = TRUE)`, or delete its
+compiled file next to the `.stan` file. If no CmdStan of your own is in the
+folder, you can delete it:
 
 ```
 rm -rf ~/.cmdstan

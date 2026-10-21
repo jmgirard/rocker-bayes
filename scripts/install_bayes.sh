@@ -47,8 +47,9 @@ resolve_cmdstan_version() {
 # CmdStan lives outside /home/rstudio, so a home volume made by an older image
 # cannot hide it, and the Dockerfile's CMDSTAN variable points cmdstanr at it.
 # A threaded model build writes into the CmdStan tree, so the staff group (the
-# rstudio user, and the user USERID creates) gets write access, as it does for
-# the R site-library in main.
+# rstudio user, and the user USERID creates) gets write access. setgid goes on
+# directories only, so new files keep the staff group. On a file such as
+# bin/stanc it would give the staff group to anyone who runs it.
 install_cmdstan_step() {
   resolve_cmdstan_version "$@" || return 1
   mkdir -p /opt/cmdstan
@@ -60,7 +61,8 @@ install_cmdstan_step() {
     )
   '
   chown -R root:staff /opt/cmdstan
-  chmod -R g+ws /opt/cmdstan
+  chmod -R g+w /opt/cmdstan
+  find /opt/cmdstan -type d -exec chmod g+s {} +
 }
 
 main() {

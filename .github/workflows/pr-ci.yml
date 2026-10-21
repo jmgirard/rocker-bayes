@@ -109,10 +109,11 @@ jobs:
 
       # The same script the publish gate runs against every leg. A non-zero
       # exit fails the job and blocks the merge. The script always tears its
-      # container down.
-      # SMOKE_TIMEOUT bounds phase 1 only. The step timeout bounds the whole
-      # script, so a wedged CmdStan compile is cut here rather than running out
-      # the job budget, where the build's share of it would be lost too.
+      # containers and its own volume down.
+      # SMOKE_TIMEOUT bounds each health wait (phases 1 and 4) and nothing
+      # else. The step timeout bounds the whole script, so a wedged CmdStan
+      # compile is cut here rather than running out the job budget, where the
+      # build's share of it would be lost too.
       - name: Smoke-test noble (amd64)
         timeout-minutes: 25
         env:

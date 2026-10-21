@@ -25,7 +25,8 @@
 # Usage: .github/smoke-test.sh <image-ref>
 #
 # Env:
-#   SMOKE_TIMEOUT    seconds to wait for server health          (default 300)
+#   SMOKE_TIMEOUT    seconds to wait for server health, applied (default 300)
+#                    to each of phase 1 and phase 4
 #   SMOKE_PORT       host port to publish container 8787 on     (default 8787)
 #   SMOKE_PKG        CRAN package for the bspm binary check,    (default praise)
 #                    one the image must not already carry
@@ -54,6 +55,7 @@ NAME="rocker-bayes-smoke-$$"
 # these, never a volume it did not create, such as compose's rstudio_home.
 OLD_NAME="${NAME}-oldhome"
 HOME_VOL="${NAME}-home"
+HOME_VOL_MADE=0
 SMOKE_OK=0
 
 if [ ! -f "$STAN_FILE" ]; then
@@ -75,7 +77,9 @@ cleanup() {
     fi
   fi
   docker rm -f "$NAME" "$OLD_NAME" >/dev/null 2>&1 || true
-  docker volume rm "$HOME_VOL" >/dev/null 2>&1 || true
+  if [ "$HOME_VOL_MADE" = "1" ] && ! docker volume rm "$HOME_VOL" >/dev/null 2>&1; then
+    echo "WARN: could not remove the phase 4 volume $HOME_VOL; remove it with: docker volume rm $HOME_VOL"
+  fi
 }
 trap cleanup EXIT
 
@@ -346,8 +350,19 @@ echo "PASS: phase 3 (cmdstan) - model compiled, sampled, and matched the referen
 # value has to come from Renviron.site, which is where an RStudio session gets
 # it. The container publishes no port, so it cannot collide with phase 1's.
 echo "==> [4/4] old home volume"
-if ! docker volume create "$HOME_VOL" >/dev/null \
-  || ! docker run --rm --entrypoint bash -v "${HOME_VOL}:/seed" "$IMAGE" -c '
+# docker volume create succeeds on a volume that already exists, which would
+# hand this phase a home it did not seed, so an existing one is refused and
+# left alone.
+if docker volume inspect "$HOME_VOL" >/dev/null 2>&1; then
+  echo "FAIL: phase 4 (old home) - a volume named $HOME_VOL already exists; this run did not create it, so it is left in place"
+  exit 1
+fi
+if ! docker volume create "$HOME_VOL" >/dev/null; then
+  echo "FAIL: phase 4 (old home) - could not create the home volume $HOME_VOL"
+  exit 1
+fi
+HOME_VOL_MADE=1
+if ! docker run --rm --entrypoint bash -v "${HOME_VOL}:/seed" "$IMAGE" -c '
     mkdir -p /seed/.cmdstan/cmdstan-2.36.0
     printf "CMDSTAN_VERSION := 2.36.0\n" >/seed/.cmdstan/cmdstan-2.36.0/makefile
     chown -R rstudio:rstudio /seed
@@ -361,7 +376,9 @@ if ! docker run -d --name "$OLD_NAME" -v "${HOME_VOL}:/home/rstudio" "$IMAGE" >/
 fi
 
 # The base writes Renviron.site while the container starts, before the server
-# comes up, so a healthy container has it.
+# comes up, so a container whose server answers has it. With no HEALTHCHECK,
+# the server is probed from inside the container, since this one publishes no
+# port.
 deadline=$(( $(date +%s) + TIMEOUT ))
 while :; do
   running="$(docker inspect --format '{{.State.Running}}' "$OLD_NAME" 2>/dev/null || echo false)"
@@ -371,7 +388,12 @@ while :; do
   fi
   status="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$OLD_NAME" 2>/dev/null || echo unknown)"
   case "$status" in
-    healthy|none) break ;;
+    healthy) break ;;
+    none)
+      if docker exec "$OLD_NAME" wget -q -O /dev/null http://localhost:8787/ >/dev/null 2>&1; then
+        break
+      fi
+      ;;
     unhealthy)
       echo "FAIL: phase 4 (old home) - the container on the seeded volume reported unhealthy"
       exit 1
@@ -384,8 +406,25 @@ while :; do
   sleep 3
 done
 
-want_path="$(docker exec "$OLD_NAME" printenv CMDSTAN 2>/dev/null || echo "")"
-want_ver="$(docker exec "$OLD_NAME" printenv CMDSTAN_VERSION 2>/dev/null || echo "")"
+# The phase means nothing unless this container sees the stale folder that
+# cmdstanr would pick without CMDSTAN.
+if ! docker exec -u rstudio "$OLD_NAME" test -f /home/rstudio/.cmdstan/cmdstan-2.36.0/makefile; then
+  echo "FAIL: phase 4 (old home) - the container does not see the seeded /home/rstudio/.cmdstan/cmdstan-2.36.0"
+  exit 1
+fi
+
+# Print a variable of the container, or "?" when the read itself failed.
+# printenv exits 1 for an unset variable, the status a failed docker exec also
+# gives, so the unset case is mapped to success inside the container.
+container_env() {
+  docker exec "$OLD_NAME" sh -c "printenv $1 || true" 2>/dev/null || echo "?"
+}
+want_path="$(container_env CMDSTAN)"
+want_ver="$(container_env CMDSTAN_VERSION)"
+if [ "$want_path" = "?" ] || [ "$want_ver" = "?" ]; then
+  echo "FAIL: phase 4 (old home) - could not read CMDSTAN and CMDSTAN_VERSION from the container"
+  exit 1
+fi
 set +e
 old_out="$(docker exec -u rstudio -e HOME=/home/rstudio "$OLD_NAME" env -u CMDSTAN Rscript -e '
   suppressMessages(library(cmdstanr))
@@ -416,8 +455,9 @@ case "$want_path" in
     echo "FAIL: phase 4 (old home) - the image sets no CMDSTAN"
     exit 1
     ;;
-  /home/*)
-    echo "FAIL: phase 4 (old home) - the image's CMDSTAN ($want_path) is inside the home folder, which a home volume hides"
+  /opt/cmdstan/*) ;;
+  *)
+    echo "FAIL: phase 4 (old home) - the image's CMDSTAN ($want_path) is not under /opt/cmdstan/"
     exit 1
     ;;
 esac

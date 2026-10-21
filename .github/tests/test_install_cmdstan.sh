@@ -5,7 +5,7 @@
 # The step must hand the CmdStan version to R through the environment, so no
 # value can change the R code that calls install_cmdstan(). Each case sources
 # the script in a subshell whose PATH holds only stubs for R, mkdir, chown,
-# and chmod, then calls the step. Any other command fails as "not found", so
+# chmod, and find, then calls the step. Any other command fails as "not found", so
 # nothing here touches the host. The R stub is a child process, so it sees
 # CMDSTAN_VERSION only when the variable is exported. The first-argument cases
 # unset it first, so they show that the script exports it. The stub records
@@ -41,13 +41,14 @@ else
   : >"$STUB_LOG/env.$n.unset"
 fi
 EOF
-# mkdir, chown, and chmod stubs log their arguments and do nothing else.
+# mkdir, chown, chmod, and find stubs log their arguments and do nothing else.
 cat >"$STUBS/mkdir" <<'EOF'
 #!/bin/bash
 printf '%s\n' "${0##*/} $*" >>"$STUB_LOG/calls"
 EOF
 cp "$STUBS/mkdir" "$STUBS/chown"
 cp "$STUBS/mkdir" "$STUBS/chmod"
+cp "$STUBS/mkdir" "$STUBS/find"
 chmod +x "$STUBS"/*
 
 # run_case <dir> <env|arg|both|empty|unset> [value] [function]
@@ -96,9 +97,12 @@ base_n="$(cat "$BASE/n")"
 if ! grep -qF 'Sys.getenv("CMDSTAN_VERSION")' "$BASE/argv.1"; then
   fail "the R program does not read Sys.getenv(\"CMDSTAN_VERSION\")"
 fi
-printf '%s\n' "mkdir -p /opt/cmdstan" "chown -R root:staff /opt/cmdstan" "chmod -R g+ws /opt/cmdstan" >"$BASE/calls.expected"
+# setgid goes on directories only. On a file, such as bin/stanc, it would hand
+# the staff group to any user who runs it.
+printf '%s\n' "mkdir -p /opt/cmdstan" "chown -R root:staff /opt/cmdstan" "chmod -R g+w /opt/cmdstan" \
+  "find /opt/cmdstan -type d -exec chmod g+s {} +" >"$BASE/calls.expected"
 if ! cmp -s "$BASE/calls.expected" "$BASE/calls"; then
-  fail "the step's mkdir, chown, and chmod calls are not the three expected: $(cat "$BASE/calls" 2>/dev/null)"
+  fail "the step's mkdir, chown, chmod, and find calls are not the four expected: $(cat "$BASE/calls" 2>/dev/null)"
 fi
 if grep -qF '/home/rstudio' "$BASE/argv.1"; then
   fail "the R program still names /home/rstudio"

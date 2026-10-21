@@ -40,8 +40,8 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
 
 - **Image build**: `Dockerfile` (build args `BASE_TAG`, `CMDSTAN_VERSION`) and
   `scripts/install_bayes.sh` (R package installs via bspm, CmdStan download and
-  compile into `/opt/cmdstan`). Its CmdStan step exports `CMDSTAN_VERSION`, and R reads it with
-  `Sys.getenv()`. An empty or unset version stops the script before the R
+  compile into `/opt/cmdstan`). Its CmdStan step exports `CMDSTAN_VERSION`,
+  and R reads it with `Sys.getenv()`. An empty or unset version stops the script before the R
   package install starts. The main body runs only when the script is
   executed, not sourced.
 - **Local run**: `docker-compose.yml` (localhost-only port bind, named home
@@ -217,9 +217,10 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   Dockerfile.
 - Home directory persists in the `rstudio_home` named volume, pre-populated
   from the image on first run.
-- CmdStan lives in `/opt/cmdstan`, outside the home volume, owned
-  `root:staff` and group-writable, because a threaded model build writes into
-  the CmdStan tree. The Dockerfile sets `CMDSTAN` to the version folder after
+- CmdStan lives in `/opt/cmdstan`, outside the home volume. The install
+  leaves it owned `root:staff`, group-writable, with setgid on directories
+  only, because a threaded model build writes into the CmdStan tree. Files a
+  session writes there later take that user's umask. The Dockerfile sets `CMDSTAN` to the version folder after
   the install. The base's `/etc/cont-init.d/01_set_env` copies container
   variables into `Renviron.site` at start, so every R session, RStudio's
   included, finds it. A volume made by an image from before the move keeps
