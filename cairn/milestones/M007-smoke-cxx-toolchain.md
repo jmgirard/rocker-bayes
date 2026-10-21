@@ -108,6 +108,7 @@ own candidate rows).
 - 2026-10-20: claim audit: not owed — internal tier.
 - 2026-10-20: all tasks done; verify slot clean (hadolint exit 0, branch image built, shellcheck 0.11.0 `-S info` exit 0); status set to review.
 - 2026-10-20: review: four lenses, 11 findings. 7 fixed in fe308fc (5 distinct changes), 1 to a candidate row, 3 rejected. Two apostrophes in new R comments ended the shell's single-quoted R block before the fix landed; shellcheck caught both, and the R comments now avoid apostrophes. After fe308fc, shellcheck 0.11.0 `-S info` exit 0, `/bin/bash` 3.2 parses the file, and AC2 to AC4 were rerun.
+- 2026-10-20: step-7 approval: m007-smoke-cxx-toolchain approved for merge
 
 ## Decisions
 
