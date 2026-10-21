@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M010: Give old home volumes the new CmdStan
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** high   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** IP1, IP3, GP3, GP4   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — it changes where the image keeps CmdStan and what every user's session runs   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m010-cmdstan-out-of-home   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -104,19 +104,19 @@ the old folder, and how to use a CmdStan of one's own.
      cites; an insertion, removal, or reorder renumbers the labels and the
      Coverage lines together. -->
 
-- [ ] T1: Test first: change the expected calls in
+- [x] T1: Test first: change the expected calls in
       `.github/tests/test_install_cmdstan.sh` (line 98) to `/opt/cmdstan` and
       a `root:staff` owner with `chmod -R g+ws` (add a `chmod` stub), and see
       the suite fail. Then change `install_cmdstan_step` in
       `scripts/install_bayes.sh` (lines 46–59): install into `/opt/cmdstan`,
       drop the build-session `set_cmdstan_path()` call, and set the owner and
       mode as `main` does for the site-library. Run the suite green.
-- [ ] T2: In the Dockerfile, add `ENV CMDSTAN=/opt/cmdstan/cmdstan-${CMDSTAN_VERSION}`
+- [x] T2: In the Dockerfile, add `ENV CMDSTAN=/opt/cmdstan/cmdstan-${CMDSTAN_VERSION}`
       after the `RUN` (before it, cmdstanr warns during the build that the
       directory does not exist yet). Confirm the `docker.yml` grep for
       `^ARG CMDSTAN_VERSION=` (lines 92, 268) still reads one value. Run
       hadolint from the image the action uses.
-- [ ] T3: Add phase 4 "old home volume" to `.github/smoke-test.sh`. It
+- [x] T3: Add phase 4 "old home volume" to `.github/smoke-test.sh`. It
       creates a named volume whose name the script generates from `$NAME`,
       seeds it through a mount at a path the image does not populate with
       `.cmdstan/cmdstan-2.36.0/makefile`, owned by the image's `rstudio`
@@ -129,14 +129,14 @@ the old folder, and how to use a CmdStan of one's own.
       217–220). Write R comments without apostrophes (M007 lesson). Control:
       run the script against `rocker-bayes:dev` built from `main` before
       this change and record phase 4's FAIL line. Run shellcheck.
-- [ ] T4: Build noble locally (`docker build -t rocker-bayes:dev .`) and run
+- [x] T4: Build noble locally (`docker build -t rocker-bayes:dev .`) and run
       the full smoke test. Read the pin from the Dockerfile and compare it
       with phase 4's output for AC1. Run the AC2 command. For AC4, start two
       containers (default, `USERID=1501`) and compile and sample the fixture
       with `stan_threads = TRUE` as `rstudio`. For AC5, write `CMDSTAN=<dir>`
       to `~/.Renviron` with a stub CmdStan directory and read the path with
       `env -u CMDSTAN Rscript`. Record each result in the work log.
-- [ ] T5: README: rewrite the "Your work is saved" note, add the FAQ entry
+- [x] T5: README: rewrite the "Your work is saved" note, add the FAQ entry
       on the old `~/.cmdstan` folder (`du -sh ~/.cmdstan`, then
       `rm -rf ~/.cmdstan` after the warning), and add the `~/.Renviron`
       and derived-image notes. Fix the `docker-compose.yml` volume comment.
@@ -162,6 +162,15 @@ the old folder, and how to use a CmdStan of one's own.
 - 2026-10-20: plan gate chose /opt/cmdstan plus `CMDSTAN` over copying CmdStan into `~/.cmdstan` at start because the copy adds about 1.3 GB per version to each volume and slows the first start; falsified by a cmdstanr release that ignores `CMDSTAN` or a base that stops copying container variables into `Renviron.site`.
 - 2026-10-20: plan gate chose no link at `/home/rstudio/.cmdstan` because a user's `install_cmdstan()` would write into the image layer and lose it at update; falsified by a derived image or user script that breaks on the old path.
 - 2026-10-20: plan gate chose the image pin over a user-installed CmdStan, with a `~/.Renviron` override, because old volumes always hold a copy and would keep the stale one; falsified by users whose own CmdStan is overridden with no notice they can find.
+- 2026-10-20: implement started on branch m010-cmdstan-out-of-home; the pre-change image is kept locally as rocker-bayes:pre-m010 for controls.
+- 2026-10-20: T1 done: the suite went red on the old `/home/rstudio/.cmdstan` calls (2 failures), then green after the step moved to `/opt/cmdstan` with `chown -R root:staff` and `chmod -R g+ws`; added a check that the R program names no `/home/rstudio`.
+- 2026-10-20: T2 done: `ENV CMDSTAN` placed after the RUN; the `^ARG CMDSTAN_VERSION=` grep still reads one value (2.40.0); hadolint-action v3.5.0 runs hadolint v2.15.1 (its Dockerfile), and that image reports nothing.
+- 2026-10-20: T3 done: phase 4 added; it compares with the image's own `CMDSTAN` and `CMDSTAN_VERSION` and checks the version first, so a stale pick gets its own FAIL line; shellcheck v0.11.0 `-S info` clean.
+- 2026-10-20: T3 control 1: smoke against rocker-bayes:pre-m010 passed phases 1-3 and failed phase 4 with "cmdstanr picked CmdStan 2.36.0 at /home/rstudio/.cmdstan/cmdstan-2.36.0, not the image's 2.40.0"; no smoke volume left after.
+- 2026-10-20: T3 control 2: branch image with `/etc/cont-init.d/01_set_env` removed passed phases 1-3 and failed phase 4 the same way, so removing `CMDSTAN` from the R process is what makes the phase test the Renviron.site route.
+- 2026-10-20: T4 done (noble arm64, this Mac): build ok; smoke passed all four phases, phase 4 reporting /opt/cmdstan/cmdstan-2.40.0 and 2.40.0, the Dockerfile pin; AC2 command exit 0; /opt/cmdstan is root:staff drwxrwsr-x.
+- 2026-10-20: T4 AC4: threaded compile and sample passed as rstudio uid 1002 and as uid 1501 (`USERID=1501`), each writing main_threads.o into /opt/cmdstan; AC5: with `CMDSTAN` in ~/.Renviron pointing at a stub cmdstan-2.39.0, `cmdstan_path()` reported that directory.
+- 2026-10-20: T5 done: README note and two FAQ entries, compose comment, DESIGN Image build, CI and Architecture lines; the simple-english lint total on README.md is 39 on main and on the branch, so the added lines add none.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->

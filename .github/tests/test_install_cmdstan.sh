@@ -4,8 +4,8 @@
 #
 # The step must hand the CmdStan version to R through the environment, so no
 # value can change the R code that calls install_cmdstan(). Each case sources
-# the script in a subshell whose PATH holds only stubs for R, mkdir, and
-# chown, then calls the step. Any other command fails as "not found", so
+# the script in a subshell whose PATH holds only stubs for R, mkdir, chown,
+# and chmod, then calls the step. Any other command fails as "not found", so
 # nothing here touches the host. The R stub is a child process, so it sees
 # CMDSTAN_VERSION only when the variable is exported. The first-argument cases
 # unset it first, so they show that the script exports it. The stub records
@@ -41,12 +41,13 @@ else
   : >"$STUB_LOG/env.$n.unset"
 fi
 EOF
-# mkdir and chown stubs log their arguments and do nothing else.
+# mkdir, chown, and chmod stubs log their arguments and do nothing else.
 cat >"$STUBS/mkdir" <<'EOF'
 #!/bin/bash
 printf '%s\n' "${0##*/} $*" >>"$STUB_LOG/calls"
 EOF
 cp "$STUBS/mkdir" "$STUBS/chown"
+cp "$STUBS/mkdir" "$STUBS/chmod"
 chmod +x "$STUBS"/*
 
 # run_case <dir> <env|arg|both|empty|unset> [value] [function]
@@ -95,9 +96,12 @@ base_n="$(cat "$BASE/n")"
 if ! grep -qF 'Sys.getenv("CMDSTAN_VERSION")' "$BASE/argv.1"; then
   fail "the R program does not read Sys.getenv(\"CMDSTAN_VERSION\")"
 fi
-printf '%s\n' "mkdir -p /home/rstudio/.cmdstan" "chown -R rstudio /home/rstudio/.cmdstan" >"$BASE/calls.expected"
+printf '%s\n' "mkdir -p /opt/cmdstan" "chown -R root:staff /opt/cmdstan" "chmod -R g+ws /opt/cmdstan" >"$BASE/calls.expected"
 if ! cmp -s "$BASE/calls.expected" "$BASE/calls"; then
-  fail "the step's mkdir and chown calls are not the two expected: $(cat "$BASE/calls" 2>/dev/null)"
+  fail "the step's mkdir, chown, and chmod calls are not the three expected: $(cat "$BASE/calls" 2>/dev/null)"
+fi
+if grep -qF '/home/rstudio' "$BASE/argv.1"; then
+  fail "the R program still names /home/rstudio"
 fi
 
 # Each value after the first carries at least one character that would break

@@ -29,6 +29,13 @@ COPY scripts /rocker_scripts
 RUN chmod -R +x /rocker_scripts \
     && /rocker_scripts/install_bayes.sh
 
+# cmdstanr reads CMDSTAN before it looks in ~/.cmdstan, so every session uses
+# the image's CmdStan, also with a home volume that an older image filled. The
+# base copies container variables into Renviron.site at start, which is how
+# RStudio sessions get it. Set after the install: with the directory missing,
+# cmdstanr warns while the build loads it.
+ENV CMDSTAN=/opt/cmdstan/cmdstan-${CMDSTAN_VERSION}
+
 # ---------------------------------------------------------------------------
 # Runtime
 # ---------------------------------------------------------------------------

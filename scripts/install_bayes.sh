@@ -44,18 +44,23 @@ resolve_cmdstan_version() {
 
 # R reads the version with Sys.getenv() and never sees it spliced into its
 # code, so no value can rewrite the install_cmdstan() call.
+# CmdStan lives outside /home/rstudio, so a home volume made by an older image
+# cannot hide it, and the Dockerfile's CMDSTAN variable points cmdstanr at it.
+# A threaded model build writes into the CmdStan tree, so the staff group (the
+# rstudio user, and the user USERID creates) gets write access, as it does for
+# the R site-library in main.
 install_cmdstan_step() {
   resolve_cmdstan_version "$@" || return 1
-  mkdir -p /home/rstudio/.cmdstan
+  mkdir -p /opt/cmdstan
   R -q -e '
     cmdstanr::install_cmdstan(
-      dir = "/home/rstudio/.cmdstan",
+      dir = "/opt/cmdstan",
       version = Sys.getenv("CMDSTAN_VERSION"),
       cpp_options = list("CXXFLAGS+= -Wno-psabi -O3")
     )
-    cmdstanr::set_cmdstan_path("/home/rstudio/.cmdstan")
   '
-  chown -R rstudio /home/rstudio/.cmdstan
+  chown -R root:staff /opt/cmdstan
+  chmod -R g+ws /opt/cmdstan
 }
 
 main() {
