@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-10-20 (status audit after triage pass 37b3524: validate green; no open issues, PRs, orphaned issues, outside merges, or linked-item news)_
+_Last hygiene check: 2026-10-20 (M006 merged as #19: row done and archived, its candidate graduated, M003 row pruned, one candidate added, two lessons added; validate green)_
 
 ## Milestones
 
@@ -9,14 +9,11 @@ _Last hygiene check: 2026-10-20 (status audit after triage pass 37b3524: validat
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M006 | Assert smoke packages arrive this run | review | — | high | milestones/M006-smoke-pkg-arrives.md |
+| M006 | Assert smoke packages arrive this run | done | — | high | milestones/archive/M006-smoke-pkg-arrives.md |
 | M005 | Superseded CI runs stop acting | done | M004 | high | milestones/archive/M005-superseded-runs.md |
 | M004 | Rerun a weekly build that failed on the r2u mirror | done | M003 | high | milestones/archive/M004-weekly-leg-retry.md |
-| M003 | Unattended-rebuild alerts and schedule keepalive | done | M001, M002 | normal | milestones/archive/M003-unattended-rebuild-alerts.md |
-
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
-- [high] Assert smoke packages arrive this run: Smoke phase 2 cannot tell a fresh bspm fetch from a package the image already carries: it asserts `library()` plus `dpkg -s`, never that the package arrived this run. Assert absence before installing — added 2026-09-12 — M001 review F3, F12, split 2026-10-20 — started M006
 - [high] Cover a broken C++ toolchain in smoke: The compile control fails at stanc parse time, so no control covers a broken C++ toolchain — added 2026-09-12 — M001 review F3, F12, split 2026-10-20
 - [high] Add tests to the docker.yml paths filter: `.github/tests/**` is absent from the `docker.yml` push paths filter, so a change to `test_publish_guard.sh` alone starts no publish-lane run. `pr-ci.yml` runs the suite since M005 — added 2026-09-12 — M001 review F8, M003 review N5
 - [high] Pass CMDSTAN_VERSION to R via Sys.getenv: `scripts/install_bayes.sh` still builds the `install_cmdstan()` call by interpolating `CMDSTAN_VERSION` into R source. The M002 quoting fix stops whitespace from splitting it, but a value carrying a double quote still rewrites the call. Read it with `Sys.getenv()` instead, the convention `smoke-test.sh` already follows — added 2026-09-12 — M002 review
