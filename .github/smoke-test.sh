@@ -10,7 +10,9 @@
 #                    silent source compile.
 #   3. cmdstan     - cmdstanr reports a CmdStan path and version, and a model
 #                    whose posterior mean is known in closed form compiles,
-#                    samples, and returns that mean.
+#                    samples, and returns that mean. stanc runs before the C++
+#                    build, so a program stanc rejects and a broken C++
+#                    toolchain each get their own FAIL line.
 #
 # Exit 0 only when all three phases pass. Each failure prints one line starting
 # with "FAIL:" that names the phase, so CI triage can read the reason off that
@@ -230,10 +232,10 @@ if ! docker exec -u rstudio -e HOME=/home/rstudio "$NAME" Rscript -e '
   exit 1
 fi
 
-# The R block below prints a `stage:` marker before it gives up, so a compile
-# failure and a wrong posterior mean produce different FAIL lines rather than
-# one message covering both. A check that cannot say which thing broke cannot
-# be trusted to have caught the thing it names.
+# The R block below prints a `stage:` marker before it gives up, so a stanc
+# rejection, a failed C++ build, and a wrong posterior mean produce different
+# FAIL lines rather than one message covering them all. A check that cannot
+# say which thing broke cannot be trusted to have caught the thing it names.
 set +e
 stan_out="$(docker exec -u rstudio -e HOME=/home/rstudio \
      -e STAN_BASE="$STAN_BASE" -e DATA_BASE="$DATA_BASE" \
@@ -248,13 +250,26 @@ stan_out="$(docker exec -u rstudio -e HOME=/home/rstudio \
   invisible(file.copy(file.path("/smoke-fixtures", Sys.getenv("STAN_BASE")), stan, overwrite = TRUE))
   # Compile before looking for the data file. Compiling needs no data, and a
   # missing data file must never stand in for a program that does not compile.
+  # stanc runs on its own first, so a failure in the C++ build that follows
+  # points at the toolchain rather than at the Stan program.
   mod <- tryCatch(
-    cmdstanr::cmdstan_model(stan),
+    {
+      m <- cmdstanr::cmdstan_model(stan, compile = FALSE)
+      m$check_syntax()
+      m
+    },
     error = function(e) {
-      cat("stage:compile\n")
+      cat("stage:stanc\n")
       stop(conditionMessage(e), call. = FALSE)
     }
   )
+  invisible(tryCatch(
+    mod$compile(),
+    error = function(e) {
+      cat("stage:cxx\n")
+      stop(conditionMessage(e), call. = FALSE)
+    }
+  ))
   data_src <- file.path("/smoke-fixtures", Sys.getenv("DATA_BASE"))
   if (!file.exists(data_src)) {
     cat("stage:data\n")
@@ -291,7 +306,8 @@ printf '%s\n' "$stan_out"
 if [ "$stan_status" -ne 0 ]; then
   case "$stan_out" in
     *"stage:data"*)    echo "FAIL: phase 3 (cmdstan) - no data file beside $STAN_BASE" ;;
-    *"stage:compile"*) echo "FAIL: phase 3 (cmdstan) - $STAN_BASE did not compile" ;;
+    *"stage:stanc"*)   echo "FAIL: phase 3 (cmdstan) - stanc rejected $STAN_BASE" ;;
+    *"stage:cxx"*)     echo "FAIL: phase 3 (cmdstan) - $STAN_BASE passed stanc but the C++ build failed" ;;
     *"stage:sample"*)  echo "FAIL: phase 3 (cmdstan) - the model compiled but sampling failed" ;;
     *"stage:mean"*)    echo "FAIL: phase 3 (cmdstan) - the posterior mean is not within $THETA_TOL of $THETA_REF" ;;
     *)                 echo "FAIL: phase 3 (cmdstan) - the CmdStan run failed before it reached a stage marker" ;;

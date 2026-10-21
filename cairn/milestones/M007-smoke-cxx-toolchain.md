@@ -1,13 +1,13 @@
 # M007: Cover a broken C++ toolchain in smoke
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP8
 - **Resolves:** —
 - **Surface tier:** internal — a CI check over the built image that no user of the image runs
-- **Branch/PR:** —
+- **Branch/PR:** m007-smoke-cxx-toolchain
 
 ## Goal
 
@@ -60,7 +60,7 @@ own candidate rows).
 
 ## Tasks
 
-- [ ] T1: In `.github/smoke-test.sh` phase 3 (the R block near lines 241-287),
+- [x] T1: In `.github/smoke-test.sh` phase 3 (the R block near lines 241-287),
       replace the single `cmdstan_model(stan)` call with
       `cmdstan_model(stan, compile = FALSE)`, a `$check_syntax()` call under a
       `stage:stanc` marker, and a `$compile()` call under a `stage:cxx` marker.
@@ -98,6 +98,8 @@ own candidate rows).
 - 2026-10-20: plan gate chose two FAIL lines over one because a single line cannot show that the control caught the compiler rather than a Stan error; falsified by `$check_syntax()` passing a program that `$compile()` then rejects in stanc.
 - 2026-10-20: plan chose replacing the resolved `g++` file over shadowing it on `PATH` because CmdStan's make may call the compiler by full path or through `/usr/bin`; falsified by a control run whose output lacks the stub's message.
 - 2026-10-20: no release notes: a CI-only change with no recipe change gets no release under D-002.
+- 2026-10-20: implement started on branch m007-smoke-cxx-toolchain, cut from main at fa3fed2; tree clean.
+- 2026-10-20: T1 split phase 3's compile into `cmdstan_model(compile = FALSE)` plus `$check_syntax()` under `stage:stanc`, then `$compile()` under `stage:cxx`, wrapped in `invisible()` so the model object does not print. FAIL lines: "stanc rejected <file>" and "<file> passed stanc but the C++ build failed". Shellcheck 0.11.0 `-S info` clean, `/bin/bash` 3.2 parses the file. The edited lines add no bash 3.2 vs 5 difference (no arrays, no new `set -u` reads).
 
 ## Decisions
 

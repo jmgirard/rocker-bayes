@@ -9,7 +9,7 @@ _Last hygiene check: 2026-10-20 (M006 merged as #19: row done and archived, its 
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M007 | Cover a broken C++ toolchain in smoke | planned | — | high | milestones/M007-smoke-cxx-toolchain.md |
+| M007 | Cover a broken C++ toolchain in smoke | in-progress | — | high | milestones/M007-smoke-cxx-toolchain.md |
 | M006 | Assert smoke packages arrive this run | done | — | high | milestones/archive/M006-smoke-pkg-arrives.md |
 | M005 | Superseded CI runs stop acting | done | M004 | high | milestones/archive/M005-superseded-runs.md |
 | M004 | Rerun a weekly build that failed on the r2u mirror | done | M003 | high | milestones/archive/M004-weekly-leg-retry.md |
