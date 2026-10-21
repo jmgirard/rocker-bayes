@@ -181,3 +181,31 @@ the old folder, and how to use a CmdStan of one's own.
 
 ## Review
 <!-- owner: review · exclusive. -->
+
+Pass 1 evidence at 659bb42 (image context unchanged since 0d10372): smoke 4/4 PASS on noble arm64, phase 4 at /opt/cmdstan/cmdstan-2.40.0 and 2.40.0 (Dockerfile pin 2.40.0); AC2 exit 0; threaded runs pass as uid 1002 and uid 1501; ~/.Renviron override reports its directory; suite, hadolint v2.15.1, shellcheck v0.11.0 over 22 files clean; run 39545142917 (0d10372) green on all four legs. Boxes wait for the post-fix pass.
+
+spawned: diff-bug, blame-history, prior-review, ripple
+
+- diff-bug #1: deleting `~/.cmdstan` breaks models compiled under an older image, whose RUNPATH names that folder's tbb (confirmed with readelf in rocker-bayes:pre-m010) — fix now
+- diff-bug #2: `chmod -R g+ws` sets setgid on 146 executables such as stanc, so a non-staff user gains the staff group — fix now (setgid on directories only); the same pattern on the site library goes to candidate "Set setgid on site-library dirs only"
+- diff-bug #3: phase 4 never checks that the container sees the seeded stale folder, so a seeding that misses passes it for the wrong reason — fix now
+- diff-bug #4: phase 4 rejects only `/home/*`, while T3 says the path must be under `/opt/cmdstan/` — fix now
+- diff-bug #5: with no HEALTHCHECK, phase 4 stops waiting at once and races `01_set_env` — fix now (probe the server inside the container)
+- diff-bug #6: files a session writes into /opt/cmdstan get umask 022 modes, and `cmdstan_make_local()` settings now live in the container layer and are lost on update — follow-up, candidate "Keep CmdStan runtime files writable"; DESIGN.md's "group-writable" narrowed to the install now
+- diff-bug #7: pr-ci.yml's "SMOKE_TIMEOUT bounds phase 1 only" and the script header are stale — fix now
+- diff-bug #8: a leftover `${NAME}-home` volume from a killed run with a reused PID is reused without notice — fix now (refuse an existing volume)
+- diff-bug #9: the script compares with the image's own CMDSTAN_VERSION, not the Dockerfile pin — reject (false against AC1: review compares with the pin by hand; the tag check is candidate "Check CmdStan matches the version tag")
+- diff-bug #10: docker-compose.yml:16 at 130 columns, DESIGN.md:43 and README.md:99 wraps — fix now
+- blame-history #1: CI never builds a threaded model, so a lost group write bit on /opt/cmdstan passes CI — follow-up, candidate "Smoke a threaded CmdStan build in CI"
+- blame-history #2: README.md:159 still says installed packages persist in the home volume — follow-up, absorbed into "Fix the package persistence claim"
+- blame-history #3: the `none` case of the phase 4 wait — fix now (same fix as diff-bug #5)
+- blame-history #4: phase 3 keeps `-u rstudio -e HOME=` without the dropped root rationale — reject (false: the comment states the purpose, "as an RStudio session does")
+- blame-history #5: docker-compose.yml:16 line width — fix now (same as diff-bug #10)
+- prior-review #1: `printenv ... || echo ""` turns a failed exec into "the image sets no CMDSTAN", the M006 pattern — fix now
+- prior-review #2: the EXIT-only trap now also leaves phase 4's container and volume on a cancel — follow-up, absorbed into "Clean up smoke containers on cancel"
+- prior-review #3: phase 4 compares with the image's own ENV — reject (planned change: phase 4 tests which CmdStan cmdstanr picks, not the tag)
+- ripple #1: README.md:159 package persistence — follow-up, absorbed (same as blame-history #2)
+- ripple #2: the candidate row for this milestone still describes the old layout — reject (planned change: the row graduates at hygiene)
+- ripple #3: pr-ci.yml:113 SMOKE_TIMEOUT comment — fix now (same as diff-bug #7)
+- ripple #4: the version-tag row warns against comparing with the image ENV — reject (planned change, as prior-review #3)
+- ripple #5: the cancel-cleanup row names only the port container — follow-up, absorbed (same as prior-review #2)
