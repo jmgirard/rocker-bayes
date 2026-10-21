@@ -9,7 +9,7 @@ _Last hygiene check: 2026-10-20 (status audit after triage pass 37b3524: validat
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M006 | Assert smoke packages arrive this run | planned | — | high | milestones/M006-smoke-pkg-arrives.md |
+| M006 | Assert smoke packages arrive this run | review | — | high | milestones/M006-smoke-pkg-arrives.md |
 | M005 | Superseded CI runs stop acting | done | M004 | high | milestones/archive/M005-superseded-runs.md |
 | M004 | Rerun a weekly build that failed on the r2u mirror | done | M003 | high | milestones/archive/M004-weekly-leg-retry.md |
 | M003 | Unattended-rebuild alerts and schedule keepalive | done | M001, M002 | normal | milestones/archive/M003-unattended-rebuild-alerts.md |
@@ -39,4 +39,5 @@ _Last hygiene check: 2026-10-20 (status audit after triage pass 37b3524: validat
 - [low] Validate dependabot.yml in CI checks: `.github/dependabot.yml` matches no workflow trigger path and is schema-validated by nothing, so a config error surfaces only on GitHub's Dependabot page — added 2026-09-12 — M002 review
 - [low] Clean up smoke containers on cancel: The smoke test's cleanup trap fires on EXIT only, so a cancelled CI job leaves the container holding the port and the next run reports a collision as an image defect — added 2026-09-12 — M001 review F23, F17
 - [low] Prune untagged manifests from dispatches: Every branch dispatch pushes four untagged manifests to the production Docker Hub repository and nothing prunes them. This is the storage cost the M001 plan gate named as its own falsification condition — added 2026-09-12 — M001 review, blame lens item 1
+- [low] Tell phase 2 exit 3 from package quit: smoke phase 2 reads Rscript exit status 3 as "found by `find.package()` before the install". A package whose `.onLoad` or `.onAttach` calls `quit(status = 3)` during `library()` would be reported as already in the image — added 2026-10-20 — M006 review diff-bug #6
 - [low] Sync README to the Docker Hub page: Docker Hub description sync: a workflow that copies README.md to the Docker Hub page on push to main. Needs a Docker Hub token with read, write and delete scope — added 2026-09-11 — rstudio2u .github/workflows/dockerhub-description.yml
