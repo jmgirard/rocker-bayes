@@ -266,6 +266,9 @@ stan_out="$(docker exec -u rstudio -e HOME=/home/rstudio \
   invisible(tryCatch(
     mod$compile(),
     error = function(e) {
+      # cmdstanr keeps the stderr of the failed make on the condition and does
+      # not print it, so print it here for whoever reads the CI log.
+      if (length(e$stderr) == 1 && nzchar(e$stderr)) cat(e$stderr, "\n")
       cat("stage:cxx\n")
       stop(conditionMessage(e), call. = FALSE)
     }

@@ -75,7 +75,7 @@ own candidate rows).
       a derived image that replaces that file with a stub that prints a fixed
       message to stderr and exits 1. Use a Dockerfile passed on stdin, not a
       committed file. Confirm `stanc` still runs in the derived image.
-- [ ] T3: Run the AC2 pass case, the AC3 control, and the AC4 control. Log each
+- [x] T3: Run the AC2 pass case, the AC3 control, and the AC4 control. Log each
       exit status and FAIL or PASS line. Check each failure's identity, not
       the line alone: AC3 fails on the stanc error at the `no_such_type`
       declaration, and AC4's output carries the stub's message.
@@ -101,6 +101,9 @@ own candidate rows).
 - 2026-10-20: implement started on branch m007-smoke-cxx-toolchain, cut from main at fa3fed2; tree clean.
 - 2026-10-20: T1 split phase 3's compile into `cmdstan_model(compile = FALSE)` plus `$check_syntax()` under `stage:stanc`, then `$compile()` under `stage:cxx`, wrapped in `invisible()` so the model object does not print. FAIL lines: "stanc rejected <file>" and "<file> passed stanc but the C++ build failed". Shellcheck 0.11.0 `-S info` clean, `/bin/bash` 3.2 parses the file. The edited lines add no bash 3.2 vs 5 difference (no arrays, no new `set -u` reads).
 - 2026-10-20: T2 `hadolint Dockerfile` (hadolint/hadolint container) exit 0 with no output. `rocker-bayes:dev` built from the branch, arm64, created 2026-10-21T01:53Z UTC, base layers from cache. In it `g++` resolves to `/usr/bin/aarch64-linux-gnu-g++-13`, and CmdStan 2.40.0's `make print-CXX` gives `CXX = g++`. `rocker-bayes:dev-broken-cxx` (Dockerfile on stdin) overwrites the resolved file with a stub that prints "smoke control: C++ compiler disabled" and exits 1. In it `g++ --version` printed the stub message and exited 1, and `bin/stanc --version` printed `stanc3 v2.40.0` and exited 0.
+- 2026-10-20: T3 first AC4 run exited 1 on the C++ build line, but its output lacked the stub message: cmdstanr 0.9.0 keeps the failed make's stderr on the condition (`e$stderr`) and does not print it. The `stage:cxx` handler now prints `e$stderr` before its marker. Shellcheck 0.11.0 `-S info` still clean, `/bin/bash` 3.2 still parses the file.
+- 2026-10-20: T3 runs on the final script, no `SMOKE_*` variables in the environment. AC2 against `rocker-bayes:dev`: exit 0, three phase PASS lines, theta mean 0.3988 against 0.4020. AC3 (`SMOKE_STAN_FILE=.github/smoke-fixtures/does-not-compile.stan`): exit 1, "FAIL: phase 3 (cmdstan) - stanc rejected does-not-compile.stan", after `stage:stanc` and a stanc syntax error at line 6 (`no_such_type theta;`). AC4 against `rocker-bayes:dev-broken-cxx`: exit 1, "FAIL: phase 3 (cmdstan) - bernoulli.stan passed stanc but the C++ build failed", after "Stan program is syntactically correct", `stage:cxx`, and the stub message. Make stopped at `make/program:20` because Stan Math's `compiler_flags` reads `CXX_VERSION` from `$(CXX) -dumpversion`, which the stub broke.
+- 2026-10-20: T3 extra control beyond AC4, so the C++ build line is shown for a failed compile and not only for the version probe: `rocker-bayes:dev-broken-cxx2` keeps `-dumpversion` working and fails every other compiler call. Exit 1 with the same C++ build FAIL line, after the stub message for the model compile and `make: *** [make/program:83: .../model-*.o] Error 1`.
 
 ## Decisions
 
