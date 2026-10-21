@@ -9,7 +9,7 @@ _Last hygiene check: 2026-10-20 (status audit after triage pass 37b3524: validat
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M006 | Assert smoke packages arrive this run | planned | — | high | milestones/M006-smoke-pkg-arrives.md |
+| M006 | Assert smoke packages arrive this run | in-progress | — | high | milestones/M006-smoke-pkg-arrives.md |
 | M005 | Superseded CI runs stop acting | done | M004 | high | milestones/archive/M005-superseded-runs.md |
 | M004 | Rerun a weekly build that failed on the r2u mirror | done | M003 | high | milestones/archive/M004-weekly-leg-retry.md |
 | M003 | Unattended-rebuild alerts and schedule keepalive | done | M001, M002 | normal | milestones/archive/M003-unattended-rebuild-alerts.md |

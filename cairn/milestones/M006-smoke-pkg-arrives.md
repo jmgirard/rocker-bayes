@@ -1,13 +1,13 @@
 # M006: Assert smoke packages arrive this run
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP8
 - **Resolves:** —
 - **Surface tier:** internal — a CI check over the built image that no user of the image runs
-- **Branch/PR:** —
+- **Branch/PR:** m006-smoke-pkg-arrives
 
 ## Goal
 
@@ -95,6 +95,10 @@ locally).
 - 2026-10-20: plan gate chose failing the run over a fallback probe list because a fallback hides the case it exists to catch and adds parsing; falsified by roster churn making the default probe present more than once a year.
 - 2026-10-20: plan gate chose local control runs over CI control branches because the workflows pass no `SMOKE_PKG` and each CI control costs a build; falsified by a control that passes locally and fails on amd64 CI.
 - 2026-10-20: no release notes: a CI-only change with no recipe change gets no release under D-002.
+- 2026-10-20: implement started; branch m006-smoke-pkg-arrives cut from main at eeeab0d. Docker Desktop started; `rocker-bayes:dev` build running in the background.
+- 2026-10-20: T1 choice: the R library check signals through Rscript exit status 3 rather than a stdout stage marker, so install output still streams live; the dpkg check counts only a `Status: install ok installed` line.
+- 2026-10-20: question set (implement stop): download koalaman/shellcheck:v0.11.0 and hadolint/hadolint:v2.12.0 for local lint — granted.
+- 2026-10-20: T1 checkpoint: absence checks, new FAIL lines, header comment, and PASS line in `.github/smoke-test.sh`. shellcheck 0.11.0 `-S info` exit 0, hadolint exit 0, `bash -n` clean. The bash 3.2 and bash 5 runs wait for the image (T3); T1 stays open until then.
 
 ## Decisions
 

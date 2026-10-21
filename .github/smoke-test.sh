@@ -5,8 +5,9 @@
 #
 #   1. server up   - RStudio Server answers on 8787 (healthcheck, or a direct
 #                    port probe when the image declares none).
-#   2. bspm binary - a CRAN package installs, loads, and lands as an apt
-#                    r-cran-* binary rather than a silent source compile.
+#   2. bspm binary - a CRAN package the image does not already carry installs,
+#                    loads, and lands as an apt r-cran-* binary rather than a
+#                    silent source compile.
 #   3. cmdstan     - cmdstanr reports a CmdStan path and version, and a model
 #                    whose posterior mean is known in closed form compiles,
 #                    samples, and returns that mean.
@@ -123,23 +124,57 @@ done
 # Request a CRAN package and confirm it loads AND arrived as an apt binary.
 # The dpkg check is the part that proves the r2u binary path worked: without
 # it a silent source compile also ends with a loadable package.
+#
+# The package must also be absent before the install. A package the image
+# already carries passes the load and the dpkg check with nothing fetched, so
+# a run on it says nothing about bspm. Two checks look for it first: dpkg, for
+# an apt binary, and find.package() in the R session that runs the install,
+# for a copy that R can load but apt does not know about.
 apt_pkg="r-cran-$(printf '%s' "$PKG" | tr '[:upper:]' '[:lower:]')"
 echo "==> [2/3] bspm binary install ($PKG -> $apt_pkg)"
+# Guarded so a failed exec reads as "no entry" instead of ending the script
+# under set -e with no FAIL line. dpkg -s also succeeds for a removed package
+# that left its config files behind, so only an installed status counts.
+pre_status="$(docker exec "$NAME" dpkg -s "$apt_pkg" 2>/dev/null || true)"
+case "$pre_status" in
+  *"Status: install ok installed"*)
+    echo "FAIL: phase 2 (bspm binary) - $PKG was already in the image before the install (dpkg check: $apt_pkg is installed); set SMOKE_PKG to a package the image lacks"
+    exit 1
+    ;;
+esac
 # PKG reaches R through the environment, never by string interpolation into the
 # -e source: a value carrying a quote would otherwise run arbitrary R here.
-if ! docker exec -e SMOKE_PKG_NAME="$PKG" "$NAME" Rscript -e '
+# Exit status 3 means find.package() found the package before the install. Any
+# other failure exits 1, so the two get different FAIL lines.
+set +e
+docker exec -e SMOKE_PKG_NAME="$PKG" "$NAME" Rscript -e '
   pkg <- Sys.getenv("SMOKE_PKG_NAME")
+  found <- find.package(pkg, quiet = TRUE)
+  if (length(found) > 0) {
+    message("found before the install: ", paste(found, collapse = ", "))
+    quit(save = "no", status = 3)
+  }
   install.packages(pkg)
   library(pkg, character.only = TRUE)
-'; then
-  echo "FAIL: phase 2 (bspm binary) - install or load of $PKG failed"
-  exit 1
-fi
+'
+install_status=$?
+set -e
+case "$install_status" in
+  0) ;;
+  3)
+    echo "FAIL: phase 2 (bspm binary) - $PKG was already in the image before the install (R library check: find.package() found it in .libPaths()); set SMOKE_PKG to a package the image lacks"
+    exit 1
+    ;;
+  *)
+    echo "FAIL: phase 2 (bspm binary) - install or load of $PKG failed"
+    exit 1
+    ;;
+esac
 if ! docker exec "$NAME" dpkg -s "$apt_pkg" >/dev/null 2>&1; then
   echo "FAIL: phase 2 (bspm binary) - $PKG did not install as an apt binary ($apt_pkg absent)"
   exit 1
 fi
-echo "PASS: phase 2 (bspm binary) - $PKG installed as $apt_pkg and loads"
+echo "PASS: phase 2 (bspm binary) - $PKG was absent from the image before the install, installed as $apt_pkg, and loads"
 
 # --- Phase 3: CmdStan --------------------------------------------------------
 # Runs as the rstudio user with an explicit HOME, because CmdStan is installed
