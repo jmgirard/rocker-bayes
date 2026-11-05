@@ -69,6 +69,7 @@ Make CI fail a pull request that stores a Windows launcher with LF line endings.
 - 2026-11-05: T6: control PR #27 held one LF-only line in `stop_windows.bat`. Its only check, `line-endings` (run 42044410120), failed in 3s with "FAIL: stop_windows.bat — blob has 1 LF-only line(s) of 12" while `start_windows.bat` printed `ok:`. Closed unmerged, control branch deleted, temporary `m013-*` filter removed.
 - 2026-11-05: implementation choice: the control's edit was made in a scratch clone with `sed`, so this checkout's launcher never changed.
 - 2026-11-05: claim audit: not owed — internal tier.
+- 2026-11-05: step-7 approval: m013-port-crlf-guard approved for merge
 
 ## Decisions
 
