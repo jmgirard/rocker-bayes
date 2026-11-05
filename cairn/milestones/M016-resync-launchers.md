@@ -78,6 +78,7 @@ apart from names.
 - 2026-11-05: T3 done. README Quick start step 4 states the pull-failed and no-copy behavior, worded from T2's output and the `Could not download the latest image.` branch in `start_mac.command`. DESIGN.md's Launchers family names `4b181de` and the name map. The Simple English hook reported 31 hits in older README text, which the low row "Clear the README's plain-English hits" holds, and none in the added lines, so they were left alone.
 - 2026-11-05: claim audit: 19 claims read, 0 corrected — launcher_common.sh, start_linux.sh, start_mac.command, start_windows.bat, README.md. One claim was unverifiable here: Compose 5.6.1 exits 1 with "no port 8787/tcp" when an override drops `ports`. The test-seam comments refer to rstudio2u's scenario suites, which this repo does not port (Scope Out).
 - 2026-11-05: implement complete; status set to review.
+- 2026-11-05: step-7 approval: m016-resync-launchers approved for merge
 
 ## Decisions
 
