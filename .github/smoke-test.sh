@@ -12,7 +12,12 @@
 #                    whose posterior mean is known in closed form compiles,
 #                    samples, and returns that mean. stanc runs before the C++
 #                    build, so a program stanc rejects and a broken C++
-#                    toolchain each get their own FAIL line.
+#                    toolchain each get their own FAIL line. Then, as the
+#                    rstudio user, a second build with stan_threads on
+#                    compiles and samples with 2 threads per chain. That
+#                    build writes main_threads.o into the CmdStan tree, so it
+#                    fails, on its own FAIL line, when rstudio cannot write
+#                    there.
 #   4. old home    - a second container, whose home is a volume holding a stale
 #                    ~/.cmdstan as an older image left it, still gets the
 #                    image's CmdStan from cmdstanr, through Renviron.site as an

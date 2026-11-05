@@ -93,7 +93,7 @@ control proves the step goes red when `/opt/cmdstan` loses its group write bit.
       `RUN chmod -R g-w /opt/cmdstan`, run the script against it, and record
       the FAIL line and the permission error line. Remove the throwaway tag
       afterward.
-- [ ] T4: Update the phase 3 text in the script's header comment and the
+- [x] T4: Update the phase 3 text in the script's header comment and the
       "Its CmdStan phase" sentence of `cairn/DESIGN.md`'s CI / publish bullet,
       written from the T2 and T3 output.
 - [ ] T5: Push the branch and dispatch `docker.yml` on it with
@@ -119,6 +119,7 @@ control proves the step goes red when `/opt/cmdstan` loses its group write bit.
 - 2026-11-05: T1: phase 3 builds a second copy of the fixture with `stan_threads` on and samples 1 chain with `threads_per_chain = 2`, 200+200 iterations; new markers `stage:thread-build` and `stage:thread-sample`; the sample stage also fails on a nonzero chain return code; shellcheck 0.11.0 clean. Chose 1 short chain because the unthreaded run already checks the posterior mean.
 - 2026-11-05: T2: `docker build -t rocker-bayes:dev .` (image f34ae1ea, arm64) then the script exited 0 with all four PASS lines; phase 3 printed "theta posterior mean 0.3988", then "threaded build: wrote /opt/cmdstan/cmdstan-2.40.0/src/cmdstan/main_threads.o", then "threaded sample: 1 chain, threads_per_chain = 2".
 - 2026-11-05: T3: image `FROM rocker-bayes:dev` + `RUN chmod -R g-w /opt/cmdstan`: exit 1, the unthreaded run passed (theta 0.3988), then make printed "Fatal error: can't create src/cmdstan/main_threads.o: Permission denied" and the FAIL line was the new threaded-build line. The log also showed a denied write under `model_header.hpp.gch`, so the FAIL line and comment now name the precompiled header too, and the control was rerun on that text with the same result. Throwaway tag removed. The passing path did not change, so T2 was not rerun.
+- 2026-11-05: T4: the script header's phase 3 entry and DESIGN.md's "Its CmdStan phase" sentence now say that phase 3 builds and samples a threaded model as `rstudio` and that the build fails when `rstudio` cannot write `main_threads.o` into the CmdStan tree, as T2 and T3 showed.
 
 ## Decisions
 
