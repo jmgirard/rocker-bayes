@@ -194,3 +194,6 @@ spawned: diff-bug, blame-history, prior-review, ripple
 - ripple #2: other "succeeded" wording — reject, same reason as pass 1's diff-bug #3.
 - ripple #3: the two ROADMAP rows — reject, planned change: step 9.
 - ripple #4: `DESIGN.md`'s alert bullet omits a dispatch with `notify` — fix now.
+- Pass 2 fix-now lines above: fixed in `b88b9f8`.
+- AC5, after the fix: `{"jobs":{}}` and `{"jobs":{"a":…}}` print `unknown`, `{"jobs":[]}` prints `none`, a real-shaped listing prints its date, under a stub. `rebuild-gap.yml` dispatch 41991400832 on `b88b9f8` looked up 2026-11-02, 3 days, no alert. All eight suites pass, and shellcheck exits 0.
+- Snapshot files: the list is empty. Amendments: none; the work log carries no substantive amendment.
