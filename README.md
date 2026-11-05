@@ -200,10 +200,9 @@ packages you install. It also includes the libraries from `sudo apt install`.
 
 In the Compose setup, if you stop the container with a `stop_...` file and a
 `start_...` file starts the same image with the same settings, those items stay.
-If the start file
-downloads a newer image, Compose replaces the container. Each time Compose
-replaces the container, those items are lost. The files in your home volume
-remain. For example, these actions replace the container:
+If the start file downloads a newer image, Compose replaces the container. Each
+time Compose replaces the container, those items are lost. The files in your home
+volume remain. For example, these actions replace the container:
 
 - You run `docker compose down`, then `docker compose up -d`.
 - A newer image arrives. The start files download the newest image each time they
