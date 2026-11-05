@@ -6,9 +6,10 @@
 # space-joined) and answers `issue list` with canned JSON per scenario. The
 # branches (failure with no open issue creates; failure with an open issue
 # comments on the oldest; success with open issues comments on and closes each;
-# success with none writes nothing; cancelled does nothing) are asserted by
-# WHICH subcommand ran on WHICH issue number, never by call counts. Runs
-# offline: no network, no token.
+# success with none writes nothing; cancelled and stale do nothing; a push build
+# takes its own wording and closes nothing) are asserted by WHICH subcommand ran
+# on WHICH issue number, never by call counts. Runs offline: no network, no
+# token.
 #
 # The fixtures are job listings in the shape docker.yml's jobs produce: one
 # build leg per (variant, arch) named "build (<variant>, <arch>)", and the plain
@@ -395,6 +396,94 @@ rc=$(run_script "" "$TWO" "$FIX_ALL_GREEN")
 assert_rc      "an empty results list exits 0" 0 "$rc"
 assert_no_call "an empty results list never closes the issue" '^issue close '
 assert_call    "  ... it reports the failure instead"         '^issue comment 41 '
+
+# 7. A push build. The keepalive job is skipped on a push run, and the notify job
+# leaves it out of the results.
+FIX_PUSH_LEG_FAIL=$(jobs_doc \
+    "$(job 'build (noble, amd64)' success)" \
+    "$(job 'build (noble, arm64)' failure)" \
+    "$(job 'build (resolute, amd64)' success)" \
+    "$(job 'build (resolute, arm64)' success)" \
+    "$(job 'publish' failure)" \
+    "$(job 'keepalive' skipped)")
+FIX_PUSH_PUBLISH_FAIL=$(jobs_doc \
+    "$(job 'build (noble, amd64)' success)" \
+    "$(job 'build (noble, arm64)' success)" \
+    "$(job 'build (resolute, amd64)' success)" \
+    "$(job 'build (resolute, arm64)' success)" \
+    "$(job 'publish' failure)" \
+    "$(job 'keepalive' skipped)")
+FIX_PUSH_GREEN=$(jobs_doc \
+    "$(job 'build (noble, amd64)' success)" \
+    "$(job 'build (noble, arm64)' success)" \
+    "$(job 'build (resolute, amd64)' success)" \
+    "$(job 'build (resolute, arm64)' success)" \
+    "$(job 'publish' success)" \
+    "$(job 'keepalive' skipped)")
+# A timed-out leg reads as cancelled and skips publish. No job concluded failure.
+FIX_PUSH_LEG_CANCELLED=$(jobs_doc \
+    "$(job 'build (noble, amd64)' cancelled)" \
+    "$(job 'build (noble, arm64)' success)" \
+    "$(job 'build (resolute, amd64)' success)" \
+    "$(job 'build (resolute, arm64)' success)" \
+    "$(job 'publish' skipped)" \
+    "$(job 'keepalive' skipped)")
+
+# 7a. A failed leg with a failed publish, no open issue: the push wording.
+rc=$(RUN_EVENT=push run_script "failure failure" "$NONE" "$FIX_PUSH_LEG_FAIL")
+assert_rc      "push failure/none exits 0" 0 "$rc"
+assert_call    "a failed push build opens an issue with the push title" '^issue create .*--label ci-failure .*--title Push build failed: noble publish --body '
+assert_call    "  ... whose body opens with the push wording" '^issue create .*--body The push build failed in: noble publish  Run: '
+assert_call    "  ... and says a scheduled run that moves the tags closes it" '^issue create .*next fully green scheduled run that moves the tags\.'
+
+# 7b. Only publish failed.
+rc=$(RUN_EVENT=push run_script "success failure" "$NONE" "$FIX_PUSH_PUBLISH_FAIL")
+assert_rc      "push publish-only failure exits 0" 0 "$rc"
+assert_call    "a push publish-only failure names publish" '^issue create .*--title Push build failed: publish --body '
+
+# 7c. A cancelled leg beside a skipped publish moved no tag, so it is reported
+# under the generic text.
+rc=$(RUN_EVENT=push run_script "cancelled skipped" "$NONE" "$FIX_PUSH_LEG_CANCELLED")
+assert_rc      "push cancelled leg exits 0" 0 "$rc"
+assert_call    "a cancelled leg beside a skipped publish opens an issue" '^issue create .*--title Push build failed: \(see the run summary'
+
+# 7d. An open issue: comment on the oldest, whichever kind opened it.
+rc=$(RUN_EVENT=push run_script "failure failure" "$TWO" "$FIX_PUSH_LEG_FAIL")
+assert_rc      "push failure/open exits 0" 0 "$rc"
+assert_call    "a failed push build comments on the oldest open issue" '^issue comment 41 --body A push build failed in: noble publish  Run: '
+assert_no_call "  ... and opens no second issue"              '^issue create '
+
+# 7e. A green push build touches nothing, whether or not an issue is open.
+rc=$(RUN_EVENT=push run_script "success success" "$TWO" "$FIX_PUSH_GREEN")
+assert_rc      "push green/open exits 0" 0 "$rc"
+assert_no_gh   "a green push build leaves an open issue alone"
+rc=$(RUN_EVENT=push run_script "success success" "$NONE" "$FIX_PUSH_GREEN")
+assert_rc      "push green/none exits 0" 0 "$rc"
+assert_no_gh   "a green push build with no open issue makes no gh call"
+
+# 8. A stale run: publish refused to attach tags and ended green. The notify job
+# passes `stale` in place of publish's result.
+
+# 8a. Nothing failed: neither opened, commented on, nor closed.
+rc=$(run_script "success stale success" "$TWO" "$FIX_ALL_GREEN")
+assert_rc      "stale/open exits 0" 0 "$rc"
+assert_no_gh   "a stale run leaves an open issue alone"
+assert_out     "  ... and says the run was stale"             'the run was stale'
+
+# 8b. keepalive failed beside a stale publish: reported as usual.
+rc=$(run_script "success stale failure" "$NONE" "$FIX_KEEPALIVE_FAIL")
+assert_rc      "stale beside a failure exits 0" 0 "$rc"
+assert_call    "a failure beside a stale publish opens an issue" '^issue create .*--title Weekly run failed: keepalive --body '
+
+# 9. The events that keep the scheduled wording and the close rule.
+for event in schedule workflow_dispatch; do
+    rc=$(RUN_EVENT=$event run_script failure "$NONE" "$FIX_ARM64_FAIL")
+    assert_rc      "$event failure exits 0" 0 "$rc"
+    assert_call    "$event failure keeps the weekly title" '^issue create .*--title Weekly run failed: noble publish --body '
+    rc=$(RUN_EVENT=$event run_script "success success success" "$TWO" "$FIX_ALL_GREEN")
+    assert_rc      "$event green exits 0" 0 "$rc"
+    assert_call    "$event green closes the open issue" '^issue close 41$'
+done
 
 # Usage error: fewer than two args exits 2 without calling gh.
 : > "$LOG"
