@@ -434,8 +434,7 @@ rc=$(RUN_EVENT=push run_script "failure failure" "$NONE" "$FIX_PUSH_LEG_FAIL")
 assert_rc      "push failure/none exits 0" 0 "$rc"
 assert_call    "a failed push build opens an issue with the push title" '^issue create .*--label ci-failure .*--title Push build failed: noble publish --body '
 assert_call    "  ... whose body opens with the push wording" '^issue create .*--body The push build failed in: noble publish  Run: '
-assert_call    "  ... and says a scheduled run closes it"     '^issue create .*next fully green scheduled run'
-assert_no_call "  ... and never calls it a weekly run"        'Weekly run failed|The scheduled run failed'
+assert_call    "  ... and says a scheduled run that moves the tags closes it" '^issue create .*next fully green scheduled run that moves the tags\.'
 
 # 7b. Only publish failed.
 rc=$(RUN_EVENT=push run_script "success failure" "$NONE" "$FIX_PUSH_PUBLISH_FAIL")
@@ -470,22 +469,12 @@ assert_no_gh   "a green push build with no open issue makes no gh call"
 rc=$(run_script "success stale success" "$TWO" "$FIX_ALL_GREEN")
 assert_rc      "stale/open exits 0" 0 "$rc"
 assert_no_gh   "a stale run leaves an open issue alone"
-rc=$(run_script "success stale success" "$NONE" "$FIX_ALL_GREEN")
-assert_rc      "stale/none exits 0" 0 "$rc"
-assert_no_gh   "a stale run with no open issue makes no gh call"
+assert_out     "  ... and says the run was stale"             'the run was stale'
 
-# 8b. Stale on a push run.
-rc=$(RUN_EVENT=push run_script "success stale" "$TWO" "$FIX_PUSH_GREEN")
-assert_rc      "stale push run exits 0" 0 "$rc"
-assert_no_gh   "a stale push run leaves an open issue alone"
-
-# 8c. keepalive failed beside a stale publish: reported as usual.
+# 8b. keepalive failed beside a stale publish: reported as usual.
 rc=$(run_script "success stale failure" "$NONE" "$FIX_KEEPALIVE_FAIL")
 assert_rc      "stale beside a failure exits 0" 0 "$rc"
 assert_call    "a failure beside a stale publish opens an issue" '^issue create .*--title Weekly run failed: keepalive --body '
-rc=$(run_script "success stale failure" "$TWO" "$FIX_KEEPALIVE_FAIL")
-assert_call    "  ... or comments on the open one"            '^issue comment 41 '
-assert_no_call "  ... and never closes it"                    '^issue close '
 
 # 9. The events that keep the scheduled wording and the close rule.
 for event in schedule workflow_dispatch; do

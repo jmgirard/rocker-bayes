@@ -24,13 +24,12 @@ WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
 # The stub: `gh run view <id> --json jobs`. $WORK/jobs/<id> holds that run's
-# listing; $WORK/jobs/<id>.fail makes the read fail. It logs each id it is asked
-# for. Anything else it is asked exits 64, so an unexpected call is a failure.
+# listing; $WORK/jobs/<id>.fail makes the read fail. Anything else it is asked
+# exits 64, so an unexpected call is a failure.
 mkdir -p "$WORK/bin" "$WORK/jobs"
 cat > "$WORK/bin/gh" <<'EOF'
 #!/usr/bin/env bash
 [ "$1 $2 $4 $5" = "run view --json jobs" ] || { echo "gh stub: unexpected call: $*" >&2; exit 64; }
-echo "$3" >> "$GH_STUB_DIR/calls"
 if [ -e "$GH_STUB_DIR/$3.fail" ]; then echo "HTTP 502" >&2; exit 1; fi
 if [ -e "$GH_STUB_DIR/$3" ]; then cat "$GH_STUB_DIR/$3"; exit 0; fi
 printf '%s' '{"jobs":[{"name":"publish","steps":[{"name":"Attach the tags","conclusion":"success"}]}]}'
@@ -107,17 +106,13 @@ expect "a newest createdAt that is not RFC 3339 is 'unknown'" unknown "unparseab
 
 NEW=2026-10-05T15:48:59Z
 OLD=2026-09-28T15:14:55Z
-OLDER=2026-09-21T15:00:00Z
 ATTACH_SKIPPED='{"jobs":[{"name":"build (noble, amd64)","steps":[{"name":"Checkout","conclusion":"success"}]},{"name":"publish","steps":[{"name":"Attach the tags","conclusion":"skipped"}]}]}'
 NO_ATTACH_STEP='{"jobs":[{"name":"publish","steps":[{"name":"Checkout","conclusion":"success"}]}]}'
 
-# 7. A stale run ended green and moved no tag, so the next older run answers,
-# wherever the stale run sits in the list.
+# 7. A stale run ended green and moved no tag, so the next older run answers.
 clear_listings; set_listing "$NEW" "$ATTACH_SKIPPED"
 expect "a newer stale run is passed over" 2026-09-28 "" \
     "[$(run $NEW success schedule),$(run $OLD success schedule)]"
-expect "  ... in a list that is not newest first too" 2026-09-28 "" \
-    "[$(run $OLD success schedule),$(run $NEW success schedule)]"
 
 # 8. Every successful run was stale.
 clear_listings; set_listing "$NEW" "$ATTACH_SKIPPED"; set_listing "$OLD" "$ATTACH_SKIPPED"
@@ -137,8 +132,8 @@ expect "a failed listing read is 'unknown'" unknown "could not read the job list
 clear_listings; set_listing "$NEW" "<html>Bad gateway</html>"
 expect "a listing that is not JSON is 'unknown'" unknown "unreadable job listing" \
     "[$(run $NEW success schedule),$(run $OLD success schedule)]"
-clear_listings; set_listing "$NEW" '{"message":"Not Found"}'
-expect "a JSON answer with no jobs is 'unknown'" unknown "unreadable job listing" \
+clear_listings; set_listing "$NEW" '{"jobs":[{"steps":["oops"]}]}'
+expect "a job listing jq cannot process is 'unknown'" unknown "unreadable job listing" \
     "[$(run $NEW success schedule),$(run $OLD success schedule)]"
 clear_listings
 expect "a successful run with no id is 'unknown'" unknown "no run id" \
@@ -149,18 +144,6 @@ expect "a successful run with no id is 'unknown'" unknown "no run id" \
 clear_listings; set_read_fails "$OLD"
 expect "an unreadable listing past the answer does not matter" 2026-10-05 "" \
     "[$(run $NEW success schedule),$(run $OLD success schedule)]"
-want_calls="$(run_id "$NEW")"
-if [ "$(cat "$WORK/jobs/calls")" = "$want_calls" ]; then
-    echo "ok:   ... and only the newest run's listing was read"
-else
-    echo "FAIL:   ... expected one read of $want_calls, got: $(tr '\n' ' ' < "$WORK/jobs/calls")"
-    fails=$((fails + 1))
-fi
-
-# 12. The walk goes through a stale run in date order, not list order.
-clear_listings; set_listing "$NEW" "$ATTACH_SKIPPED"
-expect "the run after a stale one is the next newest" 2026-09-28 "" \
-    "[$(run $OLDER success schedule),$(run $NEW success schedule),$(run $OLD success schedule)]"
 
 if [ "$fails" -ne 0 ]; then
     echo "FAILED: $fails assertion(s)"; exit 1

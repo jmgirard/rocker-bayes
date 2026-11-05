@@ -161,8 +161,8 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   run's failed jobs once, for scheduled runs only, and only for the mirror
   symptom: every failed build leg failed at its build step with
   `Command still failing after` in its log, and publish failed at most at its
-  digest count. Attempt 1 still opens the issue, and a green attempt 2 closes
-  it. A rerun works only while attempt 1's digest artifacts exist, which is 1
+  digest count. Attempt 1 still opens the issue, and a green attempt 2 that is
+  not stale closes it. A rerun works only while attempt 1's digest artifacts exist, which is 1
   day (`retention-days: 1`), because publish reads the green legs' digests
   from them.
 - Container is intentionally root-capable (passwordless sudo); safety comes

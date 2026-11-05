@@ -67,15 +67,16 @@ done <<< "$candidates"
 
 while IFS=$'\t' read -r c id; do
     [ -n "$id" ] || warn_unknown "the run from $c has no run id"
-    if ! listing="$(gh run view "$id" --json jobs)"; then
+    if ! listing="$(gh run view "$id" --json jobs </dev/null)"; then
         warn_unknown "could not read the job listing of run $id"
     fi
-    if ! printf '%s' "$listing" | jq -e 'type == "object" and (.jobs | type == "array")' >/dev/null 2>&1; then
+    # jq stops with an error on anything that is not a job listing.
+    if ! attached="$(printf '%s' "$listing" | jq '
+        [.jobs[] | .steps[]? | select(.name == "Attach the tags") | .conclusion]
+        | any(. == "success")' 2>/dev/null)"; then
         warn_unknown "run $id has an unreadable job listing"
     fi
-    if printf '%s' "$listing" | jq -e '
-        [.jobs[]? | .steps[]? | select(.name == "Attach the tags") | .conclusion]
-        | any(. == "success")' >/dev/null; then
+    if [ "$attached" = "true" ]; then
         echo "${c%%T*}"
         exit 0
     fi

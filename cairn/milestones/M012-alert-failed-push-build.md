@@ -45,9 +45,9 @@ A failed `docker.yml` push build reports through the `ci-failure` issue, and a s
 - AC2 → T1, T2, T5
 - AC3 → T1, T5
 - AC4 → T1, T2, T5
-- AC5 → T3, T5
+- AC5 → T3, T5, T6
 - AC6 → T2, T5
-- AC7 → T1, T3, T4, T5
+- AC7 → T1, T3, T4, T5, T6
 
 ## Tasks
 
@@ -56,6 +56,7 @@ A failed `docker.yml` push build reports through the `ci-failure` issue, and a s
 - [x] T3: In `.github/last-success.sh`, walk the successful scheduled runs newest first and read each one's job listing with `gh run view` until one has "Attach the tags" at `success`, tests first. In `rebuild-gap.yml`, add `databaseId` to the run list. Update the headers and comments. The existing `test_last_success.sh` cases gain a stub.
 - [x] T4: Update `cairn/DESIGN.md`'s bullets "No tag moves back to an older recipe" and "A failed or missing rebuild opens an issue", including the startup-failure limit.
 - [x] T5: Run the drills, finished before the scheduled run of Monday 2026-11-09, which could close the drill issue. Use a throwaway branch `m012-drill`, never merged, with a temporary `push` trigger for that branch. Temporary edits for a green push run: widen `publish`'s `if` to admit the branch, hard-code `verdict=fresh`, and replace "Attach the tags" with an echo, because a push run has no `test_mode` and an unblocked step moves real tags. A drill run may stub the build legs and publish gates, because it tests the `notify` wiring. In order: (a) a planted-failure push run opens the issue, then read the label with `gh label list`; (b) a green push run leaves the issue; (c) a dispatch with `notify` set is cancelled while a leg builds; (d) a real `test_mode` dispatch with `notify` set on the milestone branch reads stale and leaves the issue; (e) a real `rebuild-gap.yml` dispatch on the milestone branch prints a date; (f) a forced-fresh `test_mode` dispatch with `notify` set closes the issue, with a real "Attach the tags" step. Then delete the drill branch and make sure that no moving tag changed.
+- [x] T6: Fix review return 1. In `last-success.sh`, make a listing jq cannot process print `unknown`, with a regression case, and give `gh` no stdin. Apply the fix-now items in the Review section: the attempt-2 text in `docker.yml` and `DESIGN.md`, the `rebuild-gap.yml` wording, the `subject` doc, and the tests the rulebook excludes.
 
 ## Work log
 
@@ -88,6 +89,7 @@ A failed `docker.yml` push build reports through the `ci-failure` issue, and a s
 - 2026-11-05: claim audit re-read: all 13 hold. The issue body still omits that a `notify` dispatch can close the issue, left for the row "Fix notify on cancels and dispatches", which already names that text.
 - 2026-11-05: review return 1: AC5 fails: a job listing that jq cannot process, `{"jobs":[{"steps":["oops"]}]}`, makes `last-success.sh` go on to the next run and print `none` instead of `unknown` (diff-bug #6). The return also carries the fix-now items in the Review section.
 - 2026-11-05: throwaway branch `m012-drill2`, deleted, run 41989546885 settled diff-bug #1: `notify` runs after a leg timeout. Its notify step only echoed, so it wrote no issue.
+- 2026-11-05: T6 done. `last-success.sh` reads a listing with one `jq` that stops on anything but a job listing, so `{"jobs":[{"steps":["oops"]}]}` prints `unknown`. `{"jobs":[]}` stays readable with no such step and is passed over: a completed run with no jobs has not been seen. Tests cut per the Review section's fix-now lines; the assertion pinned to the new issue body.
 
 ## Decisions
 

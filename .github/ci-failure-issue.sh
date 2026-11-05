@@ -36,8 +36,8 @@
 #             names no failed job is warned about when the result is a failure
 #             and no subject is given.
 #   subject   what the issue is about, as one sentence. Given, it replaces the
-#             "Weekly run failed: <jobs>" wording in the title and in the lead
-#             line of the body or comment. A caller reporting something other
+#             "Weekly run failed: <jobs>" or "Push build failed: <jobs>" wording
+#             in the title and in the lead line of the body or comment. A caller reporting something other
 #             than a failed job passes one, and usually passes "" as jobs-json.
 #             It is trimmed to its first line and to 256 characters.
 # Env: GH_TOKEN (or a logged-in `gh`) with issues:write on the repo.

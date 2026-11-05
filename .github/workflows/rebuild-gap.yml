@@ -2,8 +2,9 @@ name: Check the weekly rebuild is not stale
 
 # docker.yml's `notify` job reports on a run that happened. A run that never
 # happens reports nothing. This workflow measures how long it has been since a
-# scheduled docker.yml rebuild last succeeded, so a disabled schedule, a deleted
-# workflow, and weeks of red builds all raise the same ci-failure issue.
+# scheduled docker.yml rebuild last succeeded and moved the tags, so a disabled
+# schedule, a deleted workflow, and weeks of red builds all raise the same
+# ci-failure issue.
 #
 # Its bound: this workflow is itself on a schedule, so when GitHub disables the
 # repository's scheduled workflows it stops too. docker.yml's `keepalive` job
@@ -23,7 +24,7 @@ on:
   workflow_dispatch:
     inputs:
       last_success_date:
-        description: "Use this YYYY-MM-DD date as the last successful scheduled rebuild instead of looking it up. A date more than the threshold days before today raises the alert. Leave empty to look up the real date."
+        description: "Use this YYYY-MM-DD date as the last successful scheduled rebuild that moved the tags instead of looking it up. A date more than the threshold days before today raises the alert. Leave empty to look up the real date."
         type: string
         default: ""
       threshold_days:
