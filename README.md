@@ -60,9 +60,11 @@ environment (e.g. a course), pin an immutable tag instead — see
 - [bayesplot](https://mc-stan.org/bayesplot/)
 - [BayesFactor](https://richarddmorey.github.io/BayesFactor/)
 - [easystats](https://easystats.github.io/easystats/)
+- [effects](https://cran.r-project.org/package=effects)
 - [emmeans](https://rvlenth.github.io/emmeans/)
 - [ggeffects](https://strengejacke.github.io/ggeffects/)
 - [marginaleffects](https://marginaleffects.com/)
+- [patchwork](https://patchwork.data-imaginist.com/)
 - [shinystan](https://mc-stan.org/shinystan/)
 - [tidybayes](https://mjskay.github.io/tidybayes/)
 
