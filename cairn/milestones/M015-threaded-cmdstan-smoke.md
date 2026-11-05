@@ -40,27 +40,27 @@ control proves the step goes red when `/opt/cmdstan` loses its group write bit.
 
 ## Acceptance criteria
 
-- [ ] AC1: A run of `.github/smoke-test.sh` against an image built from the
+- [x] AC1: A run of `.github/smoke-test.sh` against an image built from the
       branch (`docker build -t rocker-bayes:dev .`) exits 0, and its phase 3
       output shows, after the existing unthreaded run, a build with
       `stan_threads` on as the `rstudio` user that wrote
       `src/cmdstan/main_threads.o` under `cmdstan_path()` and then sampled
       with `threads_per_chain = 2`.
-- [ ] AC2: Against an image built `FROM rocker-bayes:dev` with
+- [x] AC2: Against an image built `FROM rocker-bayes:dev` with
       `RUN chmod -R g-w /opt/cmdstan`, the script exits non-zero, its FAIL
       line is the new phase 3 threaded-build line rather than the existing
       "passed stanc but the C++ build failed" line, and the output above it
       shows a permission error on `main_threads.o`.
-- [ ] AC3: A `docker.yml` dispatch on the branch with `test_mode=true` passes
+- [x] AC3: A `docker.yml` dispatch on the branch with `test_mode=true` passes
       the smoke step on all four legs (noble and resolute, each on amd64 and
       arm64), and each leg's smoke log shows the threaded build's output from
       AC1.
-- [ ] AC4: The phase 3 description in the header comment of
+- [x] AC4: The phase 3 description in the header comment of
       `.github/smoke-test.sh` and the CI / publish bullet of `cairn/DESIGN.md`
       each say that phase 3 also builds and samples a threaded model as
       `rstudio`, and that this build fails when `rstudio` cannot write
       `main_threads.o` into the CmdStan tree.
-- [ ] AC5: The profile's verify slot is clean: `hadolint Dockerfile` reports
+- [x] AC5: The profile's verify slot is clean: `hadolint Dockerfile` reports
       nothing and `docker build` succeeds; shellcheck at the version
       `.github/workflows/lint.yml` pins reports nothing on
       `.github/smoke-test.sh`.
@@ -127,3 +127,12 @@ control proves the step goes red when `/opt/cmdstan` loses its group write bit.
 ## Decisions
 
 ## Review
+
+Pass 1, 2026-11-05, branch head 243eca2, no PR yet, Copilot round off.
+
+- AC1: `docker build -t rocker-bayes:dev .` at 243eca2 (arm64, image c9b015572be6), then `SMOKE_PORT=18787 bash .github/smoke-test.sh rocker-bayes:dev` exited 0 with all four PASS lines. Phase 3 printed "theta posterior mean 0.3988" and then "threaded build: wrote /opt/cmdstan/cmdstan-2.40.0/src/cmdstan/main_threads.o" and "threaded sample: 1 chain, threads_per_chain = 2". The script runs phase 3 with `docker exec -u rstudio`.
+- AC2: an image from `FROM rocker-bayes:dev` + `RUN chmod -R g-w /opt/cmdstan` (df091536b12c): the script exited 1. The unthreaded run passed (theta 0.3988), make printed "Fatal error: can't create src/cmdstan/main_threads.o: Permission denied", and the FAIL line was "phase 3 (cmdstan) - the threaded build of bernoulli.stan failed; …", not the "passed stanc but the C++ build failed" line. Throwaway tag removed.
+- AC3: `gh run view 42115360063` reads success, event workflow_dispatch, head df22016; `git diff --quiet df22016 HEAD -- . ':!cairn'` shows no code change since. The publish job ran on a branch ref, which its `if:` admits only with `inputs.test_mode`, and its fresh check read stale, so no tag was attached. Each of the four build legs (noble and resolute, amd64 and arm64) passed its smoke step and logged the two threaded lines from AC1 and the phase 3 PASS line.
+- AC4: `.github/smoke-test.sh` lines 15-19 say that a second build with stan_threads on, as rstudio, compiles and samples with 2 threads per chain, writes main_threads.o into the CmdStan tree, and fails when rstudio cannot write there. `cairn/DESIGN.md` lines 62-64 say the same of the CI / publish bullet's CmdStan phase.
+- AC5: `hadolint` (container, stdin Dockerfile) printed nothing; shellcheck 0.11.0 (the `SHELLCHECK_VERSION` in lint.yml) printed nothing on `.github/smoke-test.sh`; `docker build -t rocker-bayes:dev .` succeeded under AC1.
+- Gate: `cairn_validate.py` all checks passed. No IP/GP text changed, so `cairn_impact` was skipped. Profile gate: build and hadolint as under AC1 and AC5; the Dockerfile is unchanged, with base `jmgirard/rstudio2u:${BASE_TAG}` (default `noble`, an explicit tag), no secret added, and `.dockerignore` present; changelog slot is none, and the diff changes no image content.
