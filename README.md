@@ -100,7 +100,7 @@ be installed and running.
 > files and settings) in a Docker named volume, so it survives stopping,
 > restarting, and even updating to a newer image. CmdStan lives in the image at
 > `/opt/cmdstan`, outside that volume, so an update also brings the image's
-> CmdStan. R packages that you install are also outside that volume. See
+> CmdStan. By default, R packages that you install are also outside that volume. See
 > [Keeping installed packages](#keeping-installed-packages). To wipe the volume
 > and start completely fresh, run `docker compose down -v`.
 
@@ -156,7 +156,7 @@ If you would rather work directly in a folder on your own computer, replace the
 ## Adding R Packages
 
 Thanks to [bspm](https://cloud.r-project.org/package=bspm), packages install as
-precompiled binaries — fast, with no compiling.
+precompiled binaries when r2u has them — fast, with no compiling.
 
 **Interactively (in a running container):**
 
@@ -193,14 +193,14 @@ Dockerfile are in your image, so every new container has them.
 
 ### Keeping installed packages
 
-The home volume holds only `/home/rstudio`. Everything else exists only as long
-as the container does. This includes the R packages you install and the libraries
-from `sudo apt install`.
+The home volume holds only `/home/rstudio`. Any change that you make outside that
+folder exists only as long as the container does. By default, this includes the R
+packages you install. It also includes the libraries from `sudo apt install`.
 
 In the Compose setup, if you stop and start the container with the `stop_...` and
-`start_...` files, those items stay. Each time Compose replaces the container,
-those items are lost. The files in your home volume remain. These actions replace
-the container:
+`start_...` files, those items stay, unless the start file downloads a newer
+image. Each time Compose replaces the container, those items are lost. The files
+in your home volume remain. For example, these actions replace the container:
 
 - You run `docker compose down`, then `docker compose up -d`.
 - A newer image arrives. The start files download the newest image each time they
@@ -221,8 +221,7 @@ After Compose replaces the container, run `source("~/my_packages.R")` in the
 RStudio console.
 
 To keep packages with `docker run`, bake them into your own image with the
-Dockerfile above. The Compose file and the start files use the published image,
-not yours.
+Dockerfile above. The start files use the published image, not yours.
 
 ## Reproducibility
 
@@ -308,7 +307,8 @@ port replaces the container. See
 **How do I update to the latest version?**
 `docker compose pull` (the launchers do this for you) or
 `docker pull jmgirard/rocker-bayes`. Your work in the home volume is preserved.
-You lose the R packages that you installed, so install them again. See
+When the next start file or `docker compose up -d` replaces the container, you
+lose the R packages that you installed. Then install them again. See
 [Keeping installed packages](#keeping-installed-packages).
 
 **My home volume has a `.cmdstan` folder. Do I still need it?**
