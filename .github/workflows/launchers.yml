@@ -6,7 +6,7 @@ name: Launchers
 # this guard too, with the other suites in .github/tests/.
 on:
   pull_request:
-    branches: [main]
+    branches: [main, "m013-*"]
     paths:
       - "**.bat"
       - ".gitattributes"
