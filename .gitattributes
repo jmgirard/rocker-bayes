@@ -1,8 +1,8 @@
 * text=auto eol=lf
 
-# Windows batch files need CRLF line endings to run reliably. Under `-text`, git
-# converts no bytes on checkout or in `git archive`, so a .bat file ships as CRLF
-# only when its blob holds CRLF. Guarded by
+# Windows batch files need CRLF line endings to run reliably, also for users of
+# the README's Download ZIP path. `-text` makes git keep a .bat file's bytes as
+# committed, so the blob itself must hold CRLF. Guarded by
 # .github/tests/test_launcher_line_endings.sh.
 *.bat -text
 *.cmd -text

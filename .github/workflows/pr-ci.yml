@@ -42,9 +42,9 @@ concurrency:
 jobs:
   # The offline suites for the scripts docker.yml, rebuild-gap.yml, and
   # rebuild-retry.yml call without anyone watching, plus the CmdStan pin and
-  # the CmdStan step of scripts/install_bayes.sh. They stub commands (gh, git,
-  # R), build throwaway git repositories, or read files, and need no image, so
-  # they run as their own job and report in seconds rather than after a build.
+  # the CmdStan step of scripts/install_bayes.sh and the launcher line endings
+  # in the git blobs. They stub commands (gh, git, R), build throwaway git
+  # repositories, or read files, and need no image, so they run as their own job and report in seconds rather than after a build.
   script-tests:
     name: offline script suites
     runs-on: ubuntu-latest

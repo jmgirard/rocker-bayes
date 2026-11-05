@@ -33,9 +33,10 @@ fi
 for f in "${bats[@]}"; do
     # Count total lines (\n) vs. lines ending in CR. Equal and non-zero means that
     # every line is CRLF-terminated. Fewer CRLF than total means at least one bare
-    # LF.
+    # LF. The appended x keeps a final CR with no LF after it from counting as a
+    # CRLF, which would hide one bare LF.
     n_lf="$(git cat-file -p ":$f" | wc -l | tr -d ' ')"
-    n_crlf="$(git cat-file -p ":$f" | grep -c $'\r$' || true)"
+    n_crlf="$({ git cat-file -p ":$f"; printf x; } | grep -c $'\r$' || true)"
     if [ "$n_lf" -eq 0 ]; then
         echo "FAIL: $f — blob has no line breaks at all"; fails=$((fails + 1)); continue
     fi

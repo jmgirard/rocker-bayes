@@ -83,9 +83,10 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   `test_install_cmdstan.sh`, which sources `scripts/install_bayes.sh` with
   stubbed commands. `.github/workflows/lint.yml` runs a pinned
   shellcheck over every tracked `*.sh` and `*.command` file.
-  `.github/workflows/launchers.yml` runs `test_launcher_line_endings.sh`, with
-  no image build, on a pull request that touches a `.bat` file or
-  `.gitattributes`. All three workflows
+  `.github/workflows/launchers.yml` runs `test_launcher_line_endings.sh` on a
+  pull request that touches a `.bat` file, `.gitattributes`, that test, or the
+  workflow. A `.bat` or `.gitattributes` change alone starts no image build.
+  All three workflows
   declare a concurrency group keyed on the workflow and the pull request
   number with `cancel-in-progress: true`, so a new push cancels that pull
   request's older run. `.github/dependabot.yml` keeps the action pins current.
@@ -106,7 +107,8 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   deprecation period and a README notice.
 - Launcher code (`start_*`, `stop_*`, `launcher_common.sh`) is synced from
   rstudio2u, whose test suite verifies it; tests are ported here only when a
-  file diverges. `.bat` files are stored CRLF (`.gitattributes`).
+  file diverges. `.bat` files are stored CRLF (`.gitattributes`). The guard for
+  that is ported regardless, because rstudio2u's copy reads only its own blobs.
 - A weekly scheduled CI rebuild (no cache) picks up base-image updates; push
   builds use the GitHub Actions cache.
 - **No tag moves until every leg is verified.** Each build leg smoke-tests the
