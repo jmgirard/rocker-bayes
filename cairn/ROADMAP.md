@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-11-04 (triage pass: dropped as not worth keeping site-library setgid, manifest arch subset check, push paths filter row, os step read failure test, phase 2 exit 3 check; dropped as refuted premise keepalive secret comment, digest file names, smoke cleanup on cancel; promoted and moved to high persistence claim, push build alert, effects and patchwork list, CRLF guard cite; moved to parked with a condition CmdStan runtime files, publish guard hardening, required checks, lint suffix, dependabot validation, stage markers, untagged manifests; moved to low CmdStan tag check, alert scripts, host port probe; decision entry written; validate green)_
+_Last hygiene check: 2026-11-05 (M011 done: graduated "Fix the package persistence claim", pruned the M008 row; caps checked by hand; validate green)_
 
 ## Milestones
 
@@ -9,13 +9,11 @@ _Last hygiene check: 2026-11-04 (triage pass: dropped as not worth keeping site-
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M011 | Fix the package persistence claim | review | — | high | milestones/M011-package-persistence-claim.md |
+| M011 | Fix the package persistence claim | done | — | high | milestones/archive/M011-package-persistence-claim.md |
 | M010 | Give old home volumes the new CmdStan | done | — | high | milestones/archive/M010-cmdstan-out-of-home.md |
 | M009 | Assert each leg's OS matches its variant | done | — | high | milestones/archive/M009-leg-os-codename.md |
-| M008 | Pass CMDSTAN_VERSION to R via Sys.getenv | done | — | high | milestones/archive/M008-cmdstan-version-env.md |
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
-- [high] Fix the package persistence claim: README.md's "Packages installed this way persist in the home volume" (the bspm section) is false. As `rstudio`, `.libPaths()` starts at the staff-writable `/usr/local/lib/R/site-library`, and bspm installs apt binaries under `/usr/lib/R/site-library`. Both are outside `/home/rstudio`, so installed packages are lost when the container is recreated or the image updates. Correct the text, or give the user library a home in the volume — added 2026-10-20 — M010 claim audit, M010 review blame-history #2, ripple #1 — started M011
 - [high] Alert on a failed docker.yml push build: A failed push build of `docker.yml` alerts no one, because `notify` runs only on scheduled runs and opted-in dispatches. A broken recipe merged to main leaves the tags on the older image with no issue opened. A green stale run also closes an open ci-failure issue and counts as a rebuild in `rebuild-gap`, even when the newer push build failed — added 2026-09-13 — M005 plan, M005 review O2
 - [high] List effects and patchwork in the README: Roster drift: `effects` and `patchwork` are baked in but absent from the README package list; list them under a category or drop them (GP1) — added 2026-09-03 — scripts/install_bayes.sh, README.md
 - [high] Port the CRLF guard or drop its cite: `.gitattributes` cites `scripts/tests/test_launcher_line_endings.sh`, which was not ported; fix the comment or port the guard (GP7) — added 2026-09-03 — cairn/DESIGN.md Known issues
