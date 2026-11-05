@@ -26,7 +26,7 @@ on:
         type: string
         default: "50"
       notify:
-        description: "Run the notify job on this dispatch, as a scheduled run does. It opens, comments on, or closes the ci-failure issue from this run's results. A fully green dispatch closes an open issue."
+        description: "Run the notify job on this dispatch, as a scheduled run does. It opens, comments on, or closes the ci-failure issue from this run's results. A fully green dispatch closes an open issue. A dispatch whose publish job finds a newer recipe on the default branch leaves the issue as it is, unless another job failed."
         type: boolean
         default: false
 
@@ -209,6 +209,10 @@ jobs:
       && needs.build.result != 'skipped'
       && (github.ref == 'refs/heads/main' || inputs.test_mode)
     runs-on: ubuntu-latest
+    # `fresh` or `stale`, read by the notify job. Empty when the job ended
+    # before the freshness check.
+    outputs:
+      verdict: ${{ steps.fresh.outputs.verdict }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -307,8 +311,10 @@ jobs:
       # means the newer commit normally started its own push build.
       #
       # A stale run is not a failure: it attaches nothing, warns, and ends
-      # green, so a scheduled run does not open the ci-failure issue for it. A
-      # failed fetch leaves the recipe unknown, so the job fails. The rule is in
+      # green. It also moved no tag, so the notify job neither opens nor closes
+      # the ci-failure issue for it, and .github/last-success.sh does not count
+      # it as a rebuild. A failed fetch leaves the recipe unknown, so the job
+      # fails. The rule is in
       # .github/publish-guard.sh, tested by .github/tests/test_publish_guard.sh.
       # It runs in test mode too, so a branch dispatch shows its verdict. A
       # branch that edits one of the compared paths reads as stale.
@@ -340,19 +346,17 @@ jobs:
           esac
 
       # Both indexes passed, so attach the tags, unless the check above found
-      # a newer recipe. In test mode nothing is attached: the run has already
-      # exercised every leg, both assemblies, and all three guards, and the tag
-      # list it would have applied is printed above.
+      # a newer recipe. On a stale run this step shows as skipped, which is what
+      # .github/last-success.sh reads, so it must keep this name. In test mode
+      # nothing is attached: the run has already exercised every leg, both
+      # assemblies, and all three guards, and the tag list it would have applied
+      # is printed above.
       - name: Attach the tags
+        if: steps.fresh.outputs.verdict == 'fresh'
         env:
           TEST_MODE: ${{ inputs.test_mode }}
-          VERDICT: ${{ steps.fresh.outputs.verdict }}
         run: |
           set -euo pipefail
-          if [ "$VERDICT" != "fresh" ]; then
-            echo "the recipe paths differ between this run's commit and the tip of the default branch, so no tag was attached (see the warning above)"
-            exit 0
-          fi
           if [ "$TEST_MODE" = "true" ]; then
             echo "test mode: both manifest lists were assembled and checked, and no tag was attached"
             exit 0
@@ -425,13 +429,18 @@ jobs:
           echo "default branch tip is dated $commit_date; today is $today (UTC)"
           bash "$GITHUB_WORKSPACE/.github/keepalive.sh" "$commit_date" "$today" "$THRESHOLD"
 
-  # Report a scheduled run's outcome through the ci-failure issue: a failure
-  # opens it or comments on it, and a fully green run closes it. A dispatch runs
-  # this job too when its `notify` input is set.
+  # Report a run's outcome through the ci-failure issue: a failure opens it or
+  # comments on it, and a fully green scheduled run closes it. A push build
+  # reports a failure and writes nothing when it is green, because it builds
+  # from the cache and does not prove what a scheduled rebuild proves. A
+  # dispatch runs this job too when its `notify` input is set, and reports as a
+  # scheduled run does. A run whose publish job read `stale` moved no tag, so
+  # unless another job failed it neither opens nor closes the issue.
   #
-  # `needs` and RESULTS name every other job in this file. A job added to
-  # `needs` and not to RESULTS, or the reverse, is a job whose failure goes
-  # unreported.
+  # `needs` and RESULTS name every other job in this file, except that RESULTS
+  # leaves out `keepalive` on a push run, where that job is skipped by design
+  # and a skipped result would read as a failure. A job added to `needs` and not
+  # to RESULTS, or the reverse, is a job whose failure goes unreported.
   #
   # Every attempt reports. This file has no job that starts a new attempt of
   # the workflow, because GitHub refuses that request from a job inside the
@@ -441,12 +450,16 @@ jobs:
   # the failed jobs reruns this job too, so attempt 1 opens or comments on the
   # issue and a fully green attempt 2 closes it.
   #
-  # always() runs the job whatever the results are, including when a leg
-  # failed and publish was skipped.
+  # !cancelled() runs the job whatever the jobs before it did, including when a
+  # leg failed and publish was skipped. A run someone cancelled reports nothing.
   notify:
     name: notify
     needs: [build, publish, keepalive]
-    if: always() && (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.notify))
+    if: >-
+      !cancelled()
+      && (github.event_name == 'schedule'
+          || github.event_name == 'push'
+          || (github.event_name == 'workflow_dispatch' && inputs.notify))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -460,7 +473,13 @@ jobs:
       - name: Open, update, or close the ci-failure issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RESULTS: build=${{ needs.build.result }} publish=${{ needs.publish.result }} keepalive=${{ needs.keepalive.result }}
+          # `stale` needs the job's result too, so a publish job that failed
+          # after its freshness check still reports as a failure.
+          RESULTS: >-
+            build=${{ needs.build.result }}
+            publish=${{ needs.publish.result == 'success' && needs.publish.outputs.verdict == 'stale' && 'stale' || needs.publish.result }}
+            ${{ github.event_name != 'push' && format('keepalive={0}', needs.keepalive.result) || '' }}
+          RUN_EVENT: ${{ github.event_name }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
