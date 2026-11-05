@@ -243,7 +243,7 @@ yours.
 
 `latest`, `noble`, and `resolute` are **moving** tags that update as new versions
 of R, RStudio, CmdStan, and the R packages are released. For a setting where
-everyone should get an identical environment, pin a **date tag** from an earlier
+everyone needs an identical environment, pin a **date tag** from an earlier
 day or an image digest instead:
 
 | Tag pattern           | Example                   | Keeps                    | Moves                                    |
@@ -255,7 +255,7 @@ CI names a date tag for the UTC day on which its publish job runs. A second
 publish on that day moves the tag to the newer image, so choose a date from an
 earlier day.
 
-A CmdStan tag keeps only the CmdStan version. R, RStudio, and the R packages
+A CmdStan tag keeps only the CmdStan version. R, RStudio, and the R packages can
 change with each publish while that version is the one the
 [`Dockerfile`](Dockerfile) pins. After a newer version is pinned, the old tag stays
 on the last image published with it.
@@ -264,16 +264,21 @@ Use a tag in `docker run`, in `docker-compose.yml`, or as the `FROM` line of a
 derivative image. Browse the
 [available tags](https://hub.docker.com/r/jmgirard/rocker-bayes/tags) on Docker Hub.
 
+To pin with Compose, change the `image:` line in `docker-compose.yml`, then use the
+start files or `docker compose pull` and `docker compose up -d`. Do not use
+`docker compose up --build` with a pin. That command builds a new image from the
+`Dockerfile` and gives it the name on the `image:` line.
+
 An image digest is the one pin that never moves, because it identifies the exact
-image contents. To get a tag's digest, run this command and copy the `Digest:` line
-at the top of its output:
+image contents. To get a tag's digest, run this command:
 
 ```
 docker buildx imagetools inspect jmgirard/rocker-bayes:noble-2026-11-02
 ```
 
-Then use `jmgirard/rocker-bayes@sha256:<digest>` in place of the tag. The digest
-covers both amd64 and arm64.
+Near the top of the output, the `Digest:` line shows `sha256:<digest>`. Use
+`jmgirard/rocker-bayes@sha256:<digest>` in place of the tag. The digest covers both
+amd64 and arm64.
 
 The image is rebuilt weekly by CI, so the Docker date tags are the record of
 *builds*. The [GitHub releases](https://github.com/jmgirard/rocker-bayes/releases)

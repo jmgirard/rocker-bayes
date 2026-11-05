@@ -1,6 +1,6 @@
 # M014: Stop calling the CmdStan tag immutable
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -67,6 +67,7 @@ The README and design file say truthfully which Docker tags can move, so a user 
 - 2026-11-05: T2 done: the Reproducibility table says what each tag keeps and when it moves, and the section adds the digest pin. Chose `imagetools inspect` with no `--format` flag because a `{{...}}` argument in single quotes does not work in Windows `cmd`; a run on `noble-2026-11-02` printed the index digest and both platforms.
 - 2026-11-05: T3 done: DESIGN.md drops the word, IP4 and GP2 use D-006's wording, and the Tags convention states when each tag moves.
 - 2026-11-05: T4 done: the commands of AC2 to AC5 and AC7 passed on the branch, and `test_cmdstan_pin.sh` found 3 references. The lint hook's hits on lines this branch wrote are fixed. Its other README hits are older text, left alone as out of scope, and now candidate row "Clear the README's plain-English hits".
+- 2026-11-05: claim audit: 15 claims read, 2 corrected — README.md. Corrected "change with each publish" to "can change", because push builds use the cache, and the digest wording, because the `Digest:` line already holds `sha256:` and pasting it whole gave `@sha256:sha256:`. The reader also found that `up --build` ignores a pin, so T2 adds a Compose paragraph, a minor amendment; its re-read and a dry run confirmed all three on a tag pin, with `start_linux.sh` read and the other start files checked by grep.
 - 2026-11-05: collision sweep: candidate row absorbed. D-002 and D-001 use the word, corrected by D-006. Row "Prune untagged manifests from dispatches" gains a note, because pruning can break a digest pin. Inbox sweep: 0 open issues, 0 open pull requests, so no assignment option. No release-shaped or checker-regress hit.
 
 ## Decisions

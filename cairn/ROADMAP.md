@@ -9,7 +9,7 @@ _Last hygiene check: 2026-11-05 (M013 done: graduated "Port the CRLF guard or dr
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M014 | Stop calling the CmdStan tag immutable | in-progress | — | normal | milestones/M014-cmdstan-tag-claim.md |
+| M014 | Stop calling the CmdStan tag immutable | review | — | normal | milestones/M014-cmdstan-tag-claim.md |
 | M013 | Port the CRLF guard | done | — | high | milestones/archive/M013-port-crlf-guard.md |
 | M012 | Alert on a failed docker.yml push build | done | — | high | milestones/archive/M012-alert-failed-push-build.md |
 | M011 | Fix the package persistence claim | done | — | high | milestones/archive/M011-package-persistence-claim.md |
