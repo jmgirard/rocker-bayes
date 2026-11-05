@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-11-05 (M012 planned: two parked rows added; M011 done, graduated "Fix the package persistence claim", pruned the M008 row; validate green)_
+_Last hygiene check: 2026-11-05 (M012 done: graduated "Alert on a failed docker.yml push build", narrowed "Fix notify on cancels and dispatches", pruned the M009 row; caps checked by hand; validate green)_
 
 ## Milestones
 
@@ -9,13 +9,11 @@ _Last hygiene check: 2026-11-05 (M012 planned: two parked rows added; M011 done,
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M012 | Alert on a failed docker.yml push build | review | — | high | milestones/M012-alert-failed-push-build.md |
+| M012 | Alert on a failed docker.yml push build | done | — | high | milestones/archive/M012-alert-failed-push-build.md |
 | M011 | Fix the package persistence claim | done | — | high | milestones/archive/M011-package-persistence-claim.md |
 | M010 | Give old home volumes the new CmdStan | done | — | high | milestones/archive/M010-cmdstan-out-of-home.md |
-| M009 | Assert each leg's OS matches its variant | done | — | high | milestones/archive/M009-leg-os-codename.md |
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
-- [high] Alert on a failed docker.yml push build: A failed push build of `docker.yml` alerts no one, because `notify` runs only on scheduled runs and opted-in dispatches. A broken recipe merged to main leaves the tags on the older image with no issue opened. A green stale run also closes an open ci-failure issue and counts as a rebuild in `rebuild-gap`, even when the newer push build failed — added 2026-09-13 — M005 plan, M005 review O2 — started M012
 - [high] List effects and patchwork in the README: Roster drift: `effects` and `patchwork` are baked in but absent from the README package list; list them under a category or drop them (GP1) — added 2026-09-03 — scripts/install_bayes.sh, README.md
 - [high] Port the CRLF guard or drop its cite: `.gitattributes` cites `scripts/tests/test_launcher_line_endings.sh`, which was not ported; fix the comment or port the guard (GP7) — added 2026-09-03 — cairn/DESIGN.md Known issues
 - Correct the claim in rstudio2u too: rstudio2u's README line 105 and its `docker-compose.yml` comment say that installed R packages persist in the home volume, the claim M011 corrects here. The `stop_*` launcher messages, synced from that repo, say "resume where you left off", and a start launcher can bring a newer image that drops installed packages. Normal rung because the same users are misled there — added 2026-11-05 — M011 plan, audit finding 7
@@ -25,7 +23,7 @@ _Last hygiene check: 2026-11-05 (M012 planned: two parked rows added; M011 done,
 - [low] Check CmdStan matches the version tag: Nothing asserts that the CmdStan inside a built image is the version its `<variant>-cmdstan<v>` tag names. Smoke phase 3 prints `cmdstan_version()` and compares it with nothing. Compare it with the Dockerfile pin passed in from CI, not with the image's own `CMDSTAN_VERSION` ENV, which comes from the same build arg — added 2026-10-20 — M008 plan gate
 - [low] Make alert scripts fail loudly: Alerts that fail quietly: `ci-failure-issue.sh` reads `gh issue list` through process substitution, so a failed listing reads as "none open" and opens a duplicate or leaves an issue open. A `rebuild-gap.sh` refusal (exit 2) and a broken `ci-failure-issue.sh` in `notify` fail the job with no issue. `notify` strips `job=` with `sed | xargs`, so an empty result from a job misspelled in `RESULTS` is dropped and the rest can close the issue. A failed `rebuild-retry.yml` run adds nothing to the open issue, so the issue does not say the retry failed — added 2026-09-13 — M003 review O4, O11, N6, N7, M004 review O7
 - [low] Probe the host port in smoke phase 1: Phase 1 never touches the published host port when the image declares a HEALTHCHECK, because the healthcheck requests `localhost:8787` from inside the container. Add a host-side probe — added 2026-09-12 — M001 review F18
-- [low] Fix notify on cancels and dispatches: Dispatch and cancel side effects of `notify`: its `always()` gate reports a cancelled scheduled run (`cancelled skipped success`) as a failure. A branch dispatch with `notify` and without `test_mode` skips `publish` and opens an issue. A green `notify` dispatch, or a manual rerun of a scheduled run, closes a real issue whose text says only a scheduled run closes it. A `test_mode` dispatch moves no tag yet closes the issue, unlike a stale run. A by-hand `--failed` rerun's reuse of publish's `verdict` output has no drill — added 2026-09-13 — M003 review O2, P1, O3, O5, N4, M012 review diff-bug #4, #8 — started M012
+- [low] Fix notify on cancels and dispatches: Dispatch side effects of `notify`. A branch dispatch with `notify` and without `test_mode` skips `publish` and opens an issue. A green `notify` dispatch, or a manual rerun of a scheduled run, closes a real issue whose text says only a scheduled run closes it. A `test_mode` dispatch moves no tag yet closes the issue, unlike a stale run. A by-hand `--failed` rerun's reuse of publish's `verdict` output has no drill — added 2026-09-13 — M003 review O3, O5, N4, M012 review diff-bug #4, #8 — narrowed 2026-11-05 by M012
 - [low] Sync README to the Docker Hub page: Docker Hub description sync: a workflow that copies README.md to the Docker Hub page on push to main. Needs a Docker Hub token with read, write and delete scope — added 2026-09-11 — rstudio2u .github/workflows/dockerhub-description.yml
 - [low] Check the renv and bspm speed claim: README's Reproducibility section says `renv::restore()` is quick "since bspm still serves binaries". bspm hooks `install.packages()`, and renv may use its own installer. No one has run it. Run it and correct the text if it is false. Low rung because the failure is slow installs, not a lost package — added 2026-11-05 — M011 plan
 - [parked] Alert on a docker.yml startup failure: A push run that fails at startup, such as invalid workflow YAML, starts no job, so `notify` cannot report it. No workflow lints `docker.yml` before merge. A `workflow_run` alert could cover it; promote when a startup failure goes unreported — added 2026-11-05 — M012 plan
