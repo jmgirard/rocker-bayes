@@ -1,0 +1,35 @@
+name: Launchers
+
+# Runs the CRLF-in-blob guard on pull requests that can change what a Windows
+# launcher ships as. Kept separate from pr-ci.yml, whose paths filter starts an
+# image build, because a launcher-only change does not need one. pr-ci.yml runs
+# this guard too, with the other suites in .github/tests/.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "**.bat"
+      - ".gitattributes"
+      - ".github/tests/test_launcher_line_endings.sh"
+      - ".github/workflows/launchers.yml"
+
+permissions:
+  contents: read
+
+# A new push to a pull request cancels that pull request's run still in
+# progress. This workflow triggers on pull_request alone, so the number is
+# always set.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  line-endings:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Launcher CRLF-in-blob guard
+        run: bash ./.github/tests/test_launcher_line_endings.sh

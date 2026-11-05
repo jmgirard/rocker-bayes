@@ -82,7 +82,11 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   the offline suites in `.github/tests/` that it lists by name, among them
   `test_install_cmdstan.sh`, which sources `scripts/install_bayes.sh` with
   stubbed commands. `.github/workflows/lint.yml` runs a pinned
-  shellcheck over every tracked `*.sh` and `*.command` file. Both workflows
+  shellcheck over every tracked `*.sh` and `*.command` file.
+  `.github/workflows/launchers.yml` runs `test_launcher_line_endings.sh` on a
+  pull request that touches a `.bat` file, `.gitattributes`, that test, or the
+  workflow. A `.bat` or `.gitattributes` change alone starts no image build.
+  All three workflows
   declare a concurrency group keyed on the workflow and the pull request
   number with `cancel-in-progress: true`, so a new push cancels that pull
   request's older run. `.github/dependabot.yml` keeps the action pins current.
@@ -103,7 +107,8 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   deprecation period and a README notice.
 - Launcher code (`start_*`, `stop_*`, `launcher_common.sh`) is synced from
   rstudio2u, whose test suite verifies it; tests are ported here only when a
-  file diverges. `.bat` files are stored CRLF (`.gitattributes`).
+  file diverges. `.bat` files are stored CRLF (`.gitattributes`). The guard for
+  that is ported regardless, because rstudio2u's copy reads only its own blobs.
 - A weekly scheduled CI rebuild (no cache) picks up base-image updates; push
   builds use the GitHub Actions cache.
 - **No tag moves until every leg is verified.** Each build leg smoke-tests the
@@ -243,10 +248,8 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
 
 ## Known issues
 
-- Launcher tests were not ported from rstudio2u: `.gitattributes` cites
-  `scripts/tests/test_launcher_line_endings.sh`, which does not exist here.
-  The launchers and the CRLF guard are unverified in this repo (interview
-  2026-09-03).
+- Launcher tests other than the CRLF guard were not ported from rstudio2u, so
+  the launchers' behavior is unverified in this repo (interview 2026-09-03).
 - Newest-on-CRAN means a bad upstream release can break the weekly rebuild
   (rstanarm dev bug, 2025-01); a failed build leaves the old moving tag in
   place.
