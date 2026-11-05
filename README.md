@@ -89,7 +89,9 @@ The easiest way to run the server, good for classrooms and non-technical users.
 4. It downloads the latest image, starts the server, waits until it is ready,
    and opens <http://localhost:8787> in your browser (no username or password)
 5. When you are done, double-click the matching `stop_...` file. Your session is
-   preserved; run the start file again to resume.
+   preserved; run the start file again to resume. When the start file downloads
+   a newer image, you lose the R packages that you installed. See
+   [Keeping installed packages](#keeping-installed-packages).
 
 The launchers just wrap the Docker Compose commands below, so Docker Desktop must
 be installed and running.
@@ -98,8 +100,9 @@ be installed and running.
 > files and settings) in a Docker named volume, so it survives stopping,
 > restarting, and even updating to a newer image. CmdStan lives in the image at
 > `/opt/cmdstan`, outside that volume, so an update also brings the image's
-> CmdStan. To wipe the volume and start completely fresh, run
-> `docker compose down -v`.
+> CmdStan. R packages that you install are also outside that volume. See
+> [Keeping installed packages](#keeping-installed-packages). To wipe the volume
+> and start completely fresh, run `docker compose down -v`.
 
 ### Option 1: Pull and run from Docker Hub
 
@@ -113,7 +116,10 @@ be installed and running.
 
 3. Navigate to <http://localhost:8787> and enter username `rstudio` and password `pass`
 4. Whenever you use `install.packages()` or `update.packages()`, it will use bspm
-5. When done, open Docker Desktop and end the container
+5. When done, open Docker Desktop and end the container. This `docker run --rm`
+   command has no home volume, so your files and the packages you installed are
+   gone when the container ends. To keep your files, use the Quick start or
+   Option 2.
 6. Next time, you don't need to run `docker pull...` again
 
 ### Option 2: Clone, build, and compose
@@ -156,8 +162,10 @@ precompiled binaries — fast, with no compiling.
 
 - In the RStudio console, `install.packages("dplyr")` transparently pulls the
   binary via bspm; you don't need to do anything special.
-- Packages installed this way persist in the home volume (see above), so they
-  are still there next time you start the server.
+- By default, `install.packages()` puts packages in system library folders
+  outside the home volume: `/usr/lib/R/site-library` for bspm binaries and
+  `/usr/local/lib/R/site-library` for packages built from source. See
+  [Keeping installed packages](#keeping-installed-packages).
 - If a package needs a system library, open the RStudio **Terminal** and
   `sudo apt install <libfoo-dev>` (rarely needed — bspm resolves most
   dependencies for you).
@@ -171,13 +179,50 @@ preinstalled. Pin an immutable tag (see below) for reproducibility:
 FROM jmgirard/rocker-bayes:noble-cmdstan2.40.0
 
 # install.packages() uses bspm here too, so these are fast binary installs
-RUN Rscript -e 'install.packages(c("projpred", "loo", "priorsense"))'
+RUN Rscript -e 'install.packages(c("glmmTMB", "mice", "metafor"))'
 ```
 
 ```
 docker build -t my-course .
 docker run --rm -p 8787:8787 -e PASSWORD=pass my-course
 ```
+
+This `docker run --rm` command has no home volume, so your files and the packages
+you install while it runs are gone when the container ends. The packages in your
+Dockerfile are in your image, so every new container has them.
+
+### Keeping installed packages
+
+The home volume holds only `/home/rstudio`. Everything else exists only as long
+as the container does. This includes the R packages you install and the libraries
+from `sudo apt install`.
+
+In the Compose setup, if you stop and start the container with the `stop_...` and
+`start_...` files, those items stay. Each time Compose replaces the container,
+those items are lost. The files in your home volume remain. These actions replace
+the container:
+
+- You run `docker compose down`, then `docker compose up -d`.
+- A newer image arrives. The start files download the newest image each time they
+  run, and so does `docker compose pull` followed by `docker compose up -d`. The
+  weekly rebuild publishes a newer image, so this can happen on any start.
+- You change `RS_PORT`.
+
+To keep packages with the start files or Compose, save a list. Put your install
+commands in a file in your home directory, such as `~/my_packages.R`. Include a
+`sudo apt install` line for each system library that you need:
+
+```r
+system("sudo apt install -y libfftw3-dev")
+install.packages(c("glmmTMB", "mice", "metafor"))
+```
+
+After Compose replaces the container, run `source("~/my_packages.R")` in the
+RStudio console.
+
+To keep packages with `docker run`, bake them into your own image with the
+Dockerfile above. The Compose file and the start files use the published image,
+not yours.
 
 ## Reproducibility
 
@@ -256,11 +301,15 @@ RS_PORT=8888
 then double-click the launcher again and browse to <http://localhost:8888>. (The
 `.env` file works for double-clicking, which is why it is the recommended way;
 from a terminal, `RS_PORT=8888 docker compose up -d` also does the job.) With
-`docker run`, change the mapping to `-p 8888:8787`.
+`docker run`, change the mapping to `-p 8888:8787`. In the Compose setup, a new
+port replaces the container. See
+[Keeping installed packages](#keeping-installed-packages).
 
 **How do I update to the latest version?**
 `docker compose pull` (the launchers do this for you) or
 `docker pull jmgirard/rocker-bayes`. Your work in the home volume is preserved.
+You lose the R packages that you installed, so install them again. See
+[Keeping installed packages](#keeping-installed-packages).
 
 **My home volume has a `.cmdstan` folder. Do I still need it?**
 Older images compiled CmdStan into `~/.cmdstan`, and a home volume made by one
