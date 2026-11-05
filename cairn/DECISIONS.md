@@ -63,3 +63,32 @@ Adding the path would rebuild all four legs and re-point the tags for a
 test-only merge. The `fresh` gate compares this same path list, so a
 test-only commit on the default branch would also mark an older run as stale
 and keep it from attaching tags.
+
+### D-004 (2026-11-04): Triage drops five candidate rows as not worth keeping
+
+**Context:** A `/cairn-triage` pass weighed each ROADMAP candidate and each
+Known issues entry against the code and the CI run history.
+
+**Decision:** These rows are dropped because the work is not worth doing.
+
+- "Set setgid on site-library dirs only" would stop a user outside staff from
+  gaining the staff group through an executable in an R site library. The
+  container gives passwordless sudo, so there is no boundary to protect.
+- "Use a subset check for manifest arches" would let an index with a third
+  architecture pass the manifest guard. The refusal fails closed, and a third
+  architecture needs matrix and digest-count edits anyway.
+- The row that opens "The push paths filter includes `.github/smoke-test.sh`
+  and the fixtures" would stop comment-only edits of those files from
+  rebuilding four legs and re-pointing `latest`. It also absorbed the
+  `pr-ci.yml` build on any `.github/workflows/**` edit. The cost is CI minutes
+  only. The `fresh` gate reads the same push filter, and DESIGN.md lists the
+  workflows among the `pr-ci.yml` trigger paths.
+- "Test the os step's read failure" would test the step's `::error::` line for
+  a failed `docker run`. Without that branch the step still fails under
+  `set -e`, so only a log message is at stake.
+- "Tell phase 2 exit 3 from package quit" would separate a package whose load
+  calls `quit(status = 3)` from a package already in the image. CI uses
+  `praise`, and the worst case is a wrong FAIL line.
+
+**Consequences:** This entry supersedes no entry. A filed finding that matches
+one of these rows cites this entry. Superseding this entry reopens the row.
