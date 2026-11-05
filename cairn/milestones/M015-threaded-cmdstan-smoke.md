@@ -123,6 +123,7 @@ control proves the step goes red when `/opt/cmdstan` loses its group write bit.
 - 2026-11-05: T5: docker.yml dispatch with `test_mode=true` at df22016, https://github.com/jmgirard/rocker-bayes/actions/runs/42115360063, concluded success; each of the four legs logged "threaded build: wrote /opt/cmdstan/cmdstan-2.40.0/src/cmdstan/main_threads.o", "threaded sample: 1 chain, threads_per_chain = 2", and the phase 3 PASS line. Smoke step times against scheduled run 41486476474: noble amd64 2:33 (was 0:41), noble arm64 2:38 (0:44), resolute amd64 2:05 (0:42), resolute arm64 2:35 (0:59), about 1.5 to 2 minutes more per leg; docker.yml sets no step timeout and pr-ci.yml's smoke step allows 25 minutes.
 - 2026-11-05: T6: `hadolint` (container, Dockerfile unchanged) and shellcheck 0.11.0 (the version lint.yml pins) report nothing; `docker build -t rocker-bayes:dev .` succeeded at T2.
 - 2026-11-05: claim audit: not owed — internal tier.
+- 2026-11-05: step-7 approval: m015-threaded-cmdstan-smoke approved for merge
 
 ## Decisions
 
