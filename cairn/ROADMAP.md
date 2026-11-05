@@ -9,7 +9,7 @@ _Last hygiene check: 2026-11-05 (M014 done: graduated "Stop calling the CmdStan 
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M015 | Smoke a threaded CmdStan build in CI | planned | — | normal | milestones/M015-threaded-cmdstan-smoke.md |
+| M015 | Smoke a threaded CmdStan build in CI | in-progress | — | normal | milestones/M015-threaded-cmdstan-smoke.md |
 | M014 | Stop calling the CmdStan tag immutable | done | — | normal | milestones/archive/M014-cmdstan-tag-claim.md |
 | M013 | Port the CRLF guard | done | — | high | milestones/archive/M013-port-crlf-guard.md |
 | M012 | Alert on a failed docker.yml push build | done | — | high | milestones/archive/M012-alert-failed-push-build.md |

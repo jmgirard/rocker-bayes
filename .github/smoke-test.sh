@@ -323,6 +323,60 @@ stan_out="$(docker exec -u rstudio -e HOME=/home/rstudio \
     cat("stage:mean\n")
     stop(sprintf("posterior mean %.4f is not within %.2f of %.4f", got, tol, ref), call. = FALSE)
   }
+
+  # A threaded build compiles main_threads.o into the CmdStan tree, which the
+  # image does not ship, so this build fails when the rstudio user cannot write
+  # there. The unthreaded build above uses the shipped main.o and needs no
+  # write. A separate copy keeps the two builds from sharing one executable.
+  main_threads <- file.path(cmdstanr::cmdstan_path(), "src", "cmdstan", "main_threads.o")
+  had_main_threads <- file.exists(main_threads)
+  twork <- file.path(tempdir(), "smoke-threads")
+  dir.create(twork, showWarnings = FALSE, recursive = TRUE)
+  tstan <- file.path(twork, Sys.getenv("STAN_BASE"))
+  invisible(file.copy(stan, tstan, overwrite = TRUE))
+  tmod <- tryCatch(
+    cmdstanr::cmdstan_model(tstan, cpp_options = list(stan_threads = TRUE)),
+    error = function(e) {
+      err <- e[["stderr"]]
+      if (is.character(err)) {
+        err <- err[!is.na(err) & nzchar(err)]
+        if (length(err) > 0) cat(err, sep = "\n")
+      }
+      cat("stage:thread-build\n")
+      stop(conditionMessage(e), call. = FALSE)
+    }
+  )
+  if (!file.exists(main_threads)) {
+    cat("stage:thread-build\n")
+    stop("the threaded build left no ", main_threads, call. = FALSE)
+  }
+  if (had_main_threads) {
+    cat("threaded build: ", main_threads, " was already present, so this run did not test writing it\n", sep = "")
+  } else {
+    cat("threaded build: wrote ", main_threads, "\n", sep = "")
+  }
+  tfit <- tryCatch(
+    tmod$sample(
+      data = data_src,
+      seed = 20260911,
+      chains = 1,
+      threads_per_chain = 2,
+      iter_warmup = 200,
+      iter_sampling = 200,
+      refresh = 0,
+      show_messages = FALSE
+    ),
+    error = function(e) {
+      cat("stage:thread-sample\n")
+      stop(conditionMessage(e), call. = FALSE)
+    }
+  )
+  codes <- tfit$return_codes()
+  if (length(codes) == 0 || any(codes != 0)) {
+    cat("stage:thread-sample\n")
+    stop("the threaded chain did not finish: return codes ", paste(codes, collapse = " "), call. = FALSE)
+  }
+  cat("threaded sample: 1 chain, threads_per_chain =", tfit$metadata()$threads_per_chain, "\n")
 ' 2>&1)"
 stan_status=$?
 set -e
@@ -334,11 +388,13 @@ if [ "$stan_status" -ne 0 ]; then
     *"stage:cxx"*)     echo "FAIL: phase 3 (cmdstan) - $STAN_BASE passed stanc but the C++ build failed" ;;
     *"stage:sample"*)  echo "FAIL: phase 3 (cmdstan) - the model compiled but sampling failed" ;;
     *"stage:mean"*)    echo "FAIL: phase 3 (cmdstan) - the posterior mean is not within $THETA_TOL of $THETA_REF" ;;
+    *"stage:thread-build"*)  echo "FAIL: phase 3 (cmdstan) - the threaded build of $STAN_BASE failed; it writes main_threads.o into the CmdStan tree, so check that the rstudio user can write there" ;;
+    *"stage:thread-sample"*) echo "FAIL: phase 3 (cmdstan) - the threaded build compiled but threaded sampling failed" ;;
     *)                 echo "FAIL: phase 3 (cmdstan) - the CmdStan run failed before it reached a stage marker" ;;
   esac
   exit 1
 fi
-echo "PASS: phase 3 (cmdstan) - model compiled, sampled, and matched the reference posterior mean"
+echo "PASS: phase 3 (cmdstan) - model compiled, sampled, and matched the reference posterior mean, and a threaded build compiled and sampled"
 
 # --- Phase 4: old home volume ------------------------------------------------
 # Docker copies the image's home into a named volume only while the volume is

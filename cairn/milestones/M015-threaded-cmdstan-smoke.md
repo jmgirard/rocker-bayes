@@ -2,14 +2,14 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M015: Smoke a threaded CmdStan build in CI
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP4, GP8
 - **Resolves:** —
 - **Surface tier:** internal — a CI smoke check; the image's contents do not change
-- **Branch/PR:** —
+- **Branch/PR:** m015-threaded-cmdstan-smoke
 
 ## Goal
 
@@ -75,7 +75,7 @@ control proves the step goes red when `/opt/cmdstan` loses its group write bit.
 
 ## Tasks
 
-- [ ] T1: In `.github/smoke-test.sh` phase 3 (lines 234-341), after the mean
+- [x] T1: In `.github/smoke-test.sh` phase 3 (lines 234-341), after the mean
       check, copy the fixture into a second work directory and build it with
       `cpp_options = list(stan_threads = TRUE)`. Record whether
       `file.path(cmdstan_path(), "src/cmdstan/main_threads.o")` exists before
@@ -116,6 +116,7 @@ control proves the step goes red when `/opt/cmdstan` loses its group write bit.
 - 2026-11-05: plan gate chose a one-time local control over a CI step that builds the plant image on every pull request because M007 took the same route and a CI plant adds an image build per run; falsified by a smoke-test change that breaks the threaded FAIL line and ships unnoticed.
 - 2026-11-05: plan gate chose a second build inside phase 3 over a new phase 5 because the threaded build reuses phase 3's container, fixture, and stage markers; falsified by a phase 3 failure line that cannot tell the threaded build from the unthreaded one.
 - 2026-11-05: changelog: none (the profile's changelog slot is none, and this milestone changes no image content).
+- 2026-11-05: T1: phase 3 builds a second copy of the fixture with `stan_threads` on and samples 1 chain with `threads_per_chain = 2`, 200+200 iterations; new markers `stage:thread-build` and `stage:thread-sample`; the sample stage also fails on a nonzero chain return code; shellcheck 0.11.0 clean. Chose 1 short chain because the unthreaded run already checks the posterior mean.
 
 ## Decisions
 
