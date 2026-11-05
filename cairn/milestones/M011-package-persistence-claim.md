@@ -46,7 +46,7 @@ The README says truthfully where installed R packages live, when they are lost, 
 
 ## Tasks
 
-- [ ] T1: Start Docker Desktop and run the observation on `noble`, using the shipped `docker-compose.yml` under its own project name (`-p m011`) and a free `RS_PORT`, so the user's `rstudio_home` volume is not touched. Note the digest of any local `latest` first, to restore it at cleanup.
+- [x] T1: Start Docker Desktop and run the observation on `noble`, using the shipped `docker-compose.yml` under its own project name (`-p m011`) and a free `RS_PORT`, so the user's `rstudio_home` volume is not touched. Note the digest of any local `latest` first, to restore it at cleanup.
   - Fresh container, before any bspm call: try `sudo apt install` on a package the image lacks. If it fails until `sudo apt update` runs, T2 fixes README line 162.
   - Install `praise` (apt binary) and a package with no r2u binary (`oolong` if apt shows none). Print `.libPaths()` and `find.package()`. Write a file in the home directory.
   - Compare container IDs and check all four items after each of: `docker compose stop` then `start`; a changed `RS_PORT`; `down` then `up`; and a newer image. Reinstall between cases. For the newer image, pull `noble-2026-10-26` or another older date tag, tag it `latest`, start, install, then run `docker compose pull` and `up -d`.
@@ -68,6 +68,7 @@ The README says truthfully where installed R packages live, when they are lost, 
 - 2026-11-05: test scope: no committed test for the altered claims; the evidence is T1 and T3's hand run. A smoke test phase was rejected because that script gates publishing, so a base change that keeps packages in the home volume would hold back every tag; falsified by this text going stale unnoticed after a base change.
 - 2026-11-05: finding 11 of the audit disposed toward the narrower promise: a local-only image through the launchers hits the `pull` failure path and its offline warning, so the README names the saved list for Compose users.
 - 2026-11-05: implement started on branch m011-package-persistence-claim; Docker Desktop started; T1 image download in progress, no README change yet.
+- 2026-11-05: T1 done on `latest` (digest 2511d73a0dad, arm64, project m011, shipped compose file and mac launchers): `.libPaths()` is `/usr/local/lib/R/site-library`, `/usr/lib/R/site-library`, `/usr/lib/R/library`; `praise` went to the second, `oolong` (no r2u candidate) to the first; `sudo apt install` of libfftw3-dev worked before any bspm call, so README line 162 stands. All three items stayed through stop and start (same container ID) and were absent after `RS_PORT` change, `down` then `up`, and a launcher pull from `noble-2026-10-26` to `latest` (new container ID each time); the home file remained in all cases. No declared volume in the image config; a `--rm` file was absent from the next container. First script run read an empty package list inside the container and tested only the apt library and home file; fixed by passing the variables and failing on an empty list, then rerun in full.
 
 ## Decisions
 
