@@ -38,34 +38,34 @@ check.
 
 ## Acceptance criteria
 
-- [ ] AC1: With `SMOKE_CMDSTAN_VERSION` unset and port 8787 free,
+- [x] AC1: With `SMOKE_CMDSTAN_VERSION` unset and port 8787 free,
       `bash .github/smoke-test.sh rocker-bayes:dev`, run from the repo root
       against a local build of the branch's Dockerfile, exits 0, and its
       phase 3 PASS line names the CmdStan version that phase compared, which
       equals the Dockerfile's `ARG CMDSTAN_VERSION` value.
-- [ ] AC2: Against the same image, two mismatch runs each exit non-zero,
+- [x] AC2: Against the same image, two mismatch runs each exit non-zero,
       print a `FAIL: phase 3 (cmdstan)` line that names the expected version
       and the version `cmdstanr::cmdstan_version()` reported, and print no
       `PASS: phase 3` line: (a) `SMOKE_CMDSTAN_VERSION=2.39.0`; (b)
       `SMOKE_CMDSTAN_VERSION` unset, with a copy of `.github/` run beside a
       copy of the Dockerfile whose pin reads `2.39.0`, both in a directory
       inside the repo checkout.
-- [ ] AC3: Two bad-pin runs each exit non-zero with a FAIL line saying the
+- [x] AC3: Two bad-pin runs each exit non-zero with a FAIL line saying the
       expected CmdStan version could not be read or is not `x.y.z`, and print
       no `==> booting` line: (a) `SMOKE_CMDSTAN_VERSION` unset, with a copy of
       the script in a directory whose parent holds no Dockerfile; (b)
       `SMOKE_CMDSTAN_VERSION=2.40`.
-- [ ] AC4: In phase 3, the image's version is the value that
+- [x] AC4: In phase 3, the image's version is the value that
       `cmdstanr::cmdstan_version()` returns in the phase 1 container. Phase
       3 reads no container environment variable and does not parse the
       version from `cmdstan_path()`, as a read of the phase 3 block shows.
-- [ ] AC5: The header comment of `.github/smoke-test.sh` lists
+- [x] AC5: The header comment of `.github/smoke-test.sh` lists
       `SMOKE_CMDSTAN_VERSION` and its default among the other `SMOKE_*`
       variables, and its phase 3 text says the phase fails when the reported
       version differs from the expected one. DESIGN.md's CI paragraph says
       phase 3 fails when cmdstanr's CmdStan version differs from the
       Dockerfile pin.
-- [ ] AC6: `docker build -t rocker-bayes:dev .` succeeds, and
+- [x] AC6: `docker build -t rocker-bayes:dev .` succeeds, and
       `koalaman/shellcheck:v0.11.0` (the version `lint.yml` pins) at
       `-S info` reports nothing for `.github/smoke-test.sh`.
 
@@ -119,3 +119,33 @@ check.
 ## Decisions
 
 ## Review
+
+Evidence pass 1, at 0f0b488 (2026-11-05), after a fresh `docker build -t rocker-bayes:dev .`; copies for AC2 (b) and AC3 (a) in `.m017-rev/` in the checkout, removed after.
+
+- AC1: `bash .github/smoke-test.sh rocker-bayes:dev` with the variable unset exit 0; "PASS: phase 3 (cmdstan) - CmdStan 2.40.0 matches the Dockerfile ARG pin, …"; the Dockerfile reads `ARG CMDSTAN_VERSION="2.40.0"`.
+- AC2: (a) `SMOKE_CMDSTAN_VERSION=2.39.0` exit 1, "FAIL: phase 3 (cmdstan) - cmdstanr reports CmdStan 2.40.0, but SMOKE_CMDSTAN_VERSION expects 2.39.0", no phase 3 PASS; (b) `.m017-rev/b/.github/smoke-test.sh` beside a Dockerfile pinned 2.39.0, variable unset, exit 1, "… but the Dockerfile ARG pin expects 2.39.0", no phase 3 PASS.
+- AC3: (a) `.m017-rev/a/sub/smoke-test.sh` with no Dockerfile in its parent, variable unset, exit 1, "FAIL: phase 3 (cmdstan) - could not read the expected CmdStan version: no Dockerfile at …; set SMOKE_CMDSTAN_VERSION"; (b) `SMOKE_CMDSTAN_VERSION=2.40` exit 1, "… from SMOKE_CMDSTAN_VERSION is not x.y.z (got '2.40')". Neither log holds a `==> booting` line.
+- AC4: read of phase 3 (`.github/smoke-test.sh:272-305` and the stan block after it): the compared value is the `cmdstan version:` line that `cmdstanr::cmdstan_version()` prints; the phase's only `Sys.getenv` reads are `STAN_BASE`, `DATA_BASE`, `THETA_REF`, `THETA_TOL`, passed with `-e`; `cmdstan_path()` is read only for the path check and `main_threads.o`, never parsed for a version. cmdstanr's `cmdstan_version()` returns what `read_cmdstan_version()` parses from the tree's `makefile` (read in the image at T3).
+- AC5: header lines 11-16 say phase 3 fails when the reported version differs from the expected one; lines 48-52 list `SMOKE_CMDSTAN_VERSION` with its Dockerfile-pin default after `SMOKE_THETA_REF`. `cairn/DESIGN.md:63-66` says the phase fails when cmdstanr's CmdStan version differs from the Dockerfile pin.
+- AC6: `docker build -t rocker-bayes:dev .` exit 0; `koalaman/shellcheck:v0.11.0 -S info .github/smoke-test.sh` exit 0, no output.
+
+Consistency gate: `cairn_validate.py` all checks passed. No IP/GP text changed, so `cairn_impact` was skipped. Toolchain: `docker build` exit 0; `hadolint/hadolint:v2.14.0` on the Dockerfile exit 0; base pinned by tag (`jmgirard/rstudio2u:${BASE_TAG}`, default `noble`); no secret in `ENV`/`COPY`; `.dockerignore` present; changelog slot is none (D-002), so no entry is owed.
+
+spawned: diff-bug, blame-history, prior-review, ripple
+
+- diff-bug #1: the capture holds stdout only, so on a failure R's stderr prints before the captured lines — fix now.
+- diff-bug #2: DESIGN.md says "when that is set" where the code treats an empty value as unset — fix now.
+- diff-bug #3: the script is a third parser of the ARG line beside `test_cmdstan_pin.sh` and docker.yml's `grep -oP` — reject, planned change (Scope In names reading the Dockerfile with that sed pattern; the drift risk is in the plan's work log).
+- diff-bug #4: two matching ARG lines print the not-x.y.z message across two lines without saying there were two — reject, edge (a Dockerfile with two `ARG CMDSTAN_VERSION` lines is outside its documented use; the effect is a failed run with an unclear message).
+- diff-bug #5: the pre-boot FAIL lines carry the phase 3 label on a run that never booted — reject, planned change (the existing Stan-file check uses the same label).
+- diff-bug #6: phase 4 still takes its expected version from the container's variable — reject, false (phase 4 is unchanged, and phase 3 has already matched the tree to the pin).
+- diff-bug #7: a symlinked copy of the script looks for the Dockerfile beside the link — reject, edge (no lane runs the script through a symlink; the effect is a failed run with a "no Dockerfile" line).
+- diff-bug #8: an R failure that printed nothing leaves one blank line before the FAIL line — reject, style.
+- diff-bug #9: AC boxes unticked at status review — reject, false (review ticks them).
+- blame-history #1: phase 3's first R output now prints after the block ends — reject, planned change (recorded at T2; three lines).
+- blame-history #2: phase 4 seeds a hard-coded stale `cmdstan-2.36.0`, which stops being stale if the pin is ever 2.36.0 — follow-up, parked row "Vary the stale CmdStan in smoke phase 4" (pre-existing line; the pin moves only forward by GP3).
+- blame-history #3: the "same checkout" claim holds only while docker.yml and pr-ci.yml build from that Dockerfile — noted (holds today; the plan's rejected-alternative line names this as its falsifier).
+- prior-review #1: the PASS line is long — noted.
+- ripple #1, #2: the ROADMAP row still says phase 3 compares with nothing and asks for CI to pass the pin — reject, planned change (the row graduates at post-merge hygiene).
+- ripple #3: the Dockerfile's `--build-arg CMDSTAN_VERSION=` example does not say that the smoke test then needs `SMOKE_CMDSTAN_VERSION` — fix now.
+- ripple #4, #5, #6: sampler-output row, stage-marker row, and "one FAIL line" header — reject, false (the reviewer found each still holds).
