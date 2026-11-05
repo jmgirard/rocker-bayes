@@ -324,9 +324,9 @@ stan_out="$(docker exec -u rstudio -e HOME=/home/rstudio \
     stop(sprintf("posterior mean %.4f is not within %.2f of %.4f", got, tol, ref), call. = FALSE)
   }
 
-  # A threaded build compiles main_threads.o into the CmdStan tree, which the
-  # image does not ship, so this build fails when the rstudio user cannot write
-  # there. The unthreaded build above uses the shipped main.o and needs no
+  # A threaded build compiles main_threads.o and a threaded precompiled header
+  # into the CmdStan tree, which the image does not ship, so this build fails
+  # when the rstudio user cannot write there. The unthreaded build above uses the shipped main.o and needs no
   # write. A separate copy keeps the two builds from sharing one executable.
   main_threads <- file.path(cmdstanr::cmdstan_path(), "src", "cmdstan", "main_threads.o")
   had_main_threads <- file.exists(main_threads)
@@ -388,7 +388,7 @@ if [ "$stan_status" -ne 0 ]; then
     *"stage:cxx"*)     echo "FAIL: phase 3 (cmdstan) - $STAN_BASE passed stanc but the C++ build failed" ;;
     *"stage:sample"*)  echo "FAIL: phase 3 (cmdstan) - the model compiled but sampling failed" ;;
     *"stage:mean"*)    echo "FAIL: phase 3 (cmdstan) - the posterior mean is not within $THETA_TOL of $THETA_REF" ;;
-    *"stage:thread-build"*)  echo "FAIL: phase 3 (cmdstan) - the threaded build of $STAN_BASE failed; it writes main_threads.o into the CmdStan tree, so check that the rstudio user can write there" ;;
+    *"stage:thread-build"*)  echo "FAIL: phase 3 (cmdstan) - the threaded build of $STAN_BASE failed; it writes main_threads.o and a precompiled header into the CmdStan tree, so check that the rstudio user can write there" ;;
     *"stage:thread-sample"*) echo "FAIL: phase 3 (cmdstan) - the threaded build compiled but threaded sampling failed" ;;
     *)                 echo "FAIL: phase 3 (cmdstan) - the CmdStan run failed before it reached a stage marker" ;;
   esac

@@ -89,7 +89,7 @@ control proves the step goes red when `/opt/cmdstan` loses its group write bit.
       lesson). Update the PASS line.
 - [x] T2: Build `rocker-bayes:dev` from the branch and run the script against
       it. Record the phase 3 lines that AC1 names in the work log.
-- [ ] T3: Build a throwaway image `FROM rocker-bayes:dev` with
+- [x] T3: Build a throwaway image `FROM rocker-bayes:dev` with
       `RUN chmod -R g-w /opt/cmdstan`, run the script against it, and record
       the FAIL line and the permission error line. Remove the throwaway tag
       afterward.
@@ -118,6 +118,7 @@ control proves the step goes red when `/opt/cmdstan` loses its group write bit.
 - 2026-11-05: changelog: none (the profile's changelog slot is none, and this milestone changes no image content).
 - 2026-11-05: T1: phase 3 builds a second copy of the fixture with `stan_threads` on and samples 1 chain with `threads_per_chain = 2`, 200+200 iterations; new markers `stage:thread-build` and `stage:thread-sample`; the sample stage also fails on a nonzero chain return code; shellcheck 0.11.0 clean. Chose 1 short chain because the unthreaded run already checks the posterior mean.
 - 2026-11-05: T2: `docker build -t rocker-bayes:dev .` (image f34ae1ea, arm64) then the script exited 0 with all four PASS lines; phase 3 printed "theta posterior mean 0.3988", then "threaded build: wrote /opt/cmdstan/cmdstan-2.40.0/src/cmdstan/main_threads.o", then "threaded sample: 1 chain, threads_per_chain = 2".
+- 2026-11-05: T3: image `FROM rocker-bayes:dev` + `RUN chmod -R g-w /opt/cmdstan`: exit 1, the unthreaded run passed (theta 0.3988), then make printed "Fatal error: can't create src/cmdstan/main_threads.o: Permission denied" and the FAIL line was the new threaded-build line. The log also showed a denied write under `model_header.hpp.gch`, so the FAIL line and comment now name the precompiled header too, and the control was rerun on that text with the same result. Throwaway tag removed. The passing path did not change, so T2 was not rerun.
 
 ## Decisions
 
