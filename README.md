@@ -202,18 +202,18 @@ folder exists only as long as the container does. By default, this includes the 
 packages you install. It also includes the libraries from `sudo apt install`.
 
 In the Compose setup, if you stop the container and start the same container
-again, those items stay. The `docker compose stop` and `docker compose start`
-commands do this. So do the `stop_...` and `start_...` files, if the image and
-settings did not change. Each time Compose replaces the container, those items
-are lost. The files in your home volume remain. For example, these actions replace
-the container:
+again, those packages and libraries stay. The `docker compose stop` and
+`docker compose start` commands do this. So do the `stop_...` and `start_...`
+files, if the image and settings did not change. Each time Compose replaces the
+container, those packages and libraries are lost. The files in your home volume
+remain. For example, these actions replace the container:
 
 - You run `docker compose down`, then `docker compose up -d`.
 - A newer image arrives. Each time they run, the start files try to download the
   image that `docker-compose.yml` names. `docker compose pull` followed by
   `docker compose up -d` does the same. As shipped, that file names `latest`, and
   the weekly rebuild moves that tag, so this can happen on any start.
-- You change `RS_PORT`.
+- You change `RS_PORT`, then run a start file or `docker compose up -d`.
 
 To keep packages with the start files or Compose, save a list. Put your install
 commands in a file in your home directory, such as `~/my_packages.R`. Include a

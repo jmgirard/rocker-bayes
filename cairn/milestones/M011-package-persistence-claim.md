@@ -40,8 +40,8 @@ The README says truthfully where installed R packages live, when they are lost, 
 ## Coverage
 
 - AC1 → T1, T2
-- AC2 → T1, T2
-- AC3 → T2, T3
+- AC2 → T1, T2, T5
+- AC3 → T2, T3, T5
 - AC4 → T1, T2
 
 ## Tasks
@@ -54,6 +54,7 @@ The README says truthfully where installed R packages live, when they are lost, 
 - [x] T2: Write the README text from T1's output, for the sites AC1 to AC4 name. Follow the simple-english document rules for new text. Name the saved list as the way for Compose and launcher users. Change the Baking Dockerfile's package list to packages for which `find.package()` finds nothing in the image. Read the files AC1 names in full.
 - [x] T3: Run the README's own text. Write the saved list as shown, rerun it in a replaced Compose container, and check that its packages load. Build the Baking Dockerfile as shown and check that a fresh container loads its packages. Then remove the test containers and volumes, restore any earlier local `latest`, and check that `rstudio_home` is unchanged. The test images stay until review's evidence run, which removes them.
 - [x] T4: Update `cairn/DESIGN.md`: Architecture states where installed packages live and when they are lost. If T1 shows no declared volume, correct the contract boundary line that lists a "`/home/rstudio` volume", marked `corrected M011`.
+- [x] T5: Fix what review pass 1 returned: the README's stop-and-start rule for the Compose setup and the other fix-now findings. Run bare `docker compose stop` and `start`, bare `pull` and `up -d`, and `RS_PORT` through a launcher. Run the list in a real RStudio session.
 
 ## Work log
 
@@ -78,6 +79,8 @@ The README says truthfully where installed R packages live, when they are lost, 
 - 2026-11-05: review return 1: AC2 fails as written, because the README states the stop-and-start outcome only for the launcher pair, not for the Compose setup (diff-bug #2). Fix with the fix-now findings in the Review section's pass 1.
 - 2026-11-05: amendment routed: AC2 — "everything outside `/home/rstudio`" is false, because the image's own contents return in each new container (diff-bug #3).
 - 2026-11-05: review return text fixes applied (checkpoint): stop and start rule, pinned and offline wording, labeled list, bind-mount note, Option 2 and apt links, DESIGN "by default". AC2's amended wording awaits its reader, and the bare Compose run and RStudio check are not done yet.
+- 2026-11-05: re-audit: AC2 (full) — "any change stays" is false for files the base rewrites at start and for `/dev/shm`; `RS_PORT` named no route; flat "installed packages"; unresolved "or" in the evidence; `noble` against the shipped `latest`; domain too wide for the milestone's goal. Disposed toward the narrower promise: packages and apt libraries only, a route for `RS_PORT`, and the digest condition. "Each route" and a mount check were not added to the criterion, because either would widen it after a return; the review run covers those routes anyway.
+- 2026-11-05: T5 observed: bare `docker compose stop` and `start` kept all items (same container ID); bare `pull` and `up -d` from `noble-2026-10-26` lost them; `RS_PORT` through `start_mac.command` lost them, with the home file present each time. The container's only mount is `m011_rstudio_home` at `/home/rstudio`. In a real RStudio session reached in a browser, the console showed the same `.libPaths()`, `source("~/my_packages.R")` installed libfftw3-dev, and glmmTMB, mice, and metafor were found in `/usr/lib/R/site-library`. Earlier runs used `docker exec -u rstudio` with Rscript.
 
 ## Decisions
 
