@@ -19,6 +19,8 @@ LABEL org.label-schema.license="MIT" \
 # ---------------------------------------------------------------------------
 # CmdStan version to install. Pin a specific release to override, e.g.:
 #   docker build --build-arg CMDSTAN_VERSION=2.40.0 .
+# To smoke-test an image built with another version, set
+# SMOKE_CMDSTAN_VERSION to that version (see .github/smoke-test.sh).
 ARG CMDSTAN_VERSION="2.40.0"
 ENV CMDSTAN_VERSION=${CMDSTAN_VERSION}
 

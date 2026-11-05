@@ -283,14 +283,16 @@ if ! cmdstan_info="$(docker exec -u rstudio -e HOME=/home/rstudio "$NAME" Rscrip
   }
   cat("cmdstan path:", path, "\n")
   cat("cmdstan version:", cmdstanr::cmdstan_version(), "\n")
-')"; then
+' 2>&1)"; then
   printf '%s\n' "$cmdstan_info"
   echo "FAIL: phase 3 (cmdstan) - cmdstanr is missing, or reports no CmdStan path or version"
   exit 1
 fi
 printf '%s\n' "$cmdstan_info"
 
-# The comparison runs here in bash, not in the R block above, so a mismatch
+# The capture takes stderr too, so on a failure R's error prints in order with
+# the lines before it. The comparison runs here in bash, not in the R block
+# above, so a mismatch
 # gets its own FAIL line rather than the generic one. cat() leaves a trailing
 # space after the version, which the second sed expression trims.
 got_cmdstan="$(printf '%s\n' "$cmdstan_info" | sed -n 's/^cmdstan version:[[:space:]]*//p' | sed 's/[[:space:]]*$//')"

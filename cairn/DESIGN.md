@@ -61,7 +61,7 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   install session, already holds its probe package before the install, so a
   pass shows a package that arrived as an apt binary during that run.
   Its CmdStan phase first fails when cmdstanr's CmdStan version differs from
-  the Dockerfile pin, or from `SMOKE_CMDSTAN_VERSION` when that is set, and
+  the Dockerfile pin, or from `SMOKE_CMDSTAN_VERSION` when that is set and non-empty, and
   the script stops before it boots a container when that expected version is
   missing or not `x.y.z` (M017).
   The phase runs stanc before the C++ build and prints a separate
