@@ -1,13 +1,13 @@
 # M011: Fix the package persistence claim
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** IP1, IP3
 - **Resolves:** —
 - **Surface tier:** user-facing — README text that image users read and act on
-- **Branch/PR:** —
+- **Branch/PR:** m011-package-persistence-claim
 
 ## Goal
 
@@ -67,6 +67,7 @@ The README says truthfully where installed R packages live, when they are lost, 
 - 2026-11-05: plan gate chose correcting the README over a home-library recipe or keeping packages by default, because bspm installs binaries system-wide (a base setting, IP1) and old copies in the volume can hide newer image packages; falsified by users needing packages across updates that a saved list and a derivative image cannot serve.
 - 2026-11-05: test scope: no committed test for the altered claims; the evidence is T1 and T3's hand run. A smoke test phase was rejected because that script gates publishing, so a base change that keeps packages in the home volume would hold back every tag; falsified by this text going stale unnoticed after a base change.
 - 2026-11-05: finding 11 of the audit disposed toward the narrower promise: a local-only image through the launchers hits the `pull` failure path and its offline warning, so the README names the saved list for Compose users.
+- 2026-11-05: implement started on branch m011-package-persistence-claim; Docker Desktop started; T1 image download in progress, no README change yet.
 
 ## Decisions
 
