@@ -347,8 +347,9 @@ jobs:
           esac
 
       # Both indexes passed, so attach the tags, unless the check above found
-      # a newer recipe. On a stale run this step shows as skipped, which is what
-      # .github/last-success.sh reads, so it must keep this name. In test mode
+      # a newer recipe. On a stale run this step shows as skipped.
+      # .github/last-success.sh counts a run as a rebuild only when this step
+      # succeeded, so the step must keep this name. In test mode
       # nothing is attached: the run has already exercised every leg, both
       # assemblies, and all three guards, and the tag list it would have applied
       # is printed above.
@@ -436,7 +437,8 @@ jobs:
   # from the cache and does not prove what a scheduled rebuild proves. A
   # dispatch runs this job too when its `notify` input is set, and reports as a
   # scheduled run does. A run whose publish job read `stale` moved no tag, so
-  # unless another job failed it neither opens nor closes the issue.
+  # it writes nothing to the issue. If another job failed, that failure reports
+  # as usual.
   #
   # `needs` and RESULTS name every other job in this file, except that RESULTS
   # leaves out `keepalive` on a push run, where that job is skipped by design

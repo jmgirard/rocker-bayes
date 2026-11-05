@@ -70,10 +70,11 @@ while IFS=$'\t' read -r c id; do
     if ! listing="$(gh run view "$id" --json jobs </dev/null)"; then
         warn_unknown "could not read the job listing of run $id"
     fi
-    # jq fails on most answers that are not a job listing, and prints nothing on
-    # an empty one.
+    # jq fails unless the answer is JSON with a list of jobs, and prints nothing
+    # on an empty answer.
     attached="$(printf '%s' "$listing" | jq '
-        [.jobs[] | .steps[]? | select(.name == "Attach the tags") | .conclusion]
+        .jobs | if type == "array" then . else error("no list of jobs") end
+        | [.[] | .steps[]? | select(.name == "Attach the tags") | .conclusion]
         | any(. == "success")' 2>/dev/null)" || attached=""
     case "$attached" in
         true)

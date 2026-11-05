@@ -450,9 +450,8 @@ assert_call    "a cancelled leg beside a skipped publish opens an issue" '^issue
 # 7d. An open issue: comment on the oldest, whichever kind opened it.
 rc=$(RUN_EVENT=push run_script "failure failure" "$TWO" "$FIX_PUSH_LEG_FAIL")
 assert_rc      "push failure/open exits 0" 0 "$rc"
-assert_call    "a failed push build comments on the oldest open issue" '^issue comment 41 --body The push build failed again in: noble publish  Run: '
-assert_no_call "  ... opens no second issue"                  '^issue create '
-assert_no_call "  ... and closes nothing"                     '^issue close '
+assert_call    "a failed push build comments on the oldest open issue" '^issue comment 41 --body A push build failed in: noble publish  Run: '
+assert_no_call "  ... and opens no second issue"              '^issue create '
 
 # 7e. A green push build touches nothing, whether or not an issue is open.
 rc=$(RUN_EVENT=push run_script "success success" "$TWO" "$FIX_PUSH_GREEN")

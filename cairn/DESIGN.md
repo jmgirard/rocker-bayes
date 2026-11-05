@@ -120,10 +120,10 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   differ, the run attaches no tag for either variant, warns, and ends green.
   A commit that changes one of those paths normally starts its own push build,
   which publishes the newer recipe. A stale run's "Attach the tags" step is
-  skipped, so the run moves no tag. It neither opens nor closes the
-  `ci-failure` issue unless another job failed, and it does not count as a
-  rebuild for `rebuild-gap.yml`, apart from stale runs older than this rule,
-  whose step shows as a success. A failed fetch fails the job. This is an
+  skipped, so the run moves no tag. It writes nothing to the `ci-failure`
+  issue, and if another job failed, that failure reports as usual. It does not
+  count as a rebuild for `rebuild-gap.yml`, apart from stale runs older than
+  this rule, whose step shows as a success. A failed fetch fails the job. This is an
   exception to GP2's "every build also publishes immutable tags": a refused
   run withholds its date and CmdStan tags too. Otherwise it overwrites the
   newer build's same-day date tag. `docker.yml` has no concurrency group. A
@@ -144,8 +144,8 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   `.github/keepalive.sh`. The push uses a write-enabled deploy key held in the
   `KEEPALIVE_DEPLOY_KEY` secret, so no job needs a token that can write.
 - **A failed build or a missing rebuild opens an issue.** If a job in a
-  scheduled run or a push build fails, the `notify` job in `docker.yml` opens
-  or comments on a `ci-failure` issue. A fully green scheduled run that is not
+  scheduled run, a push build, or a dispatch with `notify` set fails, the
+  `notify` job in `docker.yml` opens or comments on a `ci-failure` issue. A fully green scheduled run that is not
   stale, or such a dispatch with `notify` set, closes it. A green push build
   writes nothing to the issue, because it builds from the
   cache and proves less than a scheduled rebuild. A run cancelled before

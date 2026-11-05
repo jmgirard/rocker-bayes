@@ -196,7 +196,7 @@ assert_call    "  ... comments on the oldest open issue (#41)" '^issue comment 4
 assert_call    "  ... giving the gap"              '^issue comment 41 .*No successful scheduled docker\.yml rebuild in 9 days'
 assert_no_call "  ... and opens no second issue"   '^issue create '
 
-# 5. The `none` sentinel: no successful scheduled run on record. It takes its
+# 5. The `none` sentinel: no successful scheduled run that moved the tags. It takes its
 #    own branch, never the measured-age one, even with a threshold of 0.
 for t in 8 0; do
     rc=$(run_script none 2026-01-10 "$t")

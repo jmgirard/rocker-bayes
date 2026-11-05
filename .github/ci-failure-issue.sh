@@ -159,7 +159,7 @@ if [ -n "$subject" ]; then
 elif [ "${RUN_EVENT:-}" = "push" ]; then
     title="Push build failed: $failed_text"
     lead_open="The push build failed in: $failed_text"
-    lead_again="The push build failed again in: $failed_text"
+    lead_again="A push build failed in: $failed_text"
     reason="$failed_text"
 else
     title="Weekly run failed: $failed_text"
@@ -181,11 +181,12 @@ list_open() {
 
 case "$result" in
     failure)
-        # A failed run whose own job listing names no failed job is a
-        # contradiction: the extraction, the job names, or the aggregation is
-        # wrong. Say so rather than quietly shipping the generic text.
+        # A failed run whose own job listing names no failed job has one expected
+        # cause: a timed-out job reads as cancelled. Otherwise the extraction, the
+        # job names, or the aggregation is wrong. Say so rather than quietly
+        # shipping the generic text.
         if [ ${#failed_names[@]} -eq 0 ] && [ -z "$subject" ] && [ -n "$jobs_doc" ] && [ ! -s "$JQ_ERR" ]; then
-            echo "::warning::the run is reported failed but its job listing names no failed job; the issue falls back to generic text"
+            echo "::warning::the run is reported failed but its job listing names no failed job (a timed-out job reads as cancelled); the issue falls back to generic text"
         fi
         gh label create "$LABEL" --force \
             --description "Opened when a scheduled run or push build fails, or no scheduled rebuild has succeeded lately" \

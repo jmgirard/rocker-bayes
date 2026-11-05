@@ -129,8 +129,8 @@ expect "a listing with no attach step is passed over" 2026-09-28 "" \
 clear_listings; set_read_fails "$NEW"
 expect "a failed listing read is 'unknown'" unknown "could not read the job listing" \
     "[$(run $NEW success schedule),$(run $OLD success schedule)]"
-clear_listings; set_listing "$NEW" "<html>Bad gateway</html>"
-expect "a listing that is not JSON is 'unknown'" unknown "unreadable job listing" \
+clear_listings; set_listing "$NEW" '{"message":"Not Found"}'
+expect "a JSON answer with no list of jobs is 'unknown'" unknown "unreadable job listing" \
     "[$(run $NEW success schedule),$(run $OLD success schedule)]"
 clear_listings; set_listing "$NEW" '{"jobs":[{"steps":["oops"]}]}'
 expect "a job listing jq cannot process is 'unknown'" unknown "unreadable job listing" \
