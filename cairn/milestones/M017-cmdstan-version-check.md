@@ -116,6 +116,8 @@ check.
 - 2026-11-05: claim audit: 17 claims read, 1 corrected — .github/smoke-test.sh (the comment now says an empty `SMOKE_CMDSTAN_VERSION` counts as unset; the reader's re-read found it holds).
 - 2026-11-05: all tasks done; shellcheck 0.11.0 clean after the comment fix; status set to review.
 - 2026-11-05: review fix-now: phase 3's capture takes stderr (diff-bug #1), DESIGN.md says "set and non-empty" (diff-bug #2), the Dockerfile's build-arg example names `SMOKE_CMDSTAN_VERSION` (ripple #3); parked row "Vary the stale CmdStan in smoke phase 4" filed. Shellcheck, hadolint, `test_cmdstan_pin.sh` pass; evidence pass 2 running.
+- 2026-11-05: evidence pass 2 at d0d3ac5 matched pass 1 on every case.
+- 2026-11-05: step-7 approval: m017-cmdstan-version-check approved for merge
 
 ## Decisions
 
