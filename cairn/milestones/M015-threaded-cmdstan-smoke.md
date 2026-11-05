@@ -137,32 +137,33 @@ Pass 1, 2026-11-05, branch head 243eca2, no PR yet, Copilot round off.
 - AC5: `hadolint` (container, stdin Dockerfile) printed nothing; shellcheck 0.11.0 (the `SHELLCHECK_VERSION` in lint.yml) printed nothing on `.github/smoke-test.sh`; `docker build -t rocker-bayes:dev .` succeeded under AC1.
 - Gate: `cairn_validate.py` all checks passed. No IP/GP text changed, so `cairn_impact` was skipped. Profile gate: build and hadolint as under AC1 and AC5; the Dockerfile is unchanged, with base `jmgirard/rstudio2u:${BASE_TAG}` (default `noble`, an explicit tag), no secret added, and `.dockerignore` present; changelog slot is none, and the diff changes no image content.
 - spawned: diff-bug, blame-history, prior-review, ripple
-- diff-bug #1: the threaded sample prints `threads_per_chain` but never asserts it, and cmdstanr runs an unthreaded executable with one thread and only a warning — fix now (stage:thread-sample now fails unless the recorded value is 2; a one-off unthreaded build sampled with `threads_per_chain = 2` recorded 1)
-- diff-bug #2: when `main_threads.o` already exists the check passes with a note, while the header and DESIGN.md say the build always fails on a read-only tree — fix now (both now say the image ships no `main_threads.o`, which is the condition the check rests on)
-- diff-bug #3: the copy and model creation sit inside the build stage and `file.copy`'s result is ignored, against the file's own convention — fix now (copy checked; model created with `compile = FALSE` outside the stage; `$compile(cpp_options = list(stan_threads = TRUE))` is the stage)
-- diff-bug #4: the threaded-build FAIL line blames write permission for any threaded build failure — fix now (the permission line prints only when the output holds "Permission denied"; any other threaded build failure gets "the threaded build of <file> failed")
+- diff-bug #1: the threaded sample prints `threads_per_chain` but never asserts it, and cmdstanr runs an unthreaded executable with one thread and only a warning — fix now, fixed 7ebff97 (stage:thread-sample now fails unless the recorded value is 2; a one-off unthreaded build sampled with `threads_per_chain = 2` recorded 1)
+- diff-bug #2: when `main_threads.o` already exists the check passes with a note, while the header and DESIGN.md say the build always fails on a read-only tree — fix now, fixed 7ebff97 (both now say the image ships no `main_threads.o`, which is the condition the check rests on)
+- diff-bug #3: the copy and model creation sit inside the build stage and `file.copy`'s result is ignored, against the file's own convention — fix now, fixed 7ebff97 (copy checked; model created with `compile = FALSE` outside the stage; `$compile(cpp_options = list(stan_threads = TRUE))` is the stage)
+- diff-bug #4: the threaded-build FAIL line blames write permission for any threaded build failure — fix now, fixed 7ebff97 (the permission line prints only when the output holds "Permission denied"; any other threaded build failure gets "the threaded build of <file> failed")
 - diff-bug #5: a threaded sample that fails at run time leaves no CmdStan output in the log, since sampling uses `show_messages = FALSE` — follow-up, parked row "Show sampler output when smoke fails" (the unthreaded sample has the same gap, and no failure has needed it)
 - diff-bug #6: an error from `metadata()`, `return_codes()`, or the setup calls after the mean check takes the "before it reached a stage marker" line — reject (edge: only a cmdstanr API change or a malformed CSV reaches it, outside documented and common use; the run still fails)
 - diff-bug #7: the return-code check can hardly fire with one chain — reject (style: a harmless guard with no wrong result)
-- diff-bug #8: "samples with 2 threads per chain" suggests parallel work, but the fixture has no `reduce_sum` — fix now (header says no work runs in parallel)
+- diff-bug #8: "samples with 2 threads per chain" suggests parallel work, but the fixture has no `reduce_sum` — fix now, fixed 7ebff97 (header says no work runs in parallel)
 - diff-bug #9: docker.yml's smoke step has no `timeout-minutes`, and the change adds a second compile and chain per leg — follow-up, parked row "Bound the docker.yml smoke step time" (pre-existing; no step has hung)
 - diff-bug #10: the new markers join the unanchored `case` match — follow-up, absorbed by the parked row "Anchor smoke stage markers to lines"
 - diff-bug #11: one comment line runs past 80 characters — reject (style); the fix rewrapped it
 - diff-bug #12, #13: no apostrophes in the R block; no test out of scope — noted
-- blame-history #1: same as diff-bug #4, against M007's split FAIL lines — fix now (as diff-bug #4)
+- blame-history #1: same as diff-bug #4, against M007's split FAIL lines — fix now, fixed 7ebff97 (as diff-bug #4)
 - blame-history #2: the threaded run checks no posterior mean — reject (planned change: Scope In says the threaded build samples with 2 threads per chain; the mean check stays on the unthreaded run)
 - blame-history #3: the threaded build has no separate stanc stage — reject (false: the same program passed `check_syntax()` earlier in the run, so stanc cannot fail here)
 - blame-history #4: "(M015)" in DESIGN.md goes against its no-status rule — reject (false: DESIGN.md already cites milestones, such as "corrected M001")
 - blame-history #5: same as diff-bug #10 — follow-up, the same parked row
 - blame-history #6: same as diff-bug #11 — reject (style)
 - blame-history #7: the build writes into the M010 tree — reject (false: the reviewer finds no conflict; the tree is group-writable by design)
-- prior-review #1: same as diff-bug #4 — fix now (as diff-bug #4)
+- prior-review #1: same as diff-bug #4 — fix now, fixed 7ebff97 (as diff-bug #4)
 - prior-review #2: same as diff-bug #10 — follow-up, the same parked row
-- prior-review #3: same as diff-bug #2 — fix now (as diff-bug #2)
+- prior-review #3: same as diff-bug #2 — fix now, fixed 7ebff97 (as diff-bug #2)
 - prior-review #4: same as blame-history #4 — reject (false)
 - prior-review #5: the parked row "Keep CmdStan runtime files writable" may now fire through CI — reject (false: that row is about a second user rewriting files a first user wrote; CI builds once as one user on a fresh tree)
 - ripple #1: the candidate row "Smoke a threaded CmdStan build in CI" still sits in the backlog — reject (false: post-merge hygiene graduates it)
 - ripple #2: the parked marker row does not count the new markers — reject (false: the row names no count, and its mechanism covers them)
 - ripple #3, #5: the parked rows on the broken-compiler control and runtime files do not mention M015 — reject (false: the reviewer finds no disagreement)
 - ripple #4: GP8 under-describes the gate — reject (false: it is still true as written)
-- ripple #6: the FAIL line and comment named a precompiled header that the header and DESIGN.md did not — fix now (the FAIL line and comment no longer name it)
+- ripple #6: the FAIL line and comment named a precompiled header that the header and DESIGN.md did not — fix now, fixed 7ebff97 (the FAIL line and comment no longer name it)
+- Re-verification after 7ebff97 (code changed, so AC1, AC2, AC5 were rerun and AC3 is a new run): AC1 rerun on rocker-bayes:dev exited 0 with all four PASS lines, "threaded build: wrote /opt/cmdstan/cmdstan-2.40.0/src/cmdstan/main_threads.o" and "threaded sample: 1 chain, threads_per_chain = 2" after "theta posterior mean 0.3988". AC2 rerun on the no-group-write image exited 1 with "can't create src/cmdstan/main_threads.o: Permission denied" and the FAIL line "the threaded build of bernoulli.stan could not write into the CmdStan tree (Permission denied above); check that the rstudio user can write there". AC4 text re-read at 7ebff97: the header (lines 15-21) and DESIGN.md (lines 62-64) say that phase 3 builds and samples a threaded model as rstudio and that the build fails when rstudio cannot write main_threads.o into the tree. AC5: shellcheck 0.11.0 printed nothing; the Dockerfile is unchanged since the hadolint run above.
