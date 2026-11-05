@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M012: Alert on a failed docker.yml push build
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -86,6 +86,8 @@ A failed `docker.yml` push build reports through the `ci-failure` issue, and a s
 - 2026-11-05: T5 done. `m012-drill` deleted, never merged. `latest` (`sha256:2511d73a…`) and `resolute` (`sha256:783ea7b6…`) read the same digests before and after the drills. No `ci-failure` issue is open.
 - 2026-11-05: claim audit: 75 claims read, 13 corrected — .github/ci-failure-issue.sh, .github/last-success.sh, .github/rebuild-gap.sh, .github/workflows/docker.yml, .github/workflows/rebuild-gap.yml, cairn/DESIGN.md. All 13 were text, no behavior. The issue body now says "scheduled run that moves the tags".
 - 2026-11-05: claim audit re-read: all 13 hold. The issue body still omits that a `notify` dispatch can close the issue, left for the row "Fix notify on cancels and dispatches", which already names that text.
+- 2026-11-05: review return 1: AC5 fails: a job listing that jq cannot process, `{"jobs":[{"steps":["oops"]}]}`, makes `last-success.sh` go on to the next run and print `none` instead of `unknown` (diff-bug #6). The return also carries the fix-now items in the Review section.
+- 2026-11-05: throwaway branch `m012-drill2`, deleted, run 41989546885 settled diff-bug #1: `notify` runs after a leg timeout. Its notify step only echoed, so it wrote no issue.
 
 ## Decisions
 
@@ -101,3 +103,56 @@ Pass 1, branch head `1dc7ed0`, 2026-11-05. Since the drills' commit `f2cc9b4`, n
 - AC6: run 41986937699: "Attach the tags" `success`, printed "test mode: both manifest lists were assembled and checked, and no tag was attached". `latest` (`sha256:2511d73a…`) and `resolute` (`sha256:783ea7b6…`) read the same digests as before the drills. Pass.
 - AC7, part read now: each named site states the rules in the diff; `gh label list` shows "Opened when a scheduled run or push build fails, or no scheduled rebuild has succeeded lately". All eight offline suites pass locally, and `shellcheck -x -S info` v0.11.0 over the tracked shell files exits 0 in a container. The box stays open until `pr-ci.yml` and `lint.yml` pass on the pull request, at step 8's CI wait.
 - Gate: `cairn_validate` passes; no principle text changed, so `cairn_impact` is skipped; `hadolint Dockerfile` exits 0 (container); base image `jmgirard/rstudio2u:${BASE_TAG}` with `noble`; no secret word in the Dockerfile; `.dockerignore` present; the diff touches no build context file; no changelog file (PROFILE); no snapshot file changed.
+- Gate, build: local `docker build` of the branch exits 0.
+
+spawned: diff-bug, blame-history, prior-review, ripple
+
+- diff-bug #1: the timed-out leg path never ran, and `!cancelled()` could lose the alert — reject, false: run 41989546885, a throwaway dispatch with a one-minute leg timeout, shows all four legs `cancelled`, publish `skipped`, notify `success`, results `cancelled skipped success`, which the script reports as a failure.
+- diff-bug #2: `DESIGN.md:164` and `docker.yml:452` say a green attempt 2 closes the issue, and a stale one does not — fix now.
+- diff-bug #3: `rebuild-gap.yml:5,26,46` and `rebuild-gap.sh` wording still says "last succeeded" — fix now for the `rebuild-gap.yml` comment and input description, which AC7 names; the rest stays, because a stale run is not a rebuild, so "no successful rebuild" still holds.
+- diff-bug #4: a `test_mode` dispatch moves no tag yet closes the issue, unlike a stale run — follow-up, absorbed into "Fix notify on cancels and dispatches" (low: AC3 keeps today's dispatch rule).
+- diff-bug #5: a cancelled publish on a push run reports nothing — follow-up, new row "Report a cancelled publish job" (parked: needs publish to hit the 6-hour limit after four green legs).
+- diff-bug #6: `{"jobs":[{"steps":["oops"]}]}` makes jq fail inside the `if`, so the walk passes over it and prints `none` — fix now, floor return: it shows AC5 failing.
+- diff-bug #7: only a run's latest attempt is read — reject, edge: needs a by-hand "rerun all" of a green scheduled run, outside documented use; the effect is a wider measured gap and an alert.
+- diff-bug #8: a by-hand `--failed` rerun's reuse of publish's verdict output is undrilled — follow-up, absorbed into "Fix notify on cancels and dispatches" (low: `rebuild-retry` reruns only mirror failures, and a stale run has none).
+- diff-bug #9: two overlapping failed push runs can open two issues — follow-up, absorbed into "Quiet alerts from superseded push builds" (parked: a green scheduled run closes both).
+- diff-bug #10: one failed read on a Tuesday opens "Could not read" — reject, planned change: AC5 asks for `unknown`.
+- diff-bug #11: `gh` inherits the loop's here-string as stdin — fix now, `</dev/null`.
+- diff-bug #12: the ROADMAP row still names `always()` — reject, planned change: step 9 narrows that row.
+- diff-bug #13: comment wraps — reject, style.
+- diff-bug #14: stale with no open issue repeats the stale code path — fix now, remove.
+- diff-bug #15: stale on push repeats 8a's path — fix now, remove.
+- diff-bug #16: the second `success stale failure` run repeats aggregation — fix now, remove.
+- diff-bug #17: the `workflow_dispatch` pass repeats `schedule` — reject, planned change: AC3 names both values.
+- diff-bug #18: green push with no open issue repeats the open state — reject, planned change: AC2 names each open state.
+- diff-bug #19: publish-only failure repeats 7a's path — reject, planned change: AC1 names it.
+- diff-bug #20: a weaker expectation after exact title and body matches — fix now, remove.
+- diff-bug #21: the body assertion passes on the old text — fix now, pin "that moves the tags".
+- diff-bug #22: "not newest first" passes without the sort — fix now, remove.
+- diff-bug #23: case 12 repeats case 1's sort path — fix now, remove.
+- diff-bug #24: two inputs reach one `jq` guard — fix now, keep the non-JSON case and add the malformed case from #6.
+- diff-bug #25: no-step listing shares a path with skipped-step — reject, planned change: AC5 names it.
+- diff-bug #26: the exact-calls check repeats what `expect` proved — fix now, remove it and the stub's log.
+- diff-bug #27: the `any_stale` branch is unasserted — fix now, assert the printed line.
+- diff-bug #28: `lint.yml` has not run — reject, false for shellcheck: v0.11.0 with `-x -S info` exits 0 over the tracked shell files; `lint.yml` itself runs at step 8 under AC7.
+- blame-history #1: a run cancelled after a failed leg reports nothing — reject, planned change: AC2.
+- blame-history #2: pre-change stale runs can mask a missing rebuild until they leave the 100-run window — reject, false: the script returns that run's date, and the gap grows from it.
+- blame-history #3: the step name is load-bearing — reject, planned change: the header and the `docker.yml` comment state it, and it fails loud.
+- blame-history #4: the stale log line left "Attach the tags" — reject, planned change: the `fresh` step's warning says it.
+- blame-history #5: a branch dispatch with `notify` and no `test_mode` opens an issue — follow-up, already in "Fix notify on cancels and dispatches".
+- blame-history #6: an empty `createdAt` shifts tab-split fields — reject, edge: GitHub returns no such run, and the output is still `unknown`.
+- blame-history #7: a push failure stays open up to seven days — reject, planned change: the user's answer at the question set.
+- blame-history #8: up to 100 listing reads — reject, edge: only a renamed step walks the whole list; the effect is slow running.
+- prior-review #1: a timed-out leg now opens an issue on push — reject, planned change: AC1.
+- prior-review #2: `docker.yml`'s paths omit `ci-failure-issue.sh` although `notify` now runs on push — reject, false: each run reads the script from its own commit, and `pr-ci.yml` tests it. A rebuild for a script-only edit would move tags for nothing, the D-003 reasoning.
+- prior-review #3: the issue body names only scheduled runs — follow-up, already in "Fix notify on cancels and dispatches".
+- prior-review #4: pre-change stale runs still count — reject, planned change: AC5 states it.
+- ripple #1: the M012 row describes old behavior — reject, planned change: step 9 graduates it.
+- ripple #2: the "Fix notify" row names `always()` — reject, planned change: step 9 narrows it.
+- ripple #3: same as diff-bug #2 — fix now.
+- ripple #4: same as prior-review #3 — follow-up, already in that row.
+- ripple #5: "Stop false gap alerts from keepalive" says only green scheduled runs count — fix now.
+- ripple #6: "The scheduled run was fully green" prints on a dispatch — follow-up, already in "Fix notify on cancels and dispatches".
+- ripple #7: the `subject` doc names only the weekly wording — fix now.
+- ripple #8: same as diff-bug #3 — fix now for the same sites.
+- ripple #9: "Quiet alerts" omits that a `notify` dispatch also closes — fix now.
