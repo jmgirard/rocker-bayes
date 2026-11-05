@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-11-05 (M013 done: graduated "Port the CRLF guard or drop its cite", pruned the M010 row; caps checked by hand; validate green)_
+_Last hygiene check: 2026-11-05 (M014 done: graduated "Stop calling the CmdStan tag immutable", pruned the M011 row; caps checked by hand; validate green)_
 
 ## Milestones
 
@@ -9,14 +9,12 @@ _Last hygiene check: 2026-11-05 (M013 done: graduated "Port the CRLF guard or dr
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M014 | Stop calling the CmdStan tag immutable | review | — | normal | milestones/M014-cmdstan-tag-claim.md |
+| M014 | Stop calling the CmdStan tag immutable | done | — | normal | milestones/archive/M014-cmdstan-tag-claim.md |
 | M013 | Port the CRLF guard | done | — | high | milestones/archive/M013-port-crlf-guard.md |
 | M012 | Alert on a failed docker.yml push build | done | — | high | milestones/archive/M012-alert-failed-push-build.md |
-| M011 | Fix the package persistence claim | done | — | high | milestones/archive/M011-package-persistence-claim.md |
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
 - Correct the claim in rstudio2u too: rstudio2u's README line 105 and its `docker-compose.yml` comment say that installed R packages persist in the home volume, the claim M011 corrects here. The `stop_*` launcher messages, synced from that repo, say "resume where you left off", and a start launcher can bring a newer image that drops installed packages. Normal rung because the same users are misled there — added 2026-11-05 — M011 plan, audit finding 7
-- Stop calling the CmdStan tag immutable: Every build re-pushes `<variant>-cmdstan<v>` (`docker.yml`, the `tags+=` line in publish), so README's "immutable" and "will not change under you" overstate it for that tag, and DESIGN.md and IP4 use the same word. The date tag can also move within a day. Normal rung because users pin these tags for reproducibility — added 2026-11-05 — M011 plan audit — started M014
 - Stop calling rstudio2u tags immutable: rstudio2u's README says "immutable" and "will not change under you" at lines 19, 114, 135, and 143. Its `noble-2026.10.1-239` tag has the digest of `noble-2026-11-05` on Docker Hub, so that tag moves with builds too. Normal rung because the same users pin those tags — added 2026-11-05 — M014 plan
 - Smoke a threaded CmdStan build in CI: Phase 3 compiles without `stan_threads`, so a lost group write bit on `/opt/cmdstan`, which a threaded build needs for `main_threads.o`, passes CI. M010 checked it by hand only — added 2026-10-20 — M010 review blame-history #1
 - Stop false gap alerts from keepalive: A `keepalive` failure alone fails the scheduled run, and `rebuild-gap.yml` counts only green scheduled runs that moved the tags (`last-success.sh`), so a deleted deploy key raises a false "no successful rebuild" alert on the second week while tags move. The 50-day threshold leaves one weekly chance before GitHub's 60-day cutoff — added 2026-09-13 — M003 review N3, O7, O8, O6, split 2026-10-20
