@@ -199,7 +199,8 @@ folder exists only as long as the container does. By default, this includes the 
 packages you install. It also includes the libraries from `sudo apt install`.
 
 In the Compose setup, if you stop the container with a `stop_...` file and a
-`start_...` file starts the same image, those items stay. If the start file
+`start_...` file starts the same image with the same settings, those items stay.
+If the start file
 downloads a newer image, Compose replaces the container. Each time Compose
 replaces the container, those items are lost. The files in your home volume
 remain. For example, these actions replace the container:

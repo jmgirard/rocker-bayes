@@ -1,6 +1,6 @@
 # M011: Fix the package persistence claim
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -72,6 +72,9 @@ The README says truthfully where installed R packages live, when they are lost, 
 - 2026-11-05: T2 done: new section "Keeping installed packages", plus Quick start step 5, the "Your work is saved" note, Option 1 step 5, the Adding R Packages bullet, the Baking Dockerfile and `--rm` note, the port FAQ, and the update FAQ. Baking now lists glmmTMB, mice, and metafor, which `find.package()` did not find in the image and which r2u has. README line 162 unchanged per T1. Older README text keeps its simple-english lint hits: restyling it is outside this scope.
 - 2026-11-05: T3 done: the list and Dockerfile, extracted from README.md by script, both ran. In a replaced Compose container (0ed9c6ecfce6) `source("~/my_packages.R")` installed libfftw3-dev and loaded glmmTMB, mice, and metafor, all absent before. The built image loaded the same three from `/usr/lib/R/site-library`, each `r-cran-*` shown installed by dpkg. Project m011 and its volume removed. There was no local `latest` to restore and no `rstudio_home` volume existed before or after. Minor amendment: test images stay until review's evidence run.
 - 2026-11-05: T4 done: DESIGN.md Purpose no longer lists a `/home/rstudio` volume in the base interface (no declared volume in the image), and Architecture says where installed packages live.
+- 2026-11-05: T1's stop and start case and its newer-image case ran through `stop_mac.command` and `start_mac.command`, not bare `docker compose stop` and `start`; the Linux and Windows launchers were read, not run.
+- 2026-11-05: claim audit: 26 claims read, 7 corrected — README.md
+- 2026-11-05: claim audit dispositions: narrowed to "by default" in the note and section, narrowed "everything else" to changes you make, added the same-image and same-settings condition to stop and start, limited the published-image sentence to the start files, tied the update FAQ's loss to the next `up`, and qualified "Thanks to bspm". No change for the bind-mount case, because that text already says to keep work in the mounted folder, and none for the line near the top about binary installation. One re-read done; its one finding is fixed with no further pass.
 
 ## Decisions
 
