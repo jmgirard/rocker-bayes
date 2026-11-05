@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M012: Alert on a failed docker.yml push build
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP8
 - **Resolves:** —
 - **Surface tier:** user-facing — it edits the publish job that moves the tags users pull
-- **Branch/PR:** —
+- **Branch/PR:** m012-alert-failed-push-build
 
 ## Goal
 
@@ -51,7 +51,7 @@ A failed `docker.yml` push build reports through the `ci-failure` issue, and a s
 
 ## Tasks
 
-- [ ] T1: In `.github/ci-failure-issue.sh`, read `RUN_EVENT`, tests first. On `push`, a failure uses the `Push build failed` wording, and a success writes nothing and prints a line. Unset or any other value keeps today's wording. Add a `stale` result: it counts as a failure beside a failed job, and otherwise opens and closes nothing. Update the header and the label description.
+- [x] T1: In `.github/ci-failure-issue.sh`, read `RUN_EVENT`, tests first. On `push`, a failure uses the `Push build failed` wording, and a success writes nothing and prints a line. Unset or any other value keeps today's wording. Add a `stale` result: it counts as a failure beside a failed job, and otherwise opens and closes nothing. Update the header and the label description.
 - [ ] T2: In `.github/workflows/docker.yml`: give `publish` a job output carrying the verdict; add a step-level `if` on the verdict to "Attach the tags" and remove the step's own stale branch; change the `notify` gate to `!cancelled()` and add `push`; pass `RUN_EVENT`; drop `keepalive` from `RESULTS` on a push run; pass `stale` for `publish` only when the verdict is `stale` and `needs.publish.result` is `success`. Update the comments and the `notify` input description.
 - [ ] T3: In `.github/last-success.sh`, walk the successful scheduled runs newest first and read each one's job listing with `gh run view` until one has "Attach the tags" at `success`, tests first. In `rebuild-gap.yml`, add `databaseId` to the run list. Update the headers and comments. The existing `test_last_success.sh` cases gain a stub.
 - [ ] T4: Update `cairn/DESIGN.md`'s bullets "No tag moves back to an older recipe" and "A failed or missing rebuild opens an issue", including the startup-failure limit.
@@ -72,6 +72,7 @@ A failed `docker.yml` push build reports through the `ci-failure` issue, and a s
 - 2026-11-05: plan gate chose extending `notify` over a separate `workflow_run` alert workflow because `notify` and its test suite exist and the run's results are already in scope; falsified by a push build startup failure going unreported in practice.
 - 2026-11-05: plan gate chose a step-level `if` on "Attach the tags", read through the job listing, over a marker in the run title or an artifact because the listing already carries step conclusions and `rebuild-gap.yml` already has `actions: read`; falsified by a stale run whose attach step reads anything but `skipped`.
 - 2026-11-05: AC6 cannot show a real tag attach before merge. Review hygiene reads the merge's push build for attached tags and an untouched issue.
+- 2026-11-05: T1 done. `ci-failure-issue.sh` reads `RUN_EVENT` and takes a `stale` result. The new suite cases failed (11 assertions) before the script change. A green push build returns before any `gh` call, so it does not even read the list.
 
 ## Decisions
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# Open, update, or close the repo's `ci-failure` issue from a scheduled run's
+# Open, update, or close the repo's `ci-failure` issue from a workflow run's
 # job results. Ported from jmgirard/rstudio2u. Two callers use it:
 #
-#   - the `notify` job in .github/workflows/docker.yml, on scheduled runs (and
-#     on a dispatch with its `notify` input set), so a failure anywhere in the
-#     run reaches the maintainer as an issue, and the next fully green run
-#     closes it;
+#   - the `notify` job in .github/workflows/docker.yml, on scheduled runs, push
+#     builds, and a dispatch with its `notify` input set, so a failure anywhere
+#     in the run reaches the maintainer as an issue, and the next fully green
+#     scheduled run closes it;
 #   - .github/rebuild-gap.sh, which reports what no single run can see: that no
 #     scheduled run has succeeded in too long. It uses this same issue, because
 #     the next fully green scheduled run is the right close condition for both.
@@ -18,8 +18,11 @@
 #             neither "success" nor "cancelled" (a failure, a skipped job, a
 #             value GitHub has yet to invent) opens or updates the issue, even
 #             beside a cancelled job, because a skipped job did not do its work.
-#             A list whose only non-success results are "cancelled" is reported
-#             and ignored.
+#             A list whose only non-success results are "cancelled" or "stale"
+#             is reported and ignored. The caller passes "stale" for a publish
+#             job that attached no tag because the default branch has a newer
+#             recipe: that run failed nothing, and it moved no tag, so it
+#             neither opens nor closes the issue.
 #   run-url   link to the workflow run, put in the issue or comment body.
 #   jobs-json path to `gh run view --json jobs` output (or "-" for stdin). The
 #             failed job names are extracted from it here. A build leg is named
@@ -35,6 +38,12 @@
 #             than a failed job passes one, and usually passes "" as jobs-json.
 #             It is trimmed to its first line and to 256 characters.
 # Env: GH_TOKEN (or a logged-in `gh`) with issues:write on the repo.
+#      RUN_EVENT  the event that started the run. `push` gives a failure the
+#                 "Push build failed: <jobs>" wording, and makes a success write
+#                 nothing: a push build uses the build cache, so it does not
+#                 prove what a scheduled rebuild proves, and only a scheduled
+#                 run (or a dispatch with `notify` set) closes the issue. Unset
+#                 or any other value keeps the "Weekly run failed" wording.
 #
 # One issue is reused: with an open ci-failure issue, a failure comments on the
 # oldest one instead of opening another.
@@ -54,17 +63,18 @@ usage() {
     exit 2
 }
 
-# Collapse the needed jobs' results to one of failure / success / cancelled.
-# Success must be unanimous. Anything that is neither success nor cancelled
-# counts as a failure, and a failure outranks a cancellation. An empty list is a
-# failure too, because nothing reported success.
+# Collapse the needed jobs' results to one of failure / success / stale /
+# cancelled. Success must be unanimous. Anything that is none of those counts as
+# a failure, and a failure outranks a cancellation or a stale publish. An empty
+# list is a failure too, because nothing reported success.
 aggregate_result() {
-    local all_success=1 any_failure=0 r
+    local all_success=1 any_failure=0 any_stale=0 r
     [ $# -gt 0 ] || { all_success=0; any_failure=1; }
     for r in "$@"; do
         case "$r" in
             success)   ;;
             cancelled) all_success=0 ;;
+            stale)     all_success=0; any_stale=1 ;;
             *)         all_success=0; any_failure=1 ;;
         esac
     done
@@ -72,6 +82,8 @@ aggregate_result() {
         echo success
     elif [ "$any_failure" -eq 1 ]; then
         echo failure
+    elif [ "$any_stale" -eq 1 ]; then
+        echo stale
     else
         echo cancelled
     fi
@@ -141,6 +153,11 @@ if [ -n "$subject" ]; then
     lead_open="$subject"
     lead_again="$subject"
     reason="$subject"
+elif [ "${RUN_EVENT:-}" = "push" ]; then
+    title="Push build failed: $failed_text"
+    lead_open="The push build failed in: $failed_text"
+    lead_again="The push build failed again in: $failed_text"
+    reason="$failed_text"
 else
     title="Weekly run failed: $failed_text"
     lead_open="The scheduled run failed in: $failed_text"
@@ -168,7 +185,7 @@ case "$result" in
             echo "::warning::the run is reported failed but its job listing names no failed job; the issue falls back to generic text"
         fi
         gh label create "$LABEL" --force \
-            --description "Opened when a scheduled run fails or no scheduled rebuild has succeeded lately" \
+            --description "Opened when a scheduled run or push build fails, or no scheduled rebuild has succeeded lately" \
             --color B60205 >/dev/null
         list_open
         if [ ${#open[@]} -eq 0 ]; then
@@ -183,6 +200,10 @@ case "$result" in
         fi
         ;;
     success)
+        if [ "${RUN_EVENT:-}" = "push" ]; then
+            echo "the push build was fully green; only a scheduled run closes a $LABEL issue"
+            exit 0
+        fi
         list_open
         if [ ${#open[@]} -eq 0 ]; then
             echo "the scheduled run was fully green; no open $LABEL issue"

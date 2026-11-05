@@ -9,7 +9,7 @@ _Last hygiene check: 2026-11-05 (M012 planned: two parked rows added; M011 done,
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M012 | Alert on a failed docker.yml push build | planned | — | high | milestones/M012-alert-failed-push-build.md |
+| M012 | Alert on a failed docker.yml push build | in-progress | — | high | milestones/M012-alert-failed-push-build.md |
 | M011 | Fix the package persistence claim | done | — | high | milestones/archive/M011-package-persistence-claim.md |
 | M010 | Give old home volumes the new CmdStan | done | — | high | milestones/archive/M010-cmdstan-out-of-home.md |
 | M009 | Assert each leg's OS matches its variant | done | — | high | milestones/archive/M009-leg-os-codename.md |
