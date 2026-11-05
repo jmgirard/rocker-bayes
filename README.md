@@ -243,16 +243,37 @@ yours.
 
 `latest`, `noble`, and `resolute` are **moving** tags that update as new versions
 of R, RStudio, CmdStan, and the R packages are released. For a setting where
-everyone should get an identical environment, pin an **immutable** tag instead:
+everyone should get an identical environment, pin a **date tag** from an earlier
+day or an image digest instead:
 
-| Tag pattern           | Example                   | Frozen at                    |
-| --------------------- | ------------------------- | ---------------------------- |
-| `<variant>-<date>`    | `noble-2026-07-05`        | everything, as of that build |
-| `<variant>-cmdstan<v>`| `noble-cmdstan2.40.0`     | that CmdStan version         |
+| Tag pattern           | Example                   | Keeps                  | Moves                                     |
+| --------------------- | ------------------------- | ---------------------- | ----------------------------------------- |
+| `<variant>-<date>`    | `noble-2026-11-02`        | the whole image        | if a second publish runs on that UTC day  |
+| `<variant>-cmdstan<v>`| `noble-cmdstan2.40.0`     | only the CmdStan version | with each publish while `<v>` is the pin |
 
-Use one in `docker run`, in `docker-compose.yml`, or as the `FROM` line of a
-derivative image and it will not change under you. Browse the
+CI names a date tag for the UTC day on which its publish job runs. A second
+publish on that day moves the tag to the newer image, so choose a date from an
+earlier day.
+
+A CmdStan tag keeps only the CmdStan version. R, RStudio, and the R packages
+change with each publish while that version is the one the
+[`Dockerfile`](Dockerfile) pins. After a newer version is pinned, the old tag stays
+on the last image published with it.
+
+Use a tag in `docker run`, in `docker-compose.yml`, or as the `FROM` line of a
+derivative image. Browse the
 [available tags](https://hub.docker.com/r/jmgirard/rocker-bayes/tags) on Docker Hub.
+
+An image digest is the one pin that never moves, because it identifies the exact
+image contents. To get a tag's digest, run this command and copy the `Digest:` line
+at the top of its output:
+
+```
+docker buildx imagetools inspect jmgirard/rocker-bayes:noble-2026-11-02
+```
+
+Then use `jmgirard/rocker-bayes@sha256:<digest>` where you would use the tag. The
+digest covers both amd64 and arm64.
 
 The image is rebuilt weekly by CI, so the Docker date tags are the record of
 *builds*. The [GitHub releases](https://github.com/jmgirard/rocker-bayes/releases)
