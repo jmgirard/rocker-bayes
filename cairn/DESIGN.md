@@ -119,7 +119,10 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   run's commit over the paths in `docker.yml`'s push `paths` filter. If any
   differ, the run attaches no tag for either variant, warns, and ends green.
   A commit that changes one of those paths normally starts its own push build,
-  which publishes the newer recipe. A failed fetch fails the job. This is an
+  which publishes the newer recipe. A stale run moved no tag, so its "Attach
+  the tags" step shows as skipped, it neither opens nor closes the
+  `ci-failure` issue unless another job failed, and it does not count as a
+  rebuild for `rebuild-gap.yml`. A failed fetch fails the job. This is an
   exception to GP2's "every build also publishes immutable tags": a refused
   run withholds its date and CmdStan tags too. Otherwise it overwrites the
   newer build's same-day date tag. `docker.yml` has no concurrency group. A
@@ -139,12 +142,17 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   `keepalive` job pushes an empty commit to that branch. The rule is in
   `.github/keepalive.sh`. The push uses a write-enabled deploy key held in the
   `KEEPALIVE_DEPLOY_KEY` secret, so no job needs a token that can write.
-- **A failed or missing rebuild opens an issue.** If a job in a scheduled run
-  fails, the `notify` job in `docker.yml` opens or comments on a `ci-failure`
-  issue. A fully green scheduled run closes it. Every attempt reports.
-  `rebuild-gap.yml` runs each Tuesday. If the last successful
-  scheduled rebuild is more than 8 days old, it raises the same issue. The suites in
-  `.github/tests/` test these scripts offline, and `pr-ci.yml` runs them.
+- **A failed build or a missing rebuild opens an issue.** If a job in a
+  scheduled run or a push build fails, the `notify` job in `docker.yml` opens
+  or comments on a `ci-failure` issue. A fully green scheduled run closes it. A
+  green push build writes nothing to the issue, because it builds from the
+  cache and proves less than a scheduled rebuild. A run cancelled before
+  `notify` starts reports nothing. Every attempt reports. A run that fails at
+  startup, such as invalid workflow YAML, starts no job, so `notify` cannot
+  report it. `rebuild-gap.yml` runs each Tuesday. If the last successful
+  scheduled rebuild that moved the tags is more than 8 days old, it raises the
+  same issue. The suites in `.github/tests/` test these scripts offline, and
+  `pr-ci.yml` runs them.
 - **A weekly rebuild that failed on the r2u mirror is rerun once.**
   `rebuild-retry.yml` starts when a `docker.yml` run completes, because
   GitHub refuses a rerun requested from inside the same run. It reruns the
