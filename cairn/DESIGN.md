@@ -98,8 +98,8 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   publish job, and moves if a second publish runs that day. A
   `<variant>-cmdstan<version>` tag keeps only the CmdStan version, moves with each
   publish while that version is the Dockerfile pin, and then stays on the last one.
-  An image digest is the one pin that never moves (D-006). User-facing docs never
-  mention milestone IDs.
+  An image digest is the one pin that never moves. User-facing docs never mention
+  milestone IDs.
 - **CmdStan is pinned by hand** in the Dockerfile `ARG` and bumped after a
   CmdStan release is reviewed; the weekly rebuild never changes it. CI reads
   the pin for the CmdStan tag.

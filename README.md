@@ -253,7 +253,7 @@ day or an image digest instead:
 
 CI names a date tag for the UTC day on which its publish job runs. A second
 publish on that day moves the tag to the newer image, so choose a date from an
-earlier day.
+earlier day in UTC.
 
 A CmdStan tag keeps only the CmdStan version. R, RStudio, and the R packages can
 change with each publish while that version is the one the
@@ -264,10 +264,15 @@ Use a tag in `docker run`, in `docker-compose.yml`, or as the `FROM` line of a
 derivative image. Browse the
 [available tags](https://hub.docker.com/r/jmgirard/rocker-bayes/tags) on Docker Hub.
 
-To pin with Compose, change the `image:` line in `docker-compose.yml`, then use the
-start files or `docker compose pull` and `docker compose up -d`. Do not use
-`docker compose up --build` with a pin. That command builds a new image from the
-`Dockerfile` and gives it the name on the `image:` line.
+To pin with Compose, copy a tag from that page into the `image:` line in
+`docker-compose.yml`. Then use the start files, or run `docker compose pull` and
+`docker compose up -d`. The new image replaces the container, so read
+[Keeping installed packages](#keeping-installed-packages) first.
+
+If `docker compose pull` cannot find the tag, correct the `image:` line before you
+continue. Otherwise, `docker compose up -d` builds an image from the `Dockerfile`
+and gives it that tag's name. Do not use `docker compose up --build` with a tag
+pin, because it also builds an image and gives it that tag's name.
 
 An image digest is the one pin that never moves, because it identifies the exact
 image contents. To get a tag's digest, run this command:
