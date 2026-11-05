@@ -82,7 +82,10 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   the offline suites in `.github/tests/` that it lists by name, among them
   `test_install_cmdstan.sh`, which sources `scripts/install_bayes.sh` with
   stubbed commands. `.github/workflows/lint.yml` runs a pinned
-  shellcheck over every tracked `*.sh` and `*.command` file. Both workflows
+  shellcheck over every tracked `*.sh` and `*.command` file.
+  `.github/workflows/launchers.yml` runs `test_launcher_line_endings.sh`, with
+  no image build, on a pull request that touches a `.bat` file or
+  `.gitattributes`. All three workflows
   declare a concurrency group keyed on the workflow and the pull request
   number with `cancel-in-progress: true`, so a new push cancels that pull
   request's older run. `.github/dependabot.yml` keeps the action pins current.
@@ -243,10 +246,8 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
 
 ## Known issues
 
-- Launcher tests were not ported from rstudio2u: `.gitattributes` cites
-  `scripts/tests/test_launcher_line_endings.sh`, which does not exist here.
-  The launchers and the CRLF guard are unverified in this repo (interview
-  2026-09-03).
+- Launcher tests other than the CRLF guard were not ported from rstudio2u, so
+  the launchers' behavior is unverified in this repo (interview 2026-09-03).
 - Newest-on-CRAN means a bad upstream release can break the weekly rebuild
   (rstanarm dev bug, 2025-01); a failed build leaves the old moving tag in
   place.

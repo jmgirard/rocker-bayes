@@ -42,12 +42,12 @@ Make CI fail a pull request that stores a Windows launcher with LF line endings.
 ## Tasks
 
 - [x] T1: Copy `~/github/rstudio2u/scripts/tests/test_launcher_line_endings.sh` to `.github/tests/`. Keep its logic. In its header, remove the rstudio2u milestone reference and the false `git archive` reason, and add a usage line like the other suites have. shellcheck is not installed locally, so run the pinned version in a container against the repo checkout, or rely on CI.
-- [ ] T2: Run AC2's five cases in scratch repos and record the results in the work log.
-- [ ] T3: Add the guard to the `script-tests` run list in `.github/workflows/pr-ci.yml:58`.
-- [ ] T4: Add `.github/workflows/launchers.yml`, with `permissions` and `concurrency` as in `lint.yml` and the same `actions/checkout` pin. State in its header why it is separate from `pr-ci.yml`: a launcher-only change does not need an image build.
-- [ ] T5: Rewrite the `.gitattributes` comment at lines 3 to 7 with the new path and a reason that a run showed: under `-text`, git converts no bytes on checkout or in `git archive`, so only CRLF in the blob ships as CRLF.
+- [x] T2: Run AC2's five cases in scratch repos and record the results in the work log.
+- [x] T3: Add the guard to the `script-tests` run list in `.github/workflows/pr-ci.yml:58`.
+- [x] T4: Add `.github/workflows/launchers.yml`, with `permissions` and `concurrency` as in `lint.yml` and the same `actions/checkout` pin. State in its header why it is separate from `pr-ci.yml`: a launcher-only change does not need an image build.
+- [x] T5: Rewrite the `.gitattributes` comment at lines 3 to 7 with the new path and a reason that a run showed: under `-text`, git converts no bytes on checkout or in `git archive`, so only CRLF in the blob ships as CRLF.
 - [ ] T6: Control run. Push the milestone branch with `m013-*` temporarily added to `launchers.yml`'s `branches`. Cut a control branch with one LF-only line in `stop_windows.bat`, and open a pull request into the milestone branch. Record the failed `line-endings` check, close the pull request unmerged, and delete the control branch. Remove the temporary filter in its own commit before review.
-- [ ] T7: In `cairn/DESIGN.md`, narrow the Known issues entry at line 246 to the launcher tests still not ported, and name `launchers.yml` and the guard in the pre-merge checks bullet at line 78.
+- [x] T7: In `cairn/DESIGN.md`, narrow the Known issues entry at line 246 to the launcher tests still not ported, and name `launchers.yml` and the guard in the pre-merge checks bullet at line 78.
 
 ## Work log
 
@@ -64,6 +64,8 @@ Make CI fail a pull request that stores a Windows launcher with LF line endings.
 - 2026-11-05: plan chose `.github/tests/` over the cited `scripts/tests/` because `scripts/**` is in the build context and in `docker.yml`'s push paths, so a guard edit would rebuild four legs and move tags; falsified by a `docker.yml` paths change that frees `scripts/tests/`.
 - 2026-11-05: new candidate "Resync the launchers from rstudio2u" holds the launcher drift found here; it is outside this request.
 - 2026-11-05: T1: ported the guard to `.github/tests/`, logic unchanged. It passes on `start_windows.bat` and `stop_windows.bat`, and shellcheck 0.11.0 at `-S info` in a container is clean.
+- 2026-11-05: T2: AC2's five cases in scratch repos each gave the wanted exit: all-LF blob, one LF-only line, and LF blob with CRLF working tree exit 1 and name `x.bat`; no tracked `.bat` exits 1 with the "no tracked" line; CRLF blob with LF working tree exits 0.
+- 2026-11-05: T3, T4, T5, T7: added the guard to `script-tests`, added `launchers.yml`, rewrote the `.gitattributes` comment from the local `git archive` run, and narrowed the DESIGN.md Known issues entry. Their tasks ran out of plan order, before T6, so T6 tests the final workflow.
 
 ## Decisions
 
