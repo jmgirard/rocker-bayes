@@ -28,7 +28,7 @@ CmdStan with `--build-arg CMDSTAN_VERSION=<version>` if you need a specific
 version.
 
 These tags **move** as new versions are released. For an environment that stays
-the same (e.g. a course), pin a date tag instead. See
+the same (such as a course), pin a date tag instead. See
 [Reproducibility](#reproducibility).
 
 > On a Windows host you may want to increase the number of CPUs available to WSL
@@ -246,9 +246,9 @@ of R, RStudio, CmdStan, and the R packages are released. For a setting where
 everyone should get an identical environment, pin a **date tag** from an earlier
 day or an image digest instead:
 
-| Tag pattern           | Example                   | Keeps                  | Moves                                     |
-| --------------------- | ------------------------- | ---------------------- | ----------------------------------------- |
-| `<variant>-<date>`    | `noble-2026-11-02`        | the whole image        | if a second publish runs on that UTC day  |
+| Tag pattern           | Example                   | Keeps                    | Moves                                    |
+| --------------------- | ------------------------- | ------------------------ | ---------------------------------------- |
+| `<variant>-<date>`    | `noble-2026-11-02`        | the whole image          | if a second publish runs on that UTC day |
 | `<variant>-cmdstan<v>`| `noble-cmdstan2.40.0`     | only the CmdStan version | with each publish while `<v>` is the pin |
 
 CI names a date tag for the UTC day on which its publish job runs. A second
@@ -272,8 +272,8 @@ at the top of its output:
 docker buildx imagetools inspect jmgirard/rocker-bayes:noble-2026-11-02
 ```
 
-Then use `jmgirard/rocker-bayes@sha256:<digest>` where you would use the tag. The
-digest covers both amd64 and arm64.
+Then use `jmgirard/rocker-bayes@sha256:<digest>` in place of the tag. The digest
+covers both amd64 and arm64.
 
 The image is rebuilt weekly by CI, so the Docker date tags are the record of
 *builds*. The [GitHub releases](https://github.com/jmgirard/rocker-bayes/releases)
