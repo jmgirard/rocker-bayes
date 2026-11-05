@@ -77,8 +77,9 @@ SMOKE_OK=0
 # The CmdStan version phase 3 expects. CI builds with the Dockerfile pin and
 # tags with it, and runs this script from the same checkout, so the Dockerfile
 # beside .github/ is the pin the image was built from. The sed pattern is the
-# one .github/tests/test_cmdstan_pin.sh uses. A set value that is not x.y.z
-# fails here and never falls back to the Dockerfile.
+# one .github/tests/test_cmdstan_pin.sh uses. A non-empty value that is not
+# x.y.z fails here and never falls back to the Dockerfile; an empty one counts
+# as unset.
 if [ -n "${SMOKE_CMDSTAN_VERSION:-}" ]; then
   WANT_CMDSTAN="$SMOKE_CMDSTAN_VERSION"
   want_from="SMOKE_CMDSTAN_VERSION"

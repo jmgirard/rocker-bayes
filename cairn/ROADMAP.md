@@ -9,7 +9,7 @@ _Last hygiene check: 2026-11-05 (triage: dropped "Validate dependabot.yml in CI 
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M017 | Check CmdStan matches the version tag | in-progress | — | low | milestones/M017-cmdstan-version-check.md |
+| M017 | Check CmdStan matches the version tag | review | — | low | milestones/M017-cmdstan-version-check.md |
 | M016 | Resync the launchers from rstudio2u | done | — | normal | milestones/archive/M016-resync-launchers.md |
 | M015 | Smoke a threaded CmdStan build in CI | done | — | normal | milestones/archive/M015-threaded-cmdstan-smoke.md |
 | M014 | Stop calling the CmdStan tag immutable | done | — | normal | milestones/archive/M014-cmdstan-tag-claim.md |
