@@ -92,3 +92,24 @@ Known issues entry against the code and the CI run history.
 
 **Consequences:** This entry supersedes no entry. A filed finding that matches
 one of these rows cites this entry. Superseding this entry reopens the row.
+
+### D-005 (2026-11-05): Installed R packages stay outside the home volume
+
+**Context:** The README said that installed packages persist in the home volume,
+and they do not. The M011 plan gate chose between correcting the text, adding a
+recipe for a package folder in the volume, and keeping packages there by default.
+
+**Decision:** The README is corrected. By default, installed packages stay in the
+system library folders and are lost when Compose replaces the container. The image
+keeps no package library in the home volume, and the README gives no recipe for
+one. A saved install list and a derivative image are the documented ways to keep
+packages.
+
+**Rationale:** bspm installs binaries system-wide, which is a base setting (IP1), so
+a library in the volume would have to build from source. After an update, old
+copies in the volume can also hide newer packages in the image, against GP2.
+
+**Consequences:** IP3 protects `/home/rstudio` and does not cover these packages.
+Evidence that reopens this: the base moves installs into the home directory, or
+users need packages across updates in a way that the list and a derivative image
+cannot serve.

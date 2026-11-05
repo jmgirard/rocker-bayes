@@ -32,10 +32,10 @@ The README says truthfully where installed R packages live, when they are lost, 
 
 ## Acceptance criteria
 
-- [ ] AC1: No text in `README.md`, the `docker-compose.yml` comments, or the `start_*` and `stop_*` messages, each read in full, says that R packages a user installs stay in the home volume. The README's "Adding R Packages" section says that by default `install.packages()` puts packages in system library folders outside the home volume, and a run of the `noble` image that prints `.libPaths()` and `find.package()` for the installed packages shows those folders.
-- [ ] AC2: The README says that in the shipped Compose setup, by default, R packages a user installs and libraries a user adds with `sudo apt install`, when the image lacks them, stay when the same container is stopped and started, and are lost when Compose replaces the container. It names these examples: `docker compose down` then `up`, a newer image (such as one from the weekly rebuild) that a start launcher or `docker compose pull` and `up` brings in, and a changed `RS_PORT` that a start launcher or `docker compose up` applies. Quick start step 5 and the update FAQ say this or link to it. A run of the shipped compose file, on the image whose digest `noble` names on the run's date, with that digest recorded, shows each named outcome through one route the example names, for an apt binary installed through bspm, a package with no r2u binary at run time, and one `sudo apt install` package, each shown present just before the action, with container IDs compared and a home directory file as a control that remains in every case. The newer-image example starts from an older date tag and ends on that image.
-- [ ] AC3: The README gives at least these two ways to keep packages: a saved list of install commands, kept in the home directory, with any `sudo apt install` lines included, and the derivative image that its "Baking packages" section shows. The saved list, written as the README shows it and rerun in a replaced Compose container, loads its packages again. The section's Dockerfile lists packages the image lacks, and a fresh container from that built image loads them.
-- [ ] AC4: The README's two `docker run --rm` commands, in Option 1 and in the "Baking packages" section, each say that the command has no home volume, so files and packages are gone when the container ends. `docker image inspect` on the `noble` image shows no declared volume, and a file written to the home directory in a `docker run --rm` container is absent from the next one.
+- [x] AC1: No text in `README.md`, the `docker-compose.yml` comments, or the `start_*` and `stop_*` messages, each read in full, says that R packages a user installs stay in the home volume. The README's "Adding R Packages" section says that by default `install.packages()` puts packages in system library folders outside the home volume, and a run of the `noble` image that prints `.libPaths()` and `find.package()` for the installed packages shows those folders.
+- [x] AC2: The README says that in the shipped Compose setup, by default, R packages a user installs and libraries a user adds with `sudo apt install`, when the image lacks them, stay when the same container is stopped and started, and are lost when Compose replaces the container. It names these examples: `docker compose down` then `up`, a newer image (such as one from the weekly rebuild) that a start launcher or `docker compose pull` and `up` brings in, and a changed `RS_PORT` that a start launcher or `docker compose up` applies. Quick start step 5 and the update FAQ say this or link to it. A run of the shipped compose file, on the image whose digest `noble` names on the run's date, with that digest recorded, shows each named outcome through one route the example names, for an apt binary installed through bspm, a package with no r2u binary at run time, and one `sudo apt install` package, each shown present just before the action, with container IDs compared and a home directory file as a control that remains in every case. The newer-image example starts from an older date tag and ends on that image.
+- [x] AC3: The README gives at least these two ways to keep packages: a saved list of install commands, kept in the home directory, with any `sudo apt install` lines included, and the derivative image that its "Baking packages" section shows. The saved list, written as the README shows it and rerun in a replaced Compose container, loads its packages again. The section's Dockerfile lists packages the image lacks, and a fresh container from that built image loads them.
+- [x] AC4: The README's two `docker run --rm` commands, in Option 1 and in the "Baking packages" section, each say that the command has no home volume, so files and packages are gone when the container ends. `docker image inspect` on the `noble` image shows no declared volume, and a file written to the home directory in a `docker run --rm` container is absent from the next one.
 
 ## Coverage
 
@@ -88,6 +88,45 @@ The README says truthfully where installed R packages live, when they are lost, 
 ## Decisions
 
 ## Review
+
+### Pass 2 (evidence at head d13be41, 2026-11-05)
+
+The fix-now commit after this run changes README prose only, and the extracted list and Dockerfile are unchanged. Run through `docker exec -u rstudio` with Rscript on arm64. Full digest of `noble`, `latest`, and `noble-cmdstan2.40.0`: index digest sha256:2511d73a0dad7ae13bbebe13e2b490a44869a983bb9b29b02073c72e33cb6bbb, by `docker buildx imagetools inspect`. Each item was shown present in the state print before each action, and container IDs were compared.
+
+AC1: read README.md, the `docker-compose.yml` comments, and the `start_*` and `stop_*` messages in full; none says user-installed packages stay in the home volume. "Adding R Packages" states the default folders. `.libPaths()` printed `/usr/local/lib/R/site-library`, `/usr/lib/R/site-library`, `/usr/lib/R/library`; `find.package()` put `praise` in the second and `oolong` in the first.
+
+AC2: bare `docker compose stop` and `start` and the launcher pair kept `praise`, `oolong`, and libfftw3-dev with container 601d5805d1a9 unchanged. Each was then absent with a new container ID after `down` then `up`, `RS_PORT` through `up -d` and through `start_mac.command`, and a newer image from `noble-2026-10-26` through `start_mac.command` and through bare `pull` and `up -d`. The home file remained in every case. The README states the rule and names these examples; Quick start step 5 and the update FAQ link to it.
+
+AC3: the README names both ways. The list, extracted from README.md and rerun in replaced container 69a40ff659e5, loaded glmmTMB, mice, and metafor, absent before, and installed libfftw3-dev. T5 also ran it in a real RStudio session. The extracted Dockerfile built, and a fresh container loaded the same three.
+
+AC4: both `docker run --rm` commands carry the statement. The image config has no declared volume, and a file written in one `--rm` container was absent from the next.
+
+Gate: `cairn_validate` passes; `hadolint Dockerfile` clean; `docker build` succeeds; base image names an explicit tag; no secret words; `.dockerignore` present; the diff touches no build context; changelog slot is none, so release notes hold user-visible changes. `dplyr` was found in `/usr/lib/R/site-library` in a fresh container, which backs the new sentence on packages the image includes.
+
+Test project m011 removed. Two volumes that this work did not make, `rstudio2u_rstudio_home` and `rstudio2u-real-compose-test_rstudio_home`, appeared during this run, created 06:44Z and 06:47Z, with a `rstudio2u-real-compose-test` container running. They belong to other activity on this machine and were left alone. No `rocker-bayes` home volume exists.
+
+spawned: diff-bug, blame-history, prior-review, ripple
+
+- diff-bug #1: following the bind-mount note, `source("~/my_packages.R")` fails because the file is in the mounted folder — fix now.
+- diff-bug #2: no record shows each item present before each action — fix now by this pass's evidence, which prints it.
+- diff-bug #3: "those packages and libraries are lost" is false for `dplyr`, the README's own example, which the image includes — fix now.
+- diff-bug #4: on an old pinned date tag, stale apt lists can make the list's apt line fail — reject (edge): only an old pin plus a removed apt version reaches it, outside common use, and apt prints its error.
+- diff-bug #5: Option 2's "end the container" does not say stop rather than delete — follow-up, new row "Say what Option 2's rerun keeps" (parked, promote when a user reports it; the line is older text and no report exists).
+- diff-bug #6: no statement or run covers whether rerunning `up --build -d` replaces the container — follow-up, same row.
+- diff-bug #7: the digest was recorded as a prefix with its kind unnamed — fix now by this pass's full index digest.
+- diff-bug #8: T5's runs record no digest — reject (false): AC2 needs one route, and this pass ties all routes to the digest.
+- diff-bug #9: no record ties a run to the list as now written — fix now by this pass's extraction.
+- diff-bug #10: no cleanup record covers the last runs — fix now by this pass's record, with final image removal at hygiene.
+- diff-bug #11: no line records the full read AC1 asks for — fix now by the AC1 line above.
+- diff-bug #12: paths and the list carry no variant limit, and only `noble` ran — reject (false): no criterion binds `resolute`, and both variants come from one Dockerfile and base recipe (GP5).
+- diff-bug #13: "A newer image arrives" is not an action, and "they" came before its noun — fix now.
+- diff-bug #14: "install them again" assumes the user knows what was installed — reject (planned change): the plan's saved list is the answer, in the linked section.
+- diff-bug #15: a moved or renamed folder gives a new empty volume, so files look gone — follow-up, new row "Warn about moving the launcher folder" (parked, promote when a user reports it; the behavior predates this diff).
+- diff-bug #16: the launcher half rests on the mac launchers — reject (false): AC2 needs one route, the log discloses this, and all three start files run pull then up.
+- blame-history #1: the plan-gate choice has no D-entry, disputing pass 1 blame-history #1 — fix now, D-005 records it and states IP3's scope; the pass 1 reject is superseded.
+- blame-history #2: the staff-writable library is now a stated fact with no D-entry note — reject (false): the text describes existing behavior, and D-004 records why no boundary applies.
+- prior-review: no finding; the only related record is the M010 audit row this milestone fixes.
+- ripple #1: the `docker-compose.yml` comment has no package exception — reject (false): it speaks only of the home directory's files and settings.
 
 ### Pass 1 (head 2e28f6f, 2026-11-05)
 
