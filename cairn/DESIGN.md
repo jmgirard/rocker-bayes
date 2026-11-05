@@ -13,7 +13,8 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   derivative `FROM` images are first-class paths, not afterthoughts.
 - **Contract boundary.** rocker-bayes inherits `jmgirard/rstudio2u` as given:
   R, RStudio Server, Pandoc, Quarto, bspm/r2u, and the runtime interface
-  (port 8787, user `rstudio`, `/home/rstudio` volume, `PASSWORD` / `ROOT` /
+  (port 8787, user `rstudio`, home directory `/home/rstudio`, which the image
+  declares no volume for (corrected M011), `PASSWORD` / `ROOT` /
   `DISABLE_AUTH` / `USERID`, s6 `/init`) are the base's to define, and
   base-level fixes go upstream first. This repo's own job is the Bayesian
   layer: CmdStan, the R package roster, and the launchers and compose file it
@@ -217,6 +218,10 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   Dockerfile.
 - Home directory persists in the `rstudio_home` named volume, pre-populated
   from the image on first run.
+- By default, packages a user installs live outside that volume:
+  `install.packages()` puts bspm binaries in `/usr/lib/R/site-library` and source builds in
+  `/usr/local/lib/R/site-library`. They and `sudo apt install` libraries are
+  lost when Compose replaces the container, as the README states.
 - CmdStan lives in `/opt/cmdstan`, outside the home volume. The install
   leaves it owned `root:staff`, group-writable, with setgid on directories
   only, because a threaded model build writes into the CmdStan tree. Files a
