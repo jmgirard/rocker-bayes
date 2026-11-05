@@ -87,7 +87,7 @@ control proves the step goes red when `/opt/cmdstan` loses its group write bit.
       FAIL lines in the `case`. Print make's `stderr` on a build failure as
       the `stage:cxx` handler does. No apostrophes in the R comments (M007
       lesson). Update the PASS line.
-- [ ] T2: Build `rocker-bayes:dev` from the branch and run the script against
+- [x] T2: Build `rocker-bayes:dev` from the branch and run the script against
       it. Record the phase 3 lines that AC1 names in the work log.
 - [ ] T3: Build a throwaway image `FROM rocker-bayes:dev` with
       `RUN chmod -R g-w /opt/cmdstan`, run the script against it, and record
@@ -117,6 +117,7 @@ control proves the step goes red when `/opt/cmdstan` loses its group write bit.
 - 2026-11-05: plan gate chose a second build inside phase 3 over a new phase 5 because the threaded build reuses phase 3's container, fixture, and stage markers; falsified by a phase 3 failure line that cannot tell the threaded build from the unthreaded one.
 - 2026-11-05: changelog: none (the profile's changelog slot is none, and this milestone changes no image content).
 - 2026-11-05: T1: phase 3 builds a second copy of the fixture with `stan_threads` on and samples 1 chain with `threads_per_chain = 2`, 200+200 iterations; new markers `stage:thread-build` and `stage:thread-sample`; the sample stage also fails on a nonzero chain return code; shellcheck 0.11.0 clean. Chose 1 short chain because the unthreaded run already checks the posterior mean.
+- 2026-11-05: T2: `docker build -t rocker-bayes:dev .` (image f34ae1ea, arm64) then the script exited 0 with all four PASS lines; phase 3 printed "theta posterior mean 0.3988", then "threaded build: wrote /opt/cmdstan/cmdstan-2.40.0/src/cmdstan/main_threads.o", then "threaded sample: 1 chain, threads_per_chain = 2".
 
 ## Decisions
 
