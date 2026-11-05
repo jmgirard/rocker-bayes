@@ -11,14 +11,15 @@
 # `--event schedule --status success --limit 1` with a run from 2026-08-03, the
 # day after a green scheduled rebuild, and the check raised a false 64-day gap.
 # So a run counts only when its own `conclusion` is `success` and its own
-# `event` is `schedule`, and the newest of those wins, wherever it sits.
+# `event` is `schedule`. Only those runs are candidates, wherever they sit.
 #
 # A stale run also ends green: its publish job found a newer recipe on the
 # default branch and attached no tag, so it is not a rebuild. Its "Attach the
 # tags" step shows as skipped. The script therefore reads the job listing of each
 # successful scheduled run, newest first, and stops at the first whose step
-# succeeded. A readable listing with no such step does not count, so renaming the
-# step in docker.yml raises the alert rather than counting every run. A stale run
+# succeeded. A readable listing with no such step does not count, so after a
+# rename of the step in docker.yml, runs under the new name stop counting and the
+# alert fires once the runs under the old name pass the threshold. A stale run
 # from before the step's `if` was added shows the step as a success, because the
 # step exited 0 then, and it counts.
 #

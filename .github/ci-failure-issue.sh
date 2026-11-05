@@ -6,17 +6,20 @@
 #   - the `notify` job in .github/workflows/docker.yml, on scheduled runs, push
 #     builds, and a dispatch with its `notify` input set, so a failure anywhere
 #     in the run reaches the maintainer as an issue, and the next fully green
-#     scheduled run closes it;
+#     run that is a scheduled run or a `notify` dispatch, and is not stale,
+#     closes it;
 #   - .github/rebuild-gap.sh, which reports what no single run can see: that no
-#     scheduled run has succeeded in too long. It uses this same issue, because
-#     the next fully green scheduled run is the right close condition for both.
+#     scheduled run has moved the tags in too long. It uses this same issue,
+#     because the next fully green scheduled run that is not stale is the right
+#     close condition for both.
 #
 # Usage: .github/ci-failure-issue.sh <results> <run-url> [jobs-json] [subject]
 #   results   the needed jobs' results, space-separated (`needs.<job>.result`
 #             for each). This script aggregates them, so the suite covers the
-#             rule. Every result "success" closes the issue. Any result that is
-#             neither "success" nor "cancelled" (a failure, a skipped job, a
-#             value GitHub has yet to invent) opens or updates the issue, even
+#             rule. Every result "success" closes the issue, unless RUN_EVENT
+#             is `push`. Any result that is none of "success", "cancelled", or
+#             "stale" (a failure, a skipped job, a value GitHub has yet to
+#             invent) opens or updates the issue, even
 #             beside a cancelled job, because a skipped job did not do its work.
 #             A list whose only non-success results are "cancelled" or "stale"
 #             is reported and ignored. The caller passes "stale" for a publish
@@ -191,7 +194,7 @@ case "$result" in
         if [ ${#open[@]} -eq 0 ]; then
             gh issue create --label "$LABEL" \
                 --title "$title" \
-                --body "$(printf '%s\n\nRun: %s\n\nThis issue is closed automatically by the next fully green scheduled run.' "$lead_open" "$run_url")"
+                --body "$(printf '%s\n\nRun: %s\n\nThis issue is closed automatically by the next fully green scheduled run that moves the tags.' "$lead_open" "$run_url")"
             echo "opened a $LABEL issue for: $reason"
         else
             gh issue comment "${open[0]}" \
@@ -201,7 +204,7 @@ case "$result" in
         ;;
     success)
         if [ "${RUN_EVENT:-}" = "push" ]; then
-            echo "the push build was fully green; only a scheduled run closes a $LABEL issue"
+            echo "the push build was fully green; a push build never closes a $LABEL issue"
             exit 0
         fi
         list_open

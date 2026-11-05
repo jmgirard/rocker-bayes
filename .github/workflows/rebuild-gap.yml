@@ -62,10 +62,10 @@ jobs:
           # and only that. A push or dispatch build proves someone was here, not
           # that the unattended lane still works, and a stale run ends green with
           # no tag moved. The step fetches a page of scheduled runs with no
-          # --status filter and .github/last-success.sh picks the run itself,
-          # reading job listings to pass over stale runs, because the API's
-          # answer to `--status success --limit 1` on 2026-10-06 was a run from
-          # 2026-08-03.
+          # --status filter, because the API's answer to `--status success
+          # --limit 1` on 2026-10-06 was a run from 2026-08-03.
+          # .github/last-success.sh picks the run itself, and reads job listings
+          # to pass over stale runs.
           elif ! gh run list --workflow docker.yml --event schedule \
                  --limit 100 --json createdAt,conclusion,event,databaseId > runs.json; then
             # The lookup failed. That is neither a measured gap nor a clean

@@ -16,7 +16,8 @@
 # Usage: .github/rebuild-gap.sh <last-success-date> <current-date> <threshold-days>
 #   last-success-date  YYYY-MM-DD; when a scheduled rebuild last succeeded. Two
 #                      words stand in for a date that does not exist: `none`
-#                      (the history holds no successful scheduled run) and
+#                      (the history holds no successful scheduled run that moved
+#                      the tags) and
 #                      `unknown` (the history could not be read). Each raises
 #                      the alert with its own wording, so the issue never
 #                      claims a measured gap it does not have.
@@ -31,7 +32,8 @@
 # There is a gap when current-date minus last-success-date is MORE than
 # threshold-days. A gap exactly that wide is still within the bound. A gap
 # raises the issue through .github/ci-failure-issue.sh, the same issue a failed
-# run opens, because the next fully green scheduled run closes both. No gap
+# run opens, because the next fully green scheduled run that is not stale closes
+# both. No gap
 # means no call to anything, a line saying so, and exit 0. Every argument is
 # validated before the dates are compared. A rejection names the argument it
 # rejected (a fourth argument is refused by count), exits 2, and raises

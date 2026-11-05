@@ -210,7 +210,7 @@ jobs:
       && (github.ref == 'refs/heads/main' || inputs.test_mode)
     runs-on: ubuntu-latest
     # `fresh` or `stale`, read by the notify job. Empty when the job ended
-    # before the freshness check.
+    # before or during the freshness check.
     outputs:
       verdict: ${{ steps.fresh.outputs.verdict }}
     steps:
@@ -313,7 +313,8 @@ jobs:
       # A stale run is not a failure: it attaches nothing, warns, and ends
       # green. It also moved no tag, so the notify job neither opens nor closes
       # the ci-failure issue for it, and .github/last-success.sh does not count
-      # it as a rebuild. A failed fetch leaves the recipe unknown, so the job
+      # it as a rebuild, apart from the older runs that script's header names. A
+      # failed fetch leaves the recipe unknown, so the job
       # fails. The rule is in
       # .github/publish-guard.sh, tested by .github/tests/test_publish_guard.sh.
       # It runs in test mode too, so a branch dispatch shows its verdict. A
@@ -430,7 +431,7 @@ jobs:
           bash "$GITHUB_WORKSPACE/.github/keepalive.sh" "$commit_date" "$today" "$THRESHOLD"
 
   # Report a run's outcome through the ci-failure issue: a failure opens it or
-  # comments on it, and a fully green scheduled run closes it. A push build
+  # comments on it, and a fully green fresh scheduled run closes it. A push build
   # reports a failure and writes nothing when it is green, because it builds
   # from the cache and does not prove what a scheduled rebuild proves. A
   # dispatch runs this job too when its `notify` input is set, and reports as a
@@ -451,7 +452,8 @@ jobs:
   # issue and a fully green attempt 2 closes it.
   #
   # !cancelled() runs the job whatever the jobs before it did, including when a
-  # leg failed and publish was skipped. A run someone cancelled reports nothing.
+  # leg failed, or a cancelled leg skipped publish. A run cancelled before this
+  # job starts reports nothing.
   notify:
     name: notify
     needs: [build, publish, keepalive]

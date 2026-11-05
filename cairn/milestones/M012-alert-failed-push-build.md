@@ -84,6 +84,7 @@ A failed `docker.yml` push build reports through the `ci-failure` issue, and a s
 - 2026-11-05: T5 (e) run 41985549613, `rebuild-gap.yml` dispatch on the milestone branch: looked up 2026-11-02, the newest scheduled run, 3 days, no alert.
 - 2026-11-05: T5 (f) run 41986937699, forced-fresh `test_mode` dispatch with `notify` and no push trigger: "Attach the tags" shows `success` and printed the test-mode line, and notify closed #25. Its close comment says "The scheduled run was fully green" on a dispatch, the wording the row "Fix notify on cancels and dispatches" keeps.
 - 2026-11-05: T5 done. `m012-drill` deleted, never merged. `latest` (`sha256:2511d73a…`) and `resolute` (`sha256:783ea7b6…`) read the same digests before and after the drills. No `ci-failure` issue is open.
+- 2026-11-05: claim audit: 75 claims read, 13 corrected — .github/ci-failure-issue.sh, .github/last-success.sh, .github/rebuild-gap.sh, .github/workflows/docker.yml, .github/workflows/rebuild-gap.yml, cairn/DESIGN.md. All 13 were text, no behavior. The issue body now says "scheduled run that moves the tags".
 
 ## Decisions
 
