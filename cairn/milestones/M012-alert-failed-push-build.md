@@ -160,3 +160,37 @@ spawned: diff-bug, blame-history, prior-review, ripple
 - ripple #7: the `subject` doc names only the weekly wording — fix now.
 - ripple #8: same as diff-bug #3 — fix now for the same sites.
 - ripple #9: "Quiet alerts" omits that a `notify` dispatch also closes — fix now.
+- Pass 1 fix-now lines above: fixed in `15c4f73` and `c266b4f`; pass 1's ROADMAP edits are in `bfae8ac`.
+
+Pass 2, branch head `c266b4f`, 2026-11-05. AC1 to AC4 and AC6 keep their pass 1 runs, because the changes since touch comments, messages, and test cases on those paths.
+
+- AC5, pass 2: `test_last_success.sh` passes with the regression case for `{"jobs":[{"steps":["oops"]}]}`, which fails on the pass 1 script (it printed `2026-09-28`). `rebuild-gap.yml` dispatch 41990325749 on `c266b4f` looked up 2026-11-02, 3 days, no alert. Holds; re-read after this pass's fix below.
+- Gate, pass 2: `cairn_validate` passes; `hadolint` and `shellcheck -x -S info` v0.11.0 exit 0; all eight suites pass; `origin/main` is an ancestor of the branch; no open PR, so the feature cap is clear.
+
+spawned: diff-bug, blame-history, prior-review, ripple
+
+- diff-bug #1: T6's `.jobs[]` change has no test, since T6 cut `{"message":"Not Found"}`, and this refutes pass 1's reason for #24 — fix now, restore that case.
+- diff-bug #2: `{"jobs":{"a":{"steps":[…success…]}}}` counts as a rebuild, and `{"jobs":{}}` prints `none` — fix now, require `.jobs` to be a list. AC5 holds as written, since jq reads these as listings, so this is not a return.
+- diff-bug #3: the "contradiction" warning fires on a timed-out leg, a documented path — fix now, reword the comment and warning.
+- diff-bug #4: the `<html>` case runs the same path as the `oops` case — fix now, remove.
+- diff-bug #5: `... and closes nothing` pins nothing this change could break — fix now, remove.
+- diff-bug #6: `assert_out 'the run was stale'` is close to cosmetic — reject, planned change: the rulebook tests each branch a change adds, and this branch's only effect is that line.
+- diff-bug #7: `</dev/null` has no test — reject, false: `gh run view` does not read stdin, so the line is hardening with no defect to regress.
+- diff-bug #8: `.steps[]?` is unpinned — reject, edge: no listing with null `steps` has been seen; the effect is an `unknown` alert either way only if GitHub changes shape.
+- diff-bug #9: "neither opens nor closes … unless another job failed" reads as though a failure could close — fix now, in `DESIGN.md` and `docker.yml`.
+- diff-bug #10: the `docker.yml` comment says last-success reads "skipped", and it looks only for `success` — fix now.
+- diff-bug #11: repeated `assert_rc` lines — reject, style: the file's convention.
+- diff-bug #12: line wraps — reject, style.
+- blame-history #1: "The push build failed again" on an issue a scheduled run opened — fix now, "A push build failed in".
+- blame-history #2: a run cancelled after a failed leg reports nothing — reject, planned change: AC2, as pass 1.
+- prior-review #1: a timed-out leg on a push opens an issue — reject, planned change: AC1, and the script's case 6e already states the rule.
+- prior-review #2: a failed `gh issue list` reads as "none open" on push runs too — follow-up, already in "Make alert scripts fail loudly".
+- prior-review #3: M003 S1's reason no longer holds — reject, false: pass 1's prior-review #2 records the current reason.
+- prior-review #4: a failed `notify` raises no issue on push runs too — follow-up, already in "Make alert scripts fail loudly".
+- prior-review #5: pre-change stale runs can pull the alert's start forward, against pass 1's blame-history #2 — reject, planned change: AC5 states the limit, and that reviewer's read of the last six scheduled runs found no stale line.
+- prior-review #6: a keepalive failure hides a run that moved tags — follow-up, already in "Stop false gap alerts from keepalive".
+- prior-review #7: a long DESIGN line — reject, style.
+- ripple #1: `test_rebuild_gap.sh:199` comment says "no successful scheduled run" — fix now.
+- ripple #2: other "succeeded" wording — reject, same reason as pass 1's diff-bug #3.
+- ripple #3: the two ROADMAP rows — reject, planned change: step 9.
+- ripple #4: `DESIGN.md`'s alert bullet omits a dispatch with `notify` — fix now.
