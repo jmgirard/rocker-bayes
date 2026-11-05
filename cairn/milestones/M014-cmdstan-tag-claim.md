@@ -1,13 +1,13 @@
 # M014: Stop calling the CmdStan tag immutable
 
-- **Status:** planned
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** IP4, GP2
 - **Resolves:** —
 - **Surface tier:** user-facing — the README is what users read when they pin a tag
-- **Branch/PR:** —
+- **Branch/PR:** m014-cmdstan-tag-claim
 
 ## Goal
 
@@ -26,13 +26,13 @@ The README and design file say truthfully which Docker tags can move, so a user 
 
 ## Acceptance criteria
 
-- [ ] AC1: `git grep -n -i -E 'immutable|frozen|will not change' -- README.md` prints nothing.
-- [ ] AC2: README's Reproducibility section says that a `<variant>-cmdstan<v>` tag keeps only the CmdStan version, moves with each publish while `<v>` is the Dockerfile pin, and then stays on the last one. This matches Docker Hub's tags API at review: for `noble` and `resolute`, the tag naming the pin has the digest of that variant's newest `<variant>-<date>` tag, and `noble-cmdstan2.39.0` has the digest of `noble-2026-09-14`.
-- [ ] AC3: README's Reproducibility section says that a `<variant>-<date>` tag keeps the whole image, is named for the UTC day of the publish job, and moves if a second publish runs that day. It tells the reader to choose a date from an earlier day. This matches the workflows: `git grep -n -E 'imagetools create|build-push-action|docker push|push=true' -- .github/workflows` shows that only `docker.yml`'s publish job attaches registry tags, and that job reads the date with `date -u +%Y-%m-%d`.
-- [ ] AC4: README names the digest form `jmgirard/rocker-bayes@sha256:<digest>` as the one pin that never moves and gives one command that prints a tag's digest. A run of that command on the date tag in the `FROM` example prints the `digest` that the tags API gives for that tag, and `docker buildx imagetools inspect jmgirard/rocker-bayes@<digest>` lists both `linux/amd64` and `linux/arm64`.
-- [ ] AC5: The `FROM` example in README's derivative image section names a `<variant>-<date>` tag. `grep -oE '(noble|resolute)-[0-9]{4}-[0-9]{2}-[0-9]{2}' README.md` finds at least one match. Each match is dated before the UTC date of the branch's last commit and returns HTTP 200 from the tags API. `bash .github/tests/test_cmdstan_pin.sh` passes.
-- [ ] AC6: `git grep -n -i immutable -- cairn/DESIGN.md` prints nothing. DESIGN.md's Tags convention says what the README says about when each tag moves. IP4 still names `RS_PORT`, `RS_PASS`, the compose service name `bayes`, the launcher file names, both tag patterns, its deprecation clause, and "Adding is free; renaming or removing is not."
-- [ ] AC7: `git diff --name-only <default-branch>...HEAD` lists only `README.md` and paths under `cairn/`.
+- [x] AC1: `git grep -n -i -E 'immutable|frozen|will not change' -- README.md` prints nothing.
+- [x] AC2: README's Reproducibility section says that a `<variant>-cmdstan<v>` tag keeps only the CmdStan version, moves with each publish while `<v>` is the Dockerfile pin, and then stays on the last one. This matches Docker Hub's tags API at review: for `noble` and `resolute`, the tag naming the pin has the digest of that variant's newest `<variant>-<date>` tag, and `noble-cmdstan2.39.0` has the digest of `noble-2026-09-14`.
+- [x] AC3: README's Reproducibility section says that a `<variant>-<date>` tag keeps the whole image, is named for the UTC day of the publish job, and moves if a second publish runs that day. It tells the reader to choose a date from an earlier day. This matches the workflows: `git grep -n -E 'imagetools create|build-push-action|docker push|push=true' -- .github/workflows` shows that only `docker.yml`'s publish job attaches registry tags, and that job reads the date with `date -u +%Y-%m-%d`.
+- [x] AC4: README names the digest form `jmgirard/rocker-bayes@sha256:<digest>` as the one pin that never moves and gives one command that prints a tag's digest. A run of that command on the date tag in the `FROM` example prints the `digest` that the tags API gives for that tag, and `docker buildx imagetools inspect jmgirard/rocker-bayes@<digest>` lists both `linux/amd64` and `linux/arm64`.
+- [x] AC5: The `FROM` example in README's derivative image section names a `<variant>-<date>` tag. `grep -oE '(noble|resolute)-[0-9]{4}-[0-9]{2}-[0-9]{2}' README.md` finds at least one match. Each match is dated before the UTC date of the branch's last commit and returns HTTP 200 from the tags API. `bash .github/tests/test_cmdstan_pin.sh` passes.
+- [x] AC6: `git grep -n -i immutable -- cairn/DESIGN.md` prints nothing. DESIGN.md's Tags convention says what the README says about when each tag moves. IP4 still names `RS_PORT`, `RS_PASS`, the compose service name `bayes`, the launcher file names, both tag patterns, its deprecation clause, and "Adding is free; renaming or removing is not."
+- [x] AC7: `git diff --name-only <default-branch>...HEAD` lists only `README.md` and paths under `cairn/`.
 
 ## Coverage
 
@@ -46,10 +46,10 @@ The README and design file say truthfully which Docker tags can move, so a user 
 
 ## Tasks
 
-- [ ] T1: Rewrite `README.md:30-32` and `README.md:181-185`. The `FROM` line names a date tag from an earlier day that exists on Docker Hub, such as `noble-2026-11-02`.
-- [ ] T2: Rewrite `README.md:243-254`. Replace the "Frozen at" column with what each tag keeps and when it moves. Replace `noble-2026-07-05`. "As of that build" becomes the publish day, because a rerun after midnight UTC can name legs built the day before. Add the digest form and its command. Do not write an old CmdStan version in the README, because `test_cmdstan_pin.sh` fails on it.
-- [ ] T3: Reword `cairn/DESIGN.md` lines 32, 68, 96, 100, 106, 132, 197, and 209. Use the IP4 and GP2 wording in D-006, and state in the Tags convention when each tag moves.
-- [ ] T4: Run the commands that AC2 to AC5 and AC7 name, on the branch. A README-only pull request starts no `pr-ci.yml` run, so `test_cmdstan_pin.sh` runs by hand.
+- [x] T1: Rewrite `README.md:30-32` and `README.md:181-185`. The `FROM` line names a date tag from an earlier day that exists on Docker Hub, such as `noble-2026-11-02`.
+- [x] T2: Rewrite `README.md:243-254`. Replace the "Frozen at" column with what each tag keeps and when it moves. Replace `noble-2026-07-05`. "As of that build" becomes the publish day, because a rerun after midnight UTC can name legs built the day before. Add the digest form and its command. Do not write an old CmdStan version in the README, because `test_cmdstan_pin.sh` fails on it.
+- [x] T3: Reword `cairn/DESIGN.md` lines 32, 68, 96, 100, 106, 132, 197, and 209. Use the IP4 and GP2 wording in D-006, and state in the Tags convention when each tag moves.
+- [x] T4: Run the commands that AC2 to AC5 and AC7 name, on the branch. A README-only pull request starts no `pr-ci.yml` run, so `test_cmdstan_pin.sh` runs by hand.
 
 ## Work log
 
@@ -63,8 +63,54 @@ The README and design file say truthfully which Docker tags can move, so a user 
 - 2026-11-05: plan gate chose changing the words over freezing the tags at first publish because the row asks for the words and a frozen CmdStan tag would stop taking package and base updates; falsified by a user report that the moving CmdStan tag broke a pinned setup despite the new text.
 - 2026-11-05: plan gate chose naming the digest in the README over leaving date tags as the strongest pin because only a digest cannot move on its build day; falsified by Docker Hub deleting untagged manifests that digest pins name.
 - 2026-11-05: test scope: no committed test, because the claims read Docker Hub and the offline suites cannot; a Hub read in `pr-ci.yml` would fail on a Hub outage. M011 took the same route. The named commands run at review.
+- 2026-11-05: T1 done: the README's top note and `FROM` example now point at a date tag, `noble-2026-11-02`, which Docker Hub lists.
+- 2026-11-05: T2 done: the Reproducibility table says what each tag keeps and when it moves, and the section adds the digest pin. Chose `imagetools inspect` with no `--format` flag because a `{{...}}` argument in single quotes does not work in Windows `cmd`; a run on `noble-2026-11-02` printed the index digest and both platforms.
+- 2026-11-05: T3 done: DESIGN.md drops the word, IP4 and GP2 use D-006's wording, and the Tags convention states when each tag moves.
+- 2026-11-05: T4 done: the commands of AC2 to AC5 and AC7 passed on the branch, and `test_cmdstan_pin.sh` found 3 references. The lint hook's hits on lines this branch wrote are fixed. Its other README hits are older text, left alone as out of scope, and now candidate row "Clear the README's plain-English hits".
+- 2026-11-05: claim audit: 15 claims read, 2 corrected — README.md. Corrected "change with each publish" to "can change", because push builds use the cache, and the digest wording, because the `Digest:` line already holds `sha256:` and pasting it whole gave `@sha256:sha256:`. The reader also found that `up --build` ignores a pin, so T2 adds a Compose paragraph, a minor amendment; its re-read and a dry run confirmed all three on a tag pin, with `start_linux.sh` read and the other start files checked by grep.
+- 2026-11-05: step-7 approval: m014-cmdstan-tag-claim approved for merge
 - 2026-11-05: collision sweep: candidate row absorbed. D-002 and D-001 use the word, corrected by D-006. Row "Prune untagged manifests from dispatches" gains a note, because pruning can break a digest pin. Inbox sweep: 0 open issues, 0 open pull requests, so no assignment option. No release-shaped or checker-regress hit.
 
 ## Decisions
 
 ## Review
+
+- AC1 evidence (2026-11-05): `git grep -n -i -E 'immutable|frozen|will not change' -- README.md` printed nothing, exit 1.
+- AC2 evidence (2026-11-05): the Reproducibility section states the three facts in its table and CmdStan paragraph. Tags API: `noble-cmdstan2.40.0` equals `noble-2026-11-05` (`sha256:eeb15415a7d0`), `resolute-cmdstan2.40.0` equals `resolute-2026-11-05` (`sha256:e520e445e9b9`), and `noble-cmdstan2.39.0` equals `noble-2026-09-14`.
+- AC3 evidence (2026-11-05): the section states the whole image, the UTC day of the publish job, the second-publish move, and "choose a date from an earlier day". The grep lists `docker.yml:104` and `:120` (push by digest, no tag), `docker.yml:298` (dry run), `docker.yml:371` (the attach), and `pr-ci.yml:99` (`load: true`, a local tag). `docker.yml:271` reads `date -u +%Y-%m-%d`.
+- AC4 evidence (2026-11-05): the README gives the digest form and `docker buildx imagetools inspect`. On `noble-2026-11-02` the command printed `sha256:2511d73a0dad…`, equal to the tags API `digest`, and inspecting that digest listed `linux/amd64` and `linux/arm64`, exit 0.
+- AC5 evidence (2026-11-05): `README.md:186` is `FROM jmgirard/rocker-bayes:noble-2026-11-02`. The grep found 3 matches, all `noble-2026-11-02`, dated before the branch's last commit date of 2026-11-05 UTC, each HTTP 200. `test_cmdstan_pin.sh` passed with 3 references.
+- AC6 evidence (2026-11-05): `git grep -n -i immutable -- cairn/DESIGN.md` printed nothing, exit 1. The Tags convention states the README's behavior for each tag. IP4 still names `RS_PORT`, `RS_PASS`, `bayes`, the launcher file names, both tag patterns, the deprecation clause, and "Adding is free; renaming or removing is not."
+- AC7 evidence (2026-11-05): `git diff --name-only main...HEAD` lists `README.md`, `cairn/DESIGN.md`, `cairn/ROADMAP.md`, and `cairn/milestones/M014-cmdstan-tag-claim.md`.
+- Gate (2026-11-05): `cairn_validate.py` exit 0. `cairn_impact.py --changed` lists GP2 references, and `grep IP4` shows `DESIGN.md`, D-006, and the source row; none disagrees with the new wording. `hadolint` in a container exit 0. `docker build` not run: the diff has no file in the build context (`Dockerfile`, `scripts/`, `.dockerignore`), and `docker.yml` built that same context on 2026-11-05. Base tag, secrets, and `.dockerignore` unchanged. Changelog slot is none.
+- spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug #1: a mistyped pin makes `docker compose up -d` build a local image under the pin's name after a failed pull — fix now, fixed a0d36f0.
+- diff-bug #2: changing `image:` replaces the container and loses installed packages, and the pin paragraph does not say so — fix now, fixed a0d36f0.
+- diff-bug #3: a pinned `FROM` still installs current binaries, so separate builds can differ — follow-up, parked row "Tighten the README's pinning text".
+- diff-bug #4: "never moves" omits that a digest can disappear — follow-up, row "Prune untagged manifests from dispatches" already holds it.
+- diff-bug #5: "identical" and "exact image contents" overstate across two separately built architectures — follow-up, parked row "Tighten the README's pinning text".
+- diff-bug #6: `up --build` fails with "build tag cannot contain a digest" rather than naming an image for a digest pin — fix now, fixed a0d36f0.
+- diff-bug #7: the launcher blames the connection for a bad pin — follow-up, parked row "Name a bad pin in launcher errors".
+- diff-bug #8: "an earlier day" is ambiguous east of UTC — fix now, fixed a0d36f0.
+- diff-bug #9: the short forms at the README's top and `FROM` note drop "earlier day" — reject, style: both link to the section that states it.
+- diff-bug #10: the literal date tag has no prompt to choose a date and no later check — reject, false: a pin that stays put is the point, and the tag stays valid.
+- diff-bug #11: `DESIGN.md:101` cites D-006 for the digest claim, which D-006 does not cover — fix now, fixed a0d36f0.
+- diff-bug #12: Option 2 teaches `up --build` with no pointer to the warning — follow-up, parked row "Tighten the README's pinning text".
+- diff-bug #13: date tags are not a full record of builds — follow-up, parked row "Tighten the README's pinning text".
+- diff-bug #14: CmdStan is listed as moving on release, against GP3 — follow-up, parked row "Tighten the README's pinning text".
+- diff-bug #15: `docker buildx` can be missing — reject, edge: only a distro Docker package with no buildx plugin reaches it, outside the README's Docker Desktop path, and the effect is an error naming the command.
+- diff-bug #16: a pin in `docker-compose.yml` is lost with a fresh ZIP and can conflict on `git pull` — follow-up, parked row "Tighten the README's pinning text".
+- diff-bug #17: the absorbed candidate row is still listed — reject, false: hygiene graduates it after the merge.
+- blame-history #1: the pin test's header says "pinning examples" — reject, false: the table row is still a pinning example, and the test found 3 references.
+- blame-history #2: the `FROM` example's pin changed meaning — reject, planned change: T1 calls for it.
+- blame-history #3: same as diff-bug #4 — follow-up, row "Prune untagged manifests from dispatches".
+- blame-history #4: `noble-2026-11-02` not checked offline — reject, false: AC5 read HTTP 200.
+- blame-history #5: rstudio2u still says "immutable" — follow-up, row "Stop calling rstudio2u tags immutable".
+- prior-review #1: the pin paragraph does not point to Keeping installed packages — fix now, with diff-bug #2, fixed a0d36f0.
+- After the fixes (2026-11-05): AC1, AC5's pin test, AC6, and AC7 reran clean, `cairn_validate.py` exit 0. A dry run on a tag that does not exist shows the pull failing and `up -d` building under that tag's name. No snapshot files changed. No PR conversation yet.
+- prior-review #2: `CLAUDE.md`'s dev command uses `up --build` — reject, false: that command builds the local tree and involves no pin.
+- prior-review #3: the Compose instructions are untested — reject, false: dry runs on a tag pin and a bad tag are recorded.
+- ripple #1: `cairn/ROADMAP.md:19` describes the old text — reject, false: hygiene graduates that row.
+- ripple #2: comments use "moving tag" for `latest`, `noble`, `resolute` — reject, false: each comment names those tags, so none is wrong.
+- ripple #3: same as diff-bug #14 — follow-up, parked row "Tighten the README's pinning text".
+- ripple #4: launcher messages say "latest" for a pinned user — follow-up, parked row "Name a bad pin in launcher errors".

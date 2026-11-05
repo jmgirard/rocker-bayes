@@ -29,7 +29,7 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   ship-blocking or hotfix-tier, with documented temporary asymmetry only when
   an upstream forces it.
 - **Two version records.** Docker tags record *builds*: moving `latest` /
-  `noble` / `resolute` plus immutable `<variant>-<date>` and
+  `noble` / `resolute` plus `<variant>-<date>` and
   `<variant>-cmdstan<v>` tags, published by CI on every build. Git tags and
   GitHub releases (`v1.0.0` …) record *recipe changes* under semver (D-002);
   release notes live in the GitHub release, not in a changelog file.
@@ -65,7 +65,7 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   One publish job requires all four verified digests. It assembles both
   variants' manifest lists and checks each with `.github/publish-guard.sh`.
   It then runs the guard's `fresh` check against the default branch. Only
-  then does it attach the mutable and immutable tags.
+  then does it attach all the tags.
   `.github/smoke-fixtures/` holds the Stan program the smoke test compiles.
   `.github/tests/test_publish_guard.sh` drives the guard through its failing
   cases without a build.
@@ -93,18 +93,23 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
 
 ## Conventions
 
-- Tags: mutable `latest`, `noble`, `resolute`; immutable `<variant>-<date>` and
-  `<variant>-cmdstan<version>`. User-facing docs never mention milestone IDs.
+- Tags: `latest`, `noble`, and `resolute` move with each publish. A
+  `<variant>-<date>` tag keeps the whole image, is named for the UTC day of the
+  publish job, and moves if a second publish runs that day. A
+  `<variant>-cmdstan<version>` tag keeps only the CmdStan version, moves with each
+  publish while that version is the Dockerfile pin, and then stays on the last one.
+  An image digest is the one pin that never moves. User-facing docs never mention
+  milestone IDs.
 - **CmdStan is pinned by hand** in the Dockerfile `ARG` and bumped after a
   CmdStan release is reviewed; the weekly rebuild never changes it. CI reads
-  the pin for the immutable tag.
+  the pin for the CmdStan tag.
 - R packages are the newest on CRAN at build time (cmdstanr from the Stan
   r-universe). **A version pin added to dodge an upstream bug is temporary**:
   recorded when added, tracked to removal, removed when upstream heals.
 - **This repo's own user-facing surface is frozen** like the base interface:
   the `.env` variables `RS_PORT` / `RS_PASS`, the compose service name `bayes`,
-  the launcher file names, and the immutable tag patterns change only through a
-  deprecation period and a README notice.
+  the launcher file names, and the `<variant>-<date>` and `<variant>-cmdstan<v>`
+  tag patterns change only through a deprecation period and a README notice.
 - Launcher code (`start_*`, `stop_*`, `launcher_common.sh`) is synced from
   rstudio2u, whose test suite verifies it; tests are ported here only when a
   file diverges. `.bat` files are stored CRLF (`.gitattributes`). The guard for
@@ -129,7 +134,7 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   issue, and if another job failed, that failure reports as usual. It does not
   count as a rebuild for `rebuild-gap.yml`, apart from stale runs older than
   this rule, whose step shows as a success. A failed fetch fails the job. This is an
-  exception to GP2's "every build also publishes immutable tags": a refused
+  exception to GP2's "every build also publishes date and CmdStan-version tags": a refused
   run withholds its date and CmdStan tags too. Otherwise it overwrites the
   newer build's same-day date tag. `docker.yml` has no concurrency group. A
   group cancels a waiting job when another joins, and that can drop the newer
@@ -194,8 +199,9 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   and updating never destroy `/home/rstudio`; no launcher or documented flow
   wipes it implicitly. Only an explicit, warned command may.
 - IP4: **This repo's user-facing surface is frozen.** `RS_PORT`, `RS_PASS`, the
-  compose service name `bayes`, the launcher file names, and the immutable tag
-  patterns change only through a deprecation period and a README notice.
+  compose service name `bayes`, the launcher file names, and the
+  `<variant>-<date>` and `<variant>-cmdstan<v>` tag patterns change only through a
+  deprecation period and a README notice.
   Adding is free; renaming or removing is not.
 
 ### Guiding
@@ -206,7 +212,7 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   is drift. Pruning packages that fell out of use is licensed work.
 - GP2: **Always fresh, always an escape hatch.** Moving tags track newest
   stable R packages and base image automatically; every build also publishes
-  immutable date and CmdStan-version tags, and the README keeps teaching users
+  date and CmdStan-version tags, and the README keeps teaching users
   to pin. CmdStan is the stated exception (GP3).
 - GP3: **CmdStan moves only by a reviewed manual bump.** The Dockerfile `ARG`
   is the single pin; the weekly rebuild never changes it.
