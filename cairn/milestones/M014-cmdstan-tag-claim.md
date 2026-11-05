@@ -48,7 +48,7 @@ The README and design file say truthfully which Docker tags can move, so a user 
 
 - [x] T1: Rewrite `README.md:30-32` and `README.md:181-185`. The `FROM` line names a date tag from an earlier day that exists on Docker Hub, such as `noble-2026-11-02`.
 - [x] T2: Rewrite `README.md:243-254`. Replace the "Frozen at" column with what each tag keeps and when it moves. Replace `noble-2026-07-05`. "As of that build" becomes the publish day, because a rerun after midnight UTC can name legs built the day before. Add the digest form and its command. Do not write an old CmdStan version in the README, because `test_cmdstan_pin.sh` fails on it.
-- [ ] T3: Reword `cairn/DESIGN.md` lines 32, 68, 96, 100, 106, 132, 197, and 209. Use the IP4 and GP2 wording in D-006, and state in the Tags convention when each tag moves.
+- [x] T3: Reword `cairn/DESIGN.md` lines 32, 68, 96, 100, 106, 132, 197, and 209. Use the IP4 and GP2 wording in D-006, and state in the Tags convention when each tag moves.
 - [ ] T4: Run the commands that AC2 to AC5 and AC7 name, on the branch. A README-only pull request starts no `pr-ci.yml` run, so `test_cmdstan_pin.sh` runs by hand.
 
 ## Work log
@@ -65,6 +65,7 @@ The README and design file say truthfully which Docker tags can move, so a user 
 - 2026-11-05: test scope: no committed test, because the claims read Docker Hub and the offline suites cannot; a Hub read in `pr-ci.yml` would fail on a Hub outage. M011 took the same route. The named commands run at review.
 - 2026-11-05: T1 done: the README's top note and `FROM` example now point at a date tag, `noble-2026-11-02`, which Docker Hub lists.
 - 2026-11-05: T2 done: the Reproducibility table says what each tag keeps and when it moves, and the section adds the digest pin. Chose `imagetools inspect` with no `--format` flag because a `{{...}}` argument in single quotes does not work in Windows `cmd`; a run on `noble-2026-11-02` printed the index digest and both platforms.
+- 2026-11-05: T3 done: DESIGN.md drops the word, IP4 and GP2 use D-006's wording, and the Tags convention states when each tag moves.
 - 2026-11-05: collision sweep: candidate row absorbed. D-002 and D-001 use the word, corrected by D-006. Row "Prune untagged manifests from dispatches" gains a note, because pruning can break a digest pin. Inbox sweep: 0 open issues, 0 open pull requests, so no assignment option. No release-shaped or checker-regress hit.
 
 ## Decisions
