@@ -113,3 +113,24 @@ copies in the volume can also hide newer packages in the image, against GP2.
 Evidence that reopens this: the base moves installs into the home directory, or
 users need packages across updates in a way that the list and a derivative image
 cannot serve.
+
+### D-006 (2026-11-05): IP4 and GP2 drop "immutable"; corrects the word in D-002
+
+**Context:** IP4, GP2, D-001, and D-002 call the `<variant>-<date>` and
+`<variant>-cmdstan<v>` tags immutable. Each publish re-attaches the CmdStan tag
+while its version is the Dockerfile pin, and a second publish on one UTC day
+re-attaches that day's date tag.
+
+**Decision:** The user approved this wording at the M014 plan gate. IP4 says "the
+`<variant>-<date>` and `<variant>-cmdstan<v>` tag patterns" in place of "the
+immutable tag patterns". GP2 says "date and CmdStan-version tags" in place of
+"immutable date and CmdStan-version tags". What each principle requires stays the
+same. D-001 and D-002 keep their text, and this entry corrects their word.
+
+**Rationale:** IP4 protects the tag names from renaming and removal, and it never
+required that a tag's contents stay the same. The word told readers something that
+the publish job does not do.
+
+**Consequences:** The publish job does not change. Evidence that reopens this: the
+project decides to freeze tags at first publish, as the candidate row "Freeze the
+tags at first publish" describes.
