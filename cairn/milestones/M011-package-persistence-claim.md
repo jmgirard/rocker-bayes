@@ -1,6 +1,6 @@
 # M011: Fix the package persistence claim
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -75,7 +75,52 @@ The README says truthfully where installed R packages live, when they are lost, 
 - 2026-11-05: T1's stop and start case and its newer-image case ran through `stop_mac.command` and `start_mac.command`, not bare `docker compose stop` and `start`; the Linux and Windows launchers were read, not run.
 - 2026-11-05: claim audit: 26 claims read, 7 corrected — README.md
 - 2026-11-05: claim audit dispositions: narrowed to "by default" in the note and section, narrowed "everything else" to changes you make, added the same-image and same-settings condition to stop and start, limited the published-image sentence to the start files, tied the update FAQ's loss to the next `up`, and qualified "Thanks to bspm". No change for the bind-mount case, because that text already says to keep work in the mounted folder, and none for the line near the top about binary installation. One re-read done; its one finding is fixed with no further pass.
+- 2026-11-05: review return 1: AC2 fails as written, because the README states the stop-and-start outcome only for the launcher pair, not for the Compose setup (diff-bug #2). Fix with the fix-now findings in the Review section's pass 1.
+- 2026-11-05: amendment routed: AC2 — "everything outside `/home/rstudio`" is false, because the image's own contents return in each new container (diff-bug #3).
 
 ## Decisions
 
 ## Review
+
+### Pass 1 (head 2e28f6f, 2026-11-05)
+
+No box ticked in this pass, because AC2 returns to implement and the fixes change the text that AC1, AC3, and AC4 read.
+
+Evidence: `latest` and `noble` have one digest (sha256:2511d73a0dad, by `docker buildx imagetools inspect`), run on arm64 through `docker exec -u rstudio` with Rscript. AC1's `.libPaths()` and AC2's stop and start, `RS_PORT`, down and up, and launcher-pull outcomes all matched T1, for `praise`, `oolong`, and libfftw3-dev, with the home file present in every case. AC3's extracted list and Dockerfile ran, and AC4's inspect and `--rm` file case passed.
+
+Gate: `cairn_validate` passes; `hadolint Dockerfile` clean; `docker build` succeeds; base image names an explicit tag; no secret words in the Dockerfile; `.dockerignore` present; the diff touches no build context; changelog slot is none. Main has not moved.
+
+spawned: diff-bug, blame-history, prior-review, ripple
+
+- diff-bug #1: a user who took the bind-mount edit has no volume on `/home/rstudio`, so `~/my_packages.R` is lost — fix now.
+- diff-bug #2: AC2 says the README states stop and start stay in the Compose setup, but it states this only for the launcher pair — fix now, floor return (AC failing).
+- diff-bug #3: AC2's "everything outside `/home/rstudio`" is false, because image contents return in each container — amendment routed, the README's narrower wording is right.
+- diff-bug #4: T1's task text named bare `docker compose` commands and the run used the launchers — fix now, run the bare forms.
+- diff-bug #5: the record does not name the user or session, and the README sends users to the RStudio console — fix now, record the user and run the steps in a real RStudio session.
+- diff-bug #6: "newest image" and "any start" are false for a pinned tag in `docker-compose.yml` — fix now.
+- diff-bug #7: "each time they run" is false offline, when a failed pull starts the local copy — fix now, "try to".
+- diff-bug #8: "The start files use the published image" is flat, but they use what the compose file names — fix now.
+- diff-bug #9: the FAQ's "work in the home volume is preserved" follows the `docker pull` route, whose `--rm` users have no volume — reject (false): the sentence is scoped to the home volume, and Option 1 step 5 states `--rm` has none.
+- diff-bug #10: criteria name `noble` and T1 ran on `latest`; only arm64 ran — fix now for the tag by the digest comparison above; reject (false) for architecture, because no criterion binds one.
+- diff-bug #11: DESIGN.md's package line is flat where the README says "by default" — fix now.
+- diff-bug #12: the top README line promises "no compiling" with no qualifier — reject (false): its subject is binary installation.
+- diff-bug #13: the replacement list omits other triggers — reject (planned change): the plan chose a rule with named examples, and the list says "For example".
+- diff-bug #14: a one-off `RS_PORT=8888 docker compose up -d` then a launcher start replaces the container, unwarned — reject (false): that is a changed `RS_PORT`, which the rule names.
+- diff-bug #15: "no `rstudio_home` volume" would miss a prefixed name — reject (false): the check greps the substring, so `rocker-bayes_rstudio_home` matches.
+- diff-bug #16: `system()` returns a status, so a failed apt line does not stop `source()` — reject (edge): only a failed `sudo apt install`, outside common use, reaches it, and apt prints its error in the console.
+- diff-bug #17: the example pairs libfftw3-dev with packages that do not need it — fix now, label the lines.
+- diff-bug #18: Quick start step 5 and the FAQ are narrower than the rule — reject (planned change): AC2 allows a link.
+- diff-bug #19: Option 2 got no package note or link — fix now.
+- diff-bug #20: "7 corrected" beside six listed items, and a dangling "— README.md" — reject (false): 7 is the reader's count, and the line takes its fixed shape.
+- blame-history #1: no D-entry for rejecting a home-volume library — reject (false): the plan-gate work-log line records it, and the archive summary's Decisions line carries it.
+- blame-history #2: stop launchers still say "resume where you left off" — follow-up, candidate row "Correct the claim in rstudio2u too" (normal), which already holds it.
+- blame-history #3: step 5 is narrower than the rule — reject (planned change), as diff-bug #18.
+- blame-history #4: a base-owned DESIGN line now rests on this image's config — reject (false): an image inherits a declared volume, so an empty config shows the base declares none.
+- prior-review: no prior-review evidence touching this diff; the PR comment probe returned none.
+- ripple #1: the top README line — reject (false), as diff-bug #12.
+- ripple #2: the renv speed claim — follow-up, candidate row "Check the renv and bspm speed claim" (low), which already holds it.
+- ripple #3: the ROADMAP row still describes the bug — reject (false): hygiene graduates it at merge.
+- ripple #4: stop messages say work is preserved — follow-up, candidate row "Correct the claim in rstudio2u too" (normal).
+- ripple #5: IP3 needs a scope note — reject (false): IP3 names the home volume and stays true.
+- ripple #6: the `sudo apt install` bullet has no link — fix now.
+- ripple #7: the FAQ's "work" could read as packages — reject (false): the next sentence covers packages.
