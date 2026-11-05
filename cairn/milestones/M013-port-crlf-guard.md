@@ -1,0 +1,69 @@
+# M013: Port the CRLF guard
+
+- **Status:** planned
+- **Priority:** high
+- **Depends on:** —
+- **Driving RR:** —
+- **Principles touched:** GP7
+- **Resolves:** —
+- **Surface tier:** internal — a check over in-repo files that runs only in this repo's CI
+- **Branch/PR:** —
+
+## Goal
+
+Make CI fail a pull request that stores a Windows launcher with LF line endings.
+
+## Scope
+
+**In:** Port rstudio2u's guard to `.github/tests/test_launcher_line_endings.sh`. Run it from a new `launchers.yml` workflow and from `pr-ci.yml`'s `script-tests` job. Correct the `.gitattributes` comment, which cites a missing path and makes a false claim about `git archive`. Update `cairn/DESIGN.md`.
+
+**Out:** The other launcher tests and the launcher resync → candidate "Resync the launchers from rstudio2u". The false `git archive` claim in rstudio2u's own files → the same row. `*.cmd` files: none are tracked, so the guard stays on `*.bat` as in rstudio2u.
+
+## Acceptance criteria
+
+- [ ] AC1: `bash .github/tests/test_launcher_line_endings.sh`, run in this repo, exits 0 and prints an `ok:` line for each path that `git ls-files '*.bat'` lists.
+- [ ] AC2: In a throwaway git repo holding a copy of the guard at the same relative path, the guard exits 1 and prints a `FAIL:` line naming the file when a tracked `.bat` blob has all LF lines, when it has one LF-only line among CRLF lines, and when the blob is LF while the working-tree file is CRLF. It exits 1 with a `FAIL:` line when no `.bat` is tracked. It exits 0 when the blob is CRLF while the working-tree file is LF.
+- [ ] AC3: `.github/workflows/launchers.yml` triggers on pull requests to `main` with `paths` naming `**.bat`, `.gitattributes`, the guard, and the workflow file. Its `line-endings` job runs the guard in a step that does not mask the guard's exit status (no `|| true`, no `continue-on-error`). The milestone's own pull request gets a passing `line-endings` check.
+- [ ] AC4: The `script-tests` job of `.github/workflows/pr-ci.yml` runs the guard, so that workflow still runs every suite in `.github/tests/`: the `test_*.sh` names from `ls .github/tests/` each appear in that job.
+- [ ] AC5: `.gitattributes` names the guard at `.github/tests/test_launcher_line_endings.sh`, `grep -n 'scripts/tests' .gitattributes` finds nothing, and its comment no longer says that `git archive` applies no line-ending conversion.
+- [ ] AC6: `cairn/DESIGN.md`'s Known issues entry no longer says that the CRLF guard is unverified or that the cited file does not exist, and still says that the other launcher tests were not ported. Its pre-merge checks bullet names `launchers.yml`.
+- [ ] AC7: The `Shell lint` check passes on the milestone's pull request, and `.github/tests/test_launcher_line_endings.sh` is in the list that check enumerates (`git ls-files '*.sh' '*.command'`).
+
+## Coverage
+
+- AC1 → T1
+- AC2 → T1, T2
+- AC3 → T4, T6
+- AC4 → T3
+- AC5 → T5
+- AC6 → T7
+- AC7 → T1
+
+## Tasks
+
+- [ ] T1: Copy `~/github/rstudio2u/scripts/tests/test_launcher_line_endings.sh` to `.github/tests/`. Keep its logic. In its header, remove the rstudio2u milestone reference and the false `git archive` reason, and add a usage line like the other suites have. shellcheck is not installed locally, so run the pinned version in a container against the repo checkout, or rely on CI.
+- [ ] T2: Run AC2's five cases in scratch repos and record the results in the work log.
+- [ ] T3: Add the guard to the `script-tests` run list in `.github/workflows/pr-ci.yml:58`.
+- [ ] T4: Add `.github/workflows/launchers.yml`, with `permissions` and `concurrency` as in `lint.yml` and the same `actions/checkout` pin. State in its header why it is separate from `pr-ci.yml`: a launcher-only change does not need an image build.
+- [ ] T5: Rewrite the `.gitattributes` comment at lines 3 to 7 with the new path and a reason that a run showed: under `-text`, git converts no bytes on checkout or in `git archive`, so only CRLF in the blob ships as CRLF.
+- [ ] T6: Control run. Push the milestone branch with `m013-*` temporarily added to `launchers.yml`'s `branches`. Cut a control branch with one LF-only line in `stop_windows.bat`, and open a pull request into the milestone branch. Record the failed `line-endings` check, close the pull request unmerged, and delete the control branch. Remove the temporary filter in its own commit before review.
+- [ ] T7: In `cairn/DESIGN.md`, narrow the Known issues entry at line 246 to the launcher tests still not ported, and name `launchers.yml` and the guard in the pre-merge checks bullet at line 78.
+
+## Work log
+
+- 2026-11-05: created by /milestone-plan.
+- 2026-11-05: tier check: milestone — the row offers a comment fix (trivial) or a port that adds a test and a workflow (milestone), and a request with a milestone part is a milestone.
+- 2026-11-05: idea vet: gap — the request leaves port or comment-only open, and the user chose port at the set. Gap — the comment's reason is false: in a local run (git 2.54), `git archive` wrote CRLF for an LF blob under `text eol=crlf`; reading taken: keep the blob check, which holds under `-text`, and correct the reason. No flaw.
+- 2026-11-05: lessons used: 2026-09-12 (M002) a `pull_request` paths filter reads the whole diff; 2026-09-12 (M002) trigger path lists drift; 2026-09-13 (M003) temporary trigger removed before review; 2026-09-12 (M002) run containerized linters inside the checkout.
+- 2026-11-05: collision check: candidate row "Port the CRLF guard or drop its cite" absorbed in full. D-003 says `pr-ci.yml` runs every suite in `.github/tests/`, which is why AC4 exists. No standing rejection applies.
+- 2026-11-05: inbox sweep: 0 open issues and 0 open PRs.
+- 2026-11-05: criteria audit (reduced mode, fresh Opus reader): one finding. AC3's planted-failure clause was a live demonstration past the internal-tier standard; narrowed to the workflow's trigger, an unmasked guard step, and a passing check, with the control run moved to T6. The other six passed.
+- 2026-11-05: question set: open one throwaway pull request to see the check fail on GitHub — yes, closed unmerged and its branch deleted.
+- 2026-11-05: plan gate chose porting the guard over fixing only the comment because rstudio2u's copy reads only its own blobs; falsified by evidence that cmd.exe runs every launcher branch correctly from an LF `.bat`.
+- 2026-11-05: plan chose a new `launchers.yml` over adding `**.bat` to `pr-ci.yml`'s paths because that would build the image for a launcher-only edit; falsified by a line-ending defect that only an image build catches.
+- 2026-11-05: plan chose `.github/tests/` over the cited `scripts/tests/` because `scripts/**` is in the build context and in `docker.yml`'s push paths, so a guard edit would rebuild four legs and move tags; falsified by a `docker.yml` paths change that frees `scripts/tests/`.
+- 2026-11-05: new candidate "Resync the launchers from rstudio2u" holds the launcher drift found here; it is outside this request.
+
+## Decisions
+
+## Review
