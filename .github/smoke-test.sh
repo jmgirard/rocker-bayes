@@ -274,7 +274,7 @@ echo "PASS: phase 2 (bspm binary) - $PKG was absent from the image before the in
 # CmdStan lives in /opt/cmdstan, and cmdstanr finds it through the image's
 # CMDSTAN variable.
 echo "==> [3/4] cmdstan compile and sample ($STAN_BASE)"
-if ! docker exec -u rstudio -e HOME=/home/rstudio "$NAME" Rscript -e '
+if ! cmdstan_info="$(docker exec -u rstudio -e HOME=/home/rstudio "$NAME" Rscript -e '
   suppressMessages(library(cmdstanr))
   path <- tryCatch(cmdstanr::cmdstan_path(), error = function(e) "")
   if (!nzchar(path) || !dir.exists(path)) {
@@ -282,8 +282,23 @@ if ! docker exec -u rstudio -e HOME=/home/rstudio "$NAME" Rscript -e '
   }
   cat("cmdstan path:", path, "\n")
   cat("cmdstan version:", cmdstanr::cmdstan_version(), "\n")
-'; then
+')"; then
+  printf '%s\n' "$cmdstan_info"
   echo "FAIL: phase 3 (cmdstan) - cmdstanr is missing, or reports no CmdStan path or version"
+  exit 1
+fi
+printf '%s\n' "$cmdstan_info"
+
+# The comparison runs here in bash, not in the R block above, so a mismatch
+# gets its own FAIL line rather than the generic one. cat() leaves a trailing
+# space after the version, which the second sed expression trims.
+got_cmdstan="$(printf '%s\n' "$cmdstan_info" | sed -n 's/^cmdstan version:[[:space:]]*//p' | sed 's/[[:space:]]*$//')"
+if [ -z "$got_cmdstan" ]; then
+  echo "FAIL: phase 3 (cmdstan) - cmdstanr printed no CmdStan version"
+  exit 1
+fi
+if [ "$got_cmdstan" != "$WANT_CMDSTAN" ]; then
+  echo "FAIL: phase 3 (cmdstan) - cmdstanr reports CmdStan ${got_cmdstan}, but ${want_from} expects ${WANT_CMDSTAN}"
   exit 1
 fi
 
@@ -449,7 +464,7 @@ if [ "$stan_status" -ne 0 ]; then
   esac
   exit 1
 fi
-echo "PASS: phase 3 (cmdstan) - model compiled, sampled, and matched the reference posterior mean, and a threaded build compiled and sampled"
+echo "PASS: phase 3 (cmdstan) - CmdStan ${got_cmdstan} matches ${want_from}, model compiled, sampled, and matched the reference posterior mean, and a threaded build compiled and sampled"
 
 # --- Phase 4: old home volume ------------------------------------------------
 # Docker copies the image's home into a named volume only while the volume is

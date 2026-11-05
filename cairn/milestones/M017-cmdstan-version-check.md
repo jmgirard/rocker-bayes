@@ -85,7 +85,7 @@ check.
       `${SCRIPT_DIR}/../Dockerfile`; fail on a missing or non-`x.y.z` value
       with a FAIL line naming the cause. List `SMOKE_CMDSTAN_VERSION` in the
       header (lines 33-45) and extend the phase 3 description (lines 11-21).
-- [ ] T2: In phase 3 (lines 240-256), capture the `cmdstan_version()` output,
+- [x] T2: In phase 3 (lines 240-256), capture the `cmdstan_version()` output,
       trim it, and compare it in bash with the expected version. Print its
       own FAIL line naming both values, and add the version to the phase 3
       PASS line (line 420). Keep R comments inside the single-quoted
@@ -110,6 +110,7 @@ check.
 - 2026-11-05: no offline suite added; the control runs in AC2 and AC3 show the check can fail. No changelog (D-002: release notes live in the GitHub release, and this changes no recipe).
 - 2026-11-05: implement started on branch m017-cmdstan-version-check.
 - 2026-11-05: T1 done: the script reads the expected version before the Stan-file check, from `SMOKE_CMDSTAN_VERSION` or the Dockerfile ARG via the `test_cmdstan_pin.sh` sed pattern, and fails on a missing Dockerfile or a non-`x.y.z` value; header lists the variable. Shellcheck 0.11.0 clean; `SMOKE_CMDSTAN_VERSION=2.40` printed the not-x.y.z FAIL line.
+- 2026-11-05: T2 done: phase 3 captures the first R block's output, parses and trims the `cmdstan version:` line in bash, and fails on an empty value or a mismatch with a line naming both versions and the source; the PASS line names the version. The output now prints after the block ends rather than as it runs. Shellcheck 0.11.0 clean.
 
 ## Decisions
 
