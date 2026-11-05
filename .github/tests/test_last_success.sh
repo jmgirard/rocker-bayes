@@ -135,6 +135,9 @@ expect "a listing that is not JSON is 'unknown'" unknown "unreadable job listing
 clear_listings; set_listing "$NEW" '{"jobs":[{"steps":["oops"]}]}'
 expect "a job listing jq cannot process is 'unknown'" unknown "unreadable job listing" \
     "[$(run $NEW success schedule),$(run $OLD success schedule)]"
+clear_listings; set_listing "$NEW" ""
+expect "an empty answer is 'unknown'" unknown "unreadable job listing" \
+    "[$(run $NEW success schedule),$(run $OLD success schedule)]"
 clear_listings
 expect "a successful run with no id is 'unknown'" unknown "no run id" \
     '[{"createdAt":"2026-10-05T15:48:59Z","conclusion":"success","event":"schedule"}]'

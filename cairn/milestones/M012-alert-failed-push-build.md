@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M012: Alert on a failed docker.yml push build
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -90,6 +90,8 @@ A failed `docker.yml` push build reports through the `ci-failure` issue, and a s
 - 2026-11-05: review return 1: AC5 fails: a job listing that jq cannot process, `{"jobs":[{"steps":["oops"]}]}`, makes `last-success.sh` go on to the next run and print `none` instead of `unknown` (diff-bug #6). The return also carries the fix-now items in the Review section.
 - 2026-11-05: throwaway branch `m012-drill2`, deleted, run 41989546885 settled diff-bug #1: `notify` runs after a leg timeout. Its notify step only echoed, so it wrote no issue.
 - 2026-11-05: T6 done. `last-success.sh` reads a listing with one `jq` that stops on anything but a job listing, so `{"jobs":[{"steps":["oops"]}]}` prints `unknown`. `{"jobs":[]}` stays readable with no such step and is passed over: a completed run with no jobs has not been seen. Tests cut per the Review section's fix-now lines; the assertion pinned to the new issue body.
+- 2026-11-05: claim audit: 14 claims read, 2 corrected — .github/last-success.sh, cairn/DESIGN.md. The first was a behavior gap: an empty `gh` answer printed nothing from `jq`, and the run was passed over. It now prints `unknown`, with a new case. The re-read is my own run of the suite plus the corrected lines' text, since each is one line and the reader's fix is taken as written.
+- 2026-11-05: review return 1 handed back. `rebuild-gap.yml` dispatch 41990064067 on `15c4f73` looked up 2026-11-02 with no alert.
 
 ## Decisions
 

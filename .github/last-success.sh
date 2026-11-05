@@ -70,16 +70,19 @@ while IFS=$'\t' read -r c id; do
     if ! listing="$(gh run view "$id" --json jobs </dev/null)"; then
         warn_unknown "could not read the job listing of run $id"
     fi
-    # jq stops with an error on anything that is not a job listing.
-    if ! attached="$(printf '%s' "$listing" | jq '
+    # jq fails on most answers that are not a job listing, and prints nothing on
+    # an empty one.
+    attached="$(printf '%s' "$listing" | jq '
         [.jobs[] | .steps[]? | select(.name == "Attach the tags") | .conclusion]
-        | any(. == "success")' 2>/dev/null)"; then
-        warn_unknown "run $id has an unreadable job listing"
-    fi
-    if [ "$attached" = "true" ]; then
-        echo "${c%%T*}"
-        exit 0
-    fi
+        | any(. == "success")' 2>/dev/null)" || attached=""
+    case "$attached" in
+        true)
+            echo "${c%%T*}"
+            exit 0
+            ;;
+        false) ;;
+        *) warn_unknown "run $id has an unreadable job listing" ;;
+    esac
 done <<< "$(printf '%s\n' "$candidates" | LC_ALL=C sort -r)"
 
 echo none
