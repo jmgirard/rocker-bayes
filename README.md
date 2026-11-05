@@ -27,8 +27,8 @@ build argument (e.g. `--build-arg BASE_TAG=resolute` for `resolute`) and pin
 CmdStan with `--build-arg CMDSTAN_VERSION=<version>` if you need a specific
 version.
 
-These tags **move** as new versions are released. For a frozen, identical
-environment (e.g. a course), pin an immutable tag instead — see
+These tags **move** as new versions are released. For an environment that stays
+the same (e.g. a course), pin a date tag instead. See
 [Reproducibility](#reproducibility).
 
 > On a Windows host you may want to increase the number of CPUs available to WSL
@@ -179,10 +179,11 @@ compiling.
 **Baking packages into your own image (recommended for a course or lab):**
 
 Build a small image on top of rocker-bayes so everyone gets the same packages
-preinstalled. Pin an immutable tag (see below) for reproducibility:
+preinstalled. Pin a date tag (see [Reproducibility](#reproducibility)) so that
+the image you build on stays the same:
 
 ```dockerfile
-FROM jmgirard/rocker-bayes:noble-cmdstan2.40.0
+FROM jmgirard/rocker-bayes:noble-2026-11-02
 
 # install.packages() uses bspm here too, so these are fast binary installs
 RUN Rscript -e 'install.packages(c("glmmTMB", "mice", "metafor"))'

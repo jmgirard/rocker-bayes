@@ -1,13 +1,13 @@
 # M014: Stop calling the CmdStan tag immutable
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** IP4, GP2
 - **Resolves:** —
 - **Surface tier:** user-facing — the README is what users read when they pin a tag
-- **Branch/PR:** —
+- **Branch/PR:** m014-cmdstan-tag-claim
 
 ## Goal
 
@@ -46,7 +46,7 @@ The README and design file say truthfully which Docker tags can move, so a user 
 
 ## Tasks
 
-- [ ] T1: Rewrite `README.md:30-32` and `README.md:181-185`. The `FROM` line names a date tag from an earlier day that exists on Docker Hub, such as `noble-2026-11-02`.
+- [x] T1: Rewrite `README.md:30-32` and `README.md:181-185`. The `FROM` line names a date tag from an earlier day that exists on Docker Hub, such as `noble-2026-11-02`.
 - [ ] T2: Rewrite `README.md:243-254`. Replace the "Frozen at" column with what each tag keeps and when it moves. Replace `noble-2026-07-05`. "As of that build" becomes the publish day, because a rerun after midnight UTC can name legs built the day before. Add the digest form and its command. Do not write an old CmdStan version in the README, because `test_cmdstan_pin.sh` fails on it.
 - [ ] T3: Reword `cairn/DESIGN.md` lines 32, 68, 96, 100, 106, 132, 197, and 209. Use the IP4 and GP2 wording in D-006, and state in the Tags convention when each tag moves.
 - [ ] T4: Run the commands that AC2 to AC5 and AC7 name, on the branch. A README-only pull request starts no `pr-ci.yml` run, so `test_cmdstan_pin.sh` runs by hand.
@@ -63,6 +63,7 @@ The README and design file say truthfully which Docker tags can move, so a user 
 - 2026-11-05: plan gate chose changing the words over freezing the tags at first publish because the row asks for the words and a frozen CmdStan tag would stop taking package and base updates; falsified by a user report that the moving CmdStan tag broke a pinned setup despite the new text.
 - 2026-11-05: plan gate chose naming the digest in the README over leaving date tags as the strongest pin because only a digest cannot move on its build day; falsified by Docker Hub deleting untagged manifests that digest pins name.
 - 2026-11-05: test scope: no committed test, because the claims read Docker Hub and the offline suites cannot; a Hub read in `pr-ci.yml` would fail on a Hub outage. M011 took the same route. The named commands run at review.
+- 2026-11-05: T1 done: the README's top note and `FROM` example now point at a date tag, `noble-2026-11-02`, which Docker Hub lists.
 - 2026-11-05: collision sweep: candidate row absorbed. D-002 and D-001 use the word, corrected by D-006. Row "Prune untagged manifests from dispatches" gains a note, because pruning can break a digest pin. Inbox sweep: 0 open issues, 0 open pull requests, so no assignment option. No release-shaped or checker-regress hit.
 
 ## Decisions
