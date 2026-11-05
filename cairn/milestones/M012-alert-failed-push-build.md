@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M012: Alert on a failed docker.yml push build
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -85,6 +85,7 @@ A failed `docker.yml` push build reports through the `ci-failure` issue, and a s
 - 2026-11-05: T5 (f) run 41986937699, forced-fresh `test_mode` dispatch with `notify` and no push trigger: "Attach the tags" shows `success` and printed the test-mode line, and notify closed #25. Its close comment says "The scheduled run was fully green" on a dispatch, the wording the row "Fix notify on cancels and dispatches" keeps.
 - 2026-11-05: T5 done. `m012-drill` deleted, never merged. `latest` (`sha256:2511d73a…`) and `resolute` (`sha256:783ea7b6…`) read the same digests before and after the drills. No `ci-failure` issue is open.
 - 2026-11-05: claim audit: 75 claims read, 13 corrected — .github/ci-failure-issue.sh, .github/last-success.sh, .github/rebuild-gap.sh, .github/workflows/docker.yml, .github/workflows/rebuild-gap.yml, cairn/DESIGN.md. All 13 were text, no behavior. The issue body now says "scheduled run that moves the tags".
+- 2026-11-05: claim audit re-read: all 13 hold. The issue body still omits that a `notify` dispatch can close the issue, left for the row "Fix notify on cancels and dispatches", which already names that text.
 
 ## Decisions
 
