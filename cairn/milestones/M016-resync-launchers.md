@@ -2,7 +2,7 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M016: Resync the launchers from rstudio2u
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -76,6 +76,8 @@ apart from names.
 - 2026-11-05: T1 done. The seven files were written by `sed` from rstudio2u's blobs, not by the Write tool, so the CRLF bytes stay exact. `cmp` matched all seven. The CRLF guard passed on the staged blobs (244 and 12 lines), shellcheck 0.11.0 `-x -S info` was clean on every tracked `*.sh` and `*.command`, and the modes did not change.
 - 2026-11-05: T2 done. The scratch Compose files are in the scratchpad: service `bayes` with `build:`, using `rocker-bayes:dev` (pull denied, the image is local) for the offline runs and `jmgirard/rstudio2u:latest` (pulls) for the control. The project names were `m016-<mode>-<launcher>` on port 18797. Both offline runs printed the warning, the banner, the reminder, and then the keeps-running line, and exited 0. Both control runs exited 0 with neither line. All four projects were taken down with `down -v`.
 - 2026-11-05: T3 done. README Quick start step 4 states the pull-failed and no-copy behavior, worded from T2's output and the `Could not download the latest image.` branch in `start_mac.command`. DESIGN.md's Launchers family names `4b181de` and the name map. The Simple English hook reported 31 hits in older README text, which the low row "Clear the README's plain-English hits" holds, and none in the added lines, so they were left alone.
+- 2026-11-05: claim audit: 19 claims read, 0 corrected — launcher_common.sh, start_linux.sh, start_mac.command, start_windows.bat, README.md. One claim was unverifiable here: Compose 5.6.1 exits 1 with "no port 8787/tcp" when an override drops `ports`. The test-seam comments refer to rstudio2u's scenario suites, which this repo does not port (Scope Out).
+- 2026-11-05: implement complete; status set to review.
 
 ## Decisions
 
