@@ -91,8 +91,9 @@ The easiest way to run the server, good for classrooms and non-technical users.
 4. It downloads the latest image, starts the server, waits until it is ready,
    and opens <http://localhost:8787> in your browser (no username or password).
    If it cannot download the image and a copy is already on your computer, it
-   starts that copy and says that the update was skipped. If no copy is there,
-   it stops with an error.
+   starts that copy and says that the update was skipped. Then it waits for a
+   key press before its window closes, and RStudio keeps running after that.
+   If no copy is there, it stops with an error.
 5. When you are done, double-click the matching `stop_...` file. Your session is
    preserved; run the start file again to resume. When the start file downloads
    a newer image, you lose the R packages that you installed. See
