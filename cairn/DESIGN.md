@@ -49,6 +49,9 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   volume, `RS_PORT` / `RS_PASS` from `.env`).
 - **Launchers**: `start_*` / `stop_*` files plus `launcher_common.sh`; the
   Windows `.bat` files are stored with CRLF line endings (see `.gitattributes`).
+  The seven files equal rstudio2u's at commit `4b181de`, apart from the
+  project name `rocker-bayes` in the Starting and Stopping lines and the
+  Compose service `bayes` in `docker compose port` (M016).
 - **CI / publish**: `.github/workflows/docker.yml` builds each architecture on
   a native runner and pushes it by digest. Each leg then pulls that digest
   back, asserts the architecture, checks with `.github/publish-guard.sh os`
