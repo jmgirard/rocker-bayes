@@ -130,12 +130,14 @@ Evidence pass 1, at 0f0b488 (2026-11-05), after a fresh `docker build -t rocker-
 - AC5: header lines 11-16 say phase 3 fails when the reported version differs from the expected one; lines 48-52 list `SMOKE_CMDSTAN_VERSION` with its Dockerfile-pin default after `SMOKE_THETA_REF`. `cairn/DESIGN.md:63-66` says the phase fails when cmdstanr's CmdStan version differs from the Dockerfile pin.
 - AC6: `docker build -t rocker-bayes:dev .` exit 0; `koalaman/shellcheck:v0.11.0 -S info .github/smoke-test.sh` exit 0, no output.
 
+Evidence pass 2, at d0d3ac5 (after the fix-now commit), fresh build: AC1 exit 0 with the same phase 3 PASS line; AC2 (a) and (b) exit 1 with the same FAIL lines and no phase 3 PASS; AC3 (a) and (b) exit 1 with the same FAIL lines and no `==> booting`; shellcheck and hadolint exit 0; `test_cmdstan_pin.sh` passes (3 README references match 2.40.0).
+
 Consistency gate: `cairn_validate.py` all checks passed. No IP/GP text changed, so `cairn_impact` was skipped. Toolchain: `docker build` exit 0; `hadolint/hadolint:v2.14.0` on the Dockerfile exit 0; base pinned by tag (`jmgirard/rstudio2u:${BASE_TAG}`, default `noble`); no secret in `ENV`/`COPY`; `.dockerignore` present; changelog slot is none (D-002), so no entry is owed.
 
 spawned: diff-bug, blame-history, prior-review, ripple
 
-- diff-bug #1: the capture holds stdout only, so on a failure R's stderr prints before the captured lines — fix now.
-- diff-bug #2: DESIGN.md says "when that is set" where the code treats an empty value as unset — fix now.
+- diff-bug #1: the capture holds stdout only, so on a failure R's stderr prints before the captured lines — fix now, fixed d0d3ac5.
+- diff-bug #2: DESIGN.md says "when that is set" where the code treats an empty value as unset — fix now, fixed d0d3ac5.
 - diff-bug #3: the script is a third parser of the ARG line beside `test_cmdstan_pin.sh` and docker.yml's `grep -oP` — reject, planned change (Scope In names reading the Dockerfile with that sed pattern; the drift risk is in the plan's work log).
 - diff-bug #4: two matching ARG lines print the not-x.y.z message across two lines without saying there were two — reject, edge (a Dockerfile with two `ARG CMDSTAN_VERSION` lines is outside its documented use; the effect is a failed run with an unclear message).
 - diff-bug #5: the pre-boot FAIL lines carry the phase 3 label on a run that never booted — reject, planned change (the existing Stan-file check uses the same label).
@@ -148,5 +150,5 @@ spawned: diff-bug, blame-history, prior-review, ripple
 - blame-history #3: the "same checkout" claim holds only while docker.yml and pr-ci.yml build from that Dockerfile — noted (holds today; the plan's rejected-alternative line names this as its falsifier).
 - prior-review #1: the PASS line is long — noted.
 - ripple #1, #2: the ROADMAP row still says phase 3 compares with nothing and asks for CI to pass the pin — reject, planned change (the row graduates at post-merge hygiene).
-- ripple #3: the Dockerfile's `--build-arg CMDSTAN_VERSION=` example does not say that the smoke test then needs `SMOKE_CMDSTAN_VERSION` — fix now.
+- ripple #3: the Dockerfile's `--build-arg CMDSTAN_VERSION=` example does not say that the smoke test then needs `SMOKE_CMDSTAN_VERSION` — fix now, fixed d0d3ac5.
 - ripple #4, #5, #6: sampler-output row, stage-marker row, and "one FAIL line" header — reject, false (the reviewer found each still holds).
