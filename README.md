@@ -100,9 +100,9 @@ be installed and running.
 > files and settings) in a Docker named volume, so it survives stopping,
 > restarting, and even updating to a newer image. CmdStan lives in the image at
 > `/opt/cmdstan`, outside that volume, so an update also brings the image's
-> CmdStan. By default, R packages that you install are also outside that volume. See
-> [Keeping installed packages](#keeping-installed-packages). To wipe the volume
-> and start completely fresh, run `docker compose down -v`.
+> CmdStan. By default, R packages that you install are also outside that
+> volume. See [Keeping installed packages](#keeping-installed-packages). To wipe
+> the volume and start completely fresh, run `docker compose down -v`.
 
 ### Option 1: Pull and run from Docker Hub
 
@@ -156,7 +156,8 @@ If you would rather work directly in a folder on your own computer, replace the
 ## Adding R Packages
 
 Thanks to [bspm](https://cloud.r-project.org/package=bspm), packages install as
-precompiled binaries when r2u has them — fast, with no compiling.
+precompiled binaries when r2u has them. These installs are fast, with no
+compiling.
 
 **Interactively (in a running container):**
 
@@ -197,10 +198,11 @@ The home volume holds only `/home/rstudio`. Any change that you make outside tha
 folder exists only as long as the container does. By default, this includes the R
 packages you install. It also includes the libraries from `sudo apt install`.
 
-In the Compose setup, if you stop and start the container with the `stop_...` and
-`start_...` files, those items stay, unless the start file downloads a newer
-image. Each time Compose replaces the container, those items are lost. The files
-in your home volume remain. For example, these actions replace the container:
+In the Compose setup, if you stop the container with a `stop_...` file and a
+`start_...` file starts the same image, those items stay. If the start file
+downloads a newer image, Compose replaces the container. Each time Compose
+replaces the container, those items are lost. The files in your home volume
+remain. For example, these actions replace the container:
 
 - You run `docker compose down`, then `docker compose up -d`.
 - A newer image arrives. The start files download the newest image each time they
