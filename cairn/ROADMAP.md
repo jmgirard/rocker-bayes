@@ -9,7 +9,7 @@ _Last hygiene check: 2026-11-05 (M015 done: graduated "Smoke a threaded CmdStan 
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M016 | Resync the launchers from rstudio2u | planned | — | normal | milestones/M016-resync-launchers.md |
+| M016 | Resync the launchers from rstudio2u | in-progress | — | normal | milestones/M016-resync-launchers.md |
 | M015 | Smoke a threaded CmdStan build in CI | done | — | normal | milestones/archive/M015-threaded-cmdstan-smoke.md |
 | M014 | Stop calling the CmdStan tag immutable | done | — | normal | milestones/archive/M014-cmdstan-tag-claim.md |
 | M013 | Port the CRLF guard | done | — | high | milestones/archive/M013-port-crlf-guard.md |
