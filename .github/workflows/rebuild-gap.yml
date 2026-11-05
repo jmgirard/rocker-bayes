@@ -58,21 +58,23 @@ jobs:
           if [ -n "$LAST_SUCCESS" ]; then
             echo "last-success date supplied: $LAST_SUCCESS"
             last_success="$LAST_SUCCESS"
-          # The newest successful scheduled docker.yml run, and only that. A
-          # push or dispatch build proves someone was here, not that the
-          # unattended lane still works. The step fetches a page of scheduled
-          # runs with no --status filter and .github/last-success.sh picks the
-          # newest green one itself, because the API's answer to
-          # `--status success --limit 1` on 2026-10-06 was a run from 2026-08-03.
+          # The newest successful scheduled docker.yml run that moved the tags,
+          # and only that. A push or dispatch build proves someone was here, not
+          # that the unattended lane still works, and a stale run ends green with
+          # no tag moved. The step fetches a page of scheduled runs with no
+          # --status filter and .github/last-success.sh picks the run itself,
+          # reading job listings to pass over stale runs, because the API's
+          # answer to `--status success --limit 1` on 2026-10-06 was a run from
+          # 2026-08-03.
           elif ! gh run list --workflow docker.yml --event schedule \
-                 --limit 100 --json createdAt,conclusion,event > runs.json; then
+                 --limit 100 --json createdAt,conclusion,event,databaseId > runs.json; then
             # The lookup failed. That is neither a measured gap nor a clean
             # result, so it goes to the script as the `unknown` sentinel.
             echo "::warning::gh run list failed; reporting an unreadable rebuild history"
             last_success=unknown
           else
-            # A date, or `none` (no successful scheduled run in the newest
-            # 100), or `unknown` (an answer the script cannot read).
+            # A date, or `none` (no successful scheduled run in the newest 100
+            # moved the tags), or `unknown` (an answer the script cannot read).
             last_success="$(bash ./.github/last-success.sh < runs.json)"
             echo "last successful scheduled rebuild, looked up: $last_success"
           fi
