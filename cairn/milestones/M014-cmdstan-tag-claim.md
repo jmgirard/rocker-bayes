@@ -82,4 +82,33 @@ The README and design file say truthfully which Docker tags can move, so a user 
 - AC6 evidence (2026-11-05): `git grep -n -i immutable -- cairn/DESIGN.md` printed nothing, exit 1. The Tags convention states the README's behavior for each tag. IP4 still names `RS_PORT`, `RS_PASS`, `bayes`, the launcher file names, both tag patterns, the deprecation clause, and "Adding is free; renaming or removing is not."
 - AC7 evidence (2026-11-05): `git diff --name-only main...HEAD` lists `README.md`, `cairn/DESIGN.md`, `cairn/ROADMAP.md`, and `cairn/milestones/M014-cmdstan-tag-claim.md`.
 - Gate (2026-11-05): `cairn_validate.py` exit 0. `cairn_impact.py --changed` lists GP2 references, and `grep IP4` shows `DESIGN.md`, D-006, and the source row; none disagrees with the new wording. `hadolint` in a container exit 0. `docker build` not run: the diff has no file in the build context (`Dockerfile`, `scripts/`, `.dockerignore`), and `docker.yml` built that same context on 2026-11-05. Base tag, secrets, and `.dockerignore` unchanged. Changelog slot is none.
-- Review pass 1 spawned: diff-bug, blame-history, prior-review, ripple.
+- spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug #1: a mistyped pin makes `docker compose up -d` build a local image under the pin's name after a failed pull — fix now.
+- diff-bug #2: changing `image:` replaces the container and loses installed packages, and the pin paragraph does not say so — fix now.
+- diff-bug #3: a pinned `FROM` still installs current binaries, so separate builds can differ — follow-up, parked row "Tighten the README's pinning text".
+- diff-bug #4: "never moves" omits that a digest can disappear — follow-up, row "Prune untagged manifests from dispatches" already holds it.
+- diff-bug #5: "identical" and "exact image contents" overstate across two separately built architectures — follow-up, parked row "Tighten the README's pinning text".
+- diff-bug #6: `up --build` fails with "build tag cannot contain a digest" rather than naming an image for a digest pin — fix now.
+- diff-bug #7: the launcher blames the connection for a bad pin — follow-up, parked row "Name a bad pin in launcher errors".
+- diff-bug #8: "an earlier day" is ambiguous east of UTC — fix now.
+- diff-bug #9: the short forms at the README's top and `FROM` note drop "earlier day" — reject, style: both link to the section that states it.
+- diff-bug #10: the literal date tag has no prompt to choose a date and no later check — reject, false: a pin that stays put is the point, and the tag stays valid.
+- diff-bug #11: `DESIGN.md:101` cites D-006 for the digest claim, which D-006 does not cover — fix now.
+- diff-bug #12: Option 2 teaches `up --build` with no pointer to the warning — follow-up, parked row "Tighten the README's pinning text".
+- diff-bug #13: date tags are not a full record of builds — follow-up, parked row "Tighten the README's pinning text".
+- diff-bug #14: CmdStan is listed as moving on release, against GP3 — follow-up, parked row "Tighten the README's pinning text".
+- diff-bug #15: `docker buildx` can be missing — reject, edge: only a distro Docker package with no buildx plugin reaches it, outside the README's Docker Desktop path, and the effect is an error naming the command.
+- diff-bug #16: a pin in `docker-compose.yml` is lost with a fresh ZIP and can conflict on `git pull` — follow-up, parked row "Tighten the README's pinning text".
+- diff-bug #17: the absorbed candidate row is still listed — reject, false: hygiene graduates it after the merge.
+- blame-history #1: the pin test's header says "pinning examples" — reject, false: the table row is still a pinning example, and the test found 3 references.
+- blame-history #2: the `FROM` example's pin changed meaning — reject, planned change: T1 calls for it.
+- blame-history #3: same as diff-bug #4 — follow-up, row "Prune untagged manifests from dispatches".
+- blame-history #4: `noble-2026-11-02` not checked offline — reject, false: AC5 read HTTP 200.
+- blame-history #5: rstudio2u still says "immutable" — follow-up, row "Stop calling rstudio2u tags immutable".
+- prior-review #1: the pin paragraph does not point to Keeping installed packages — fix now, with diff-bug #2.
+- prior-review #2: `CLAUDE.md`'s dev command uses `up --build` — reject, false: that command builds the local tree and involves no pin.
+- prior-review #3: the Compose instructions are untested — reject, false: dry runs on a tag pin and a bad tag are recorded.
+- ripple #1: `cairn/ROADMAP.md:19` describes the old text — reject, false: hygiene graduates that row.
+- ripple #2: comments use "moving tag" for `latest`, `noble`, `resolute` — reject, false: each comment names those tags, so none is wrong.
+- ripple #3: same as diff-bug #14 — follow-up, parked row "Tighten the README's pinning text".
+- ripple #4: launcher messages say "latest" for a pinned user — follow-up, parked row "Name a bad pin in launcher errors".
