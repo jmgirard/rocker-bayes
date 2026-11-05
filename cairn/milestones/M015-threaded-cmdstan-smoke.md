@@ -2,7 +2,7 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M015: Smoke a threaded CmdStan build in CI
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -96,11 +96,11 @@ control proves the step goes red when `/opt/cmdstan` loses its group write bit.
 - [x] T4: Update the phase 3 text in the script's header comment and the
       "Its CmdStan phase" sentence of `cairn/DESIGN.md`'s CI / publish bullet,
       written from the T2 and T3 output.
-- [ ] T5: Push the branch and dispatch `docker.yml` on it with
+- [x] T5: Push the branch and dispatch `docker.yml` on it with
       `test_mode=true`. Record the run URL and each leg's threaded output
       line. Compare each leg's smoke step time with the last green scheduled
       run and log the difference.
-- [ ] T6: Run `hadolint` and shellcheck 0.11.0 in containers against files in
+- [x] T6: Run `hadolint` and shellcheck 0.11.0 in containers against files in
       the checkout (M002 lesson on Docker Desktop mounts), and `docker build`.
 
 ## Work log
@@ -120,6 +120,9 @@ control proves the step goes red when `/opt/cmdstan` loses its group write bit.
 - 2026-11-05: T2: `docker build -t rocker-bayes:dev .` (image f34ae1ea, arm64) then the script exited 0 with all four PASS lines; phase 3 printed "theta posterior mean 0.3988", then "threaded build: wrote /opt/cmdstan/cmdstan-2.40.0/src/cmdstan/main_threads.o", then "threaded sample: 1 chain, threads_per_chain = 2".
 - 2026-11-05: T3: image `FROM rocker-bayes:dev` + `RUN chmod -R g-w /opt/cmdstan`: exit 1, the unthreaded run passed (theta 0.3988), then make printed "Fatal error: can't create src/cmdstan/main_threads.o: Permission denied" and the FAIL line was the new threaded-build line. The log also showed a denied write under `model_header.hpp.gch`, so the FAIL line and comment now name the precompiled header too, and the control was rerun on that text with the same result. Throwaway tag removed. The passing path did not change, so T2 was not rerun.
 - 2026-11-05: T4: the script header's phase 3 entry and DESIGN.md's "Its CmdStan phase" sentence now say that phase 3 builds and samples a threaded model as `rstudio` and that the build fails when `rstudio` cannot write `main_threads.o` into the CmdStan tree, as T2 and T3 showed.
+- 2026-11-05: T5: docker.yml dispatch with `test_mode=true` at df22016, https://github.com/jmgirard/rocker-bayes/actions/runs/42115360063, concluded success; each of the four legs logged "threaded build: wrote /opt/cmdstan/cmdstan-2.40.0/src/cmdstan/main_threads.o", "threaded sample: 1 chain, threads_per_chain = 2", and the phase 3 PASS line. Smoke step times against scheduled run 41486476474: noble amd64 2:33 (was 0:41), noble arm64 2:38 (0:44), resolute amd64 2:05 (0:42), resolute arm64 2:35 (0:59), about 1.5 to 2 minutes more per leg; docker.yml sets no step timeout and pr-ci.yml's smoke step allows 25 minutes.
+- 2026-11-05: T6: `hadolint` (container, Dockerfile unchanged) and shellcheck 0.11.0 (the version lint.yml pins) report nothing; `docker build -t rocker-bayes:dev .` succeeded at T2.
+- 2026-11-05: claim audit: not owed — internal tier.
 
 ## Decisions
 
