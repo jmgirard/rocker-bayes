@@ -9,11 +9,10 @@ packages" section says that by default `install.packages()` uses
 `/usr/lib/R/site-library` and `/usr/local/lib/R/site-library`. Packages and
 `sudo apt install` libraries stay across stop and start, and are lost when Compose
 replaces the container: `down` then `up`, a newer image, or a changed `RS_PORT`. It
-shows a saved `~/my_packages.R` list and a derivative image. Quick start, Option 1
-and 2, the port and update FAQs, and the Baking example changed too. Hand runs on
-`noble` checked each outcome, through launchers, bare commands, and an RStudio
-session. No committed test: a smoke phase would hold back every tag if the base
-starts keeping packages in the volume.
+shows a saved `~/my_packages.R` list and a derivative image. Hand runs on `noble`
+checked each outcome, through launchers, bare commands, and an RStudio session. No
+committed test: a smoke phase would hold back every tag if the base starts keeping
+packages in the volume.
 
 **Decisions:** D-005 keeps installed packages outside the home volume.
 
