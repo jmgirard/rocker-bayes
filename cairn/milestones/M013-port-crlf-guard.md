@@ -1,13 +1,13 @@
 # M013: Port the CRLF guard
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP7
 - **Resolves:** —
 - **Surface tier:** internal — a check over in-repo files that runs only in this repo's CI
-- **Branch/PR:** —
+- **Branch/PR:** m013-port-crlf-guard
 
 ## Goal
 
@@ -41,7 +41,7 @@ Make CI fail a pull request that stores a Windows launcher with LF line endings.
 
 ## Tasks
 
-- [ ] T1: Copy `~/github/rstudio2u/scripts/tests/test_launcher_line_endings.sh` to `.github/tests/`. Keep its logic. In its header, remove the rstudio2u milestone reference and the false `git archive` reason, and add a usage line like the other suites have. shellcheck is not installed locally, so run the pinned version in a container against the repo checkout, or rely on CI.
+- [x] T1: Copy `~/github/rstudio2u/scripts/tests/test_launcher_line_endings.sh` to `.github/tests/`. Keep its logic. In its header, remove the rstudio2u milestone reference and the false `git archive` reason, and add a usage line like the other suites have. shellcheck is not installed locally, so run the pinned version in a container against the repo checkout, or rely on CI.
 - [ ] T2: Run AC2's five cases in scratch repos and record the results in the work log.
 - [ ] T3: Add the guard to the `script-tests` run list in `.github/workflows/pr-ci.yml:58`.
 - [ ] T4: Add `.github/workflows/launchers.yml`, with `permissions` and `concurrency` as in `lint.yml` and the same `actions/checkout` pin. State in its header why it is separate from `pr-ci.yml`: a launcher-only change does not need an image build.
@@ -63,6 +63,7 @@ Make CI fail a pull request that stores a Windows launcher with LF line endings.
 - 2026-11-05: plan chose a new `launchers.yml` over adding `**.bat` to `pr-ci.yml`'s paths because that would build the image for a launcher-only edit; falsified by a line-ending defect that only an image build catches.
 - 2026-11-05: plan chose `.github/tests/` over the cited `scripts/tests/` because `scripts/**` is in the build context and in `docker.yml`'s push paths, so a guard edit would rebuild four legs and move tags; falsified by a `docker.yml` paths change that frees `scripts/tests/`.
 - 2026-11-05: new candidate "Resync the launchers from rstudio2u" holds the launcher drift found here; it is outside this request.
+- 2026-11-05: T1: ported the guard to `.github/tests/`, logic unchanged. It passes on `start_windows.bat` and `stop_windows.bat`, and shellcheck 0.11.0 at `-S info` in a container is clean.
 
 ## Decisions
 
