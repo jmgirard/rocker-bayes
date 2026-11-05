@@ -58,7 +58,7 @@ apart from names.
 ## Tasks
 
 - [x] T1: Write the seven files from `git -C ../rstudio2u show 4b181de:<file>` through AC1's `sed`, keeping each file's mode. Run the AC1 `cmp` loop, the CRLF guard `.github/tests/test_launcher_line_endings.sh`, and a containerized shellcheck 0.11.0 on the changed files from inside the checkout (LESSONS M002).
-- [ ] T2: Write a scratch Compose file in the session scratchpad, passed by absolute path in `COMPOSE_FILE`, with service `bayes`, `image: rocker-bayes:dev` (local only, so the pull fails), and `build:`. Run `start_mac.command` and `start_linux.sh` under `RS_LAUNCHER_NONINTERACTIVE=1` with their own `COMPOSE_PROJECT_NAME` and `RS_PORT` (LESSONS M011). Run the control with an image that pulls, such as `jmgirard/rstudio2u:latest`. Take each project down after its run.
+- [x] T2: Write a scratch Compose file in the session scratchpad, passed by absolute path in `COMPOSE_FILE`, with service `bayes`, `image: rocker-bayes:dev` (local only, so the pull fails), and `build:`. Run `start_mac.command` and `start_linux.sh` under `RS_LAUNCHER_NONINTERACTIVE=1` with their own `COMPOSE_PROJECT_NAME` and `RS_PORT` (LESSONS M011). Run the control with an image that pulls, such as `jmgirard/rstudio2u:latest`. Take each project down after its run.
 - [ ] T3: Add the README Quick start sentence (AC3), matched to rstudio2u's README line 218, and name `4b181de` and the name map in DESIGN.md's Launchers family.
 
 ## Work log
@@ -74,6 +74,7 @@ apart from names.
 - 2026-11-05: criteria audit (full mode, fresh Opus reader): AC1 no finding. AC2 narrowed to "pull exiting non-zero" and to a Compose file with both `image:` and `build:`, scratch file moved to the scratchpad. AC3 narrowed to the pull-failed and no-copy conditions. AC4 was bound to two CI jobs; narrowed to shellcheck on the files, line-endings half dropped as covered by AC1. Windows reminder unverified by any run here; Scope now states its reliance on rstudio2u's suite and AC1.
 - 2026-11-05: implement started; branch `m016-resync-launchers` cut from `ee2cad4`. The verify slot's hadolint and build apply only to Dockerfile or build-context changes, and no task touches those, so shellcheck stands in.
 - 2026-11-05: T1 done. The seven files were written by `sed` from rstudio2u's blobs, not by the Write tool, so the CRLF bytes stay exact. `cmp` matched all seven. The CRLF guard passed on the staged blobs (244 and 12 lines), shellcheck 0.11.0 `-x -S info` was clean on every tracked `*.sh` and `*.command`, and the modes did not change.
+- 2026-11-05: T2 done. The scratch Compose files are in the scratchpad: service `bayes` with `build:`, using `rocker-bayes:dev` (pull denied, the image is local) for the offline runs and `jmgirard/rstudio2u:latest` (pulls) for the control. The project names were `m016-<mode>-<launcher>` on port 18797. Both offline runs printed the warning, the banner, the reminder, and then the keeps-running line, and exited 0. Both control runs exited 0 with neither line. All four projects were taken down with `down -v`.
 
 ## Decisions
 
