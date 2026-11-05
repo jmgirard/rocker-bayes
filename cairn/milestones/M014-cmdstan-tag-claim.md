@@ -83,17 +83,17 @@ The README and design file say truthfully which Docker tags can move, so a user 
 - AC7 evidence (2026-11-05): `git diff --name-only main...HEAD` lists `README.md`, `cairn/DESIGN.md`, `cairn/ROADMAP.md`, and `cairn/milestones/M014-cmdstan-tag-claim.md`.
 - Gate (2026-11-05): `cairn_validate.py` exit 0. `cairn_impact.py --changed` lists GP2 references, and `grep IP4` shows `DESIGN.md`, D-006, and the source row; none disagrees with the new wording. `hadolint` in a container exit 0. `docker build` not run: the diff has no file in the build context (`Dockerfile`, `scripts/`, `.dockerignore`), and `docker.yml` built that same context on 2026-11-05. Base tag, secrets, and `.dockerignore` unchanged. Changelog slot is none.
 - spawned: diff-bug, blame-history, prior-review, ripple
-- diff-bug #1: a mistyped pin makes `docker compose up -d` build a local image under the pin's name after a failed pull — fix now.
-- diff-bug #2: changing `image:` replaces the container and loses installed packages, and the pin paragraph does not say so — fix now.
+- diff-bug #1: a mistyped pin makes `docker compose up -d` build a local image under the pin's name after a failed pull — fix now, fixed a0d36f0.
+- diff-bug #2: changing `image:` replaces the container and loses installed packages, and the pin paragraph does not say so — fix now, fixed a0d36f0.
 - diff-bug #3: a pinned `FROM` still installs current binaries, so separate builds can differ — follow-up, parked row "Tighten the README's pinning text".
 - diff-bug #4: "never moves" omits that a digest can disappear — follow-up, row "Prune untagged manifests from dispatches" already holds it.
 - diff-bug #5: "identical" and "exact image contents" overstate across two separately built architectures — follow-up, parked row "Tighten the README's pinning text".
-- diff-bug #6: `up --build` fails with "build tag cannot contain a digest" rather than naming an image for a digest pin — fix now.
+- diff-bug #6: `up --build` fails with "build tag cannot contain a digest" rather than naming an image for a digest pin — fix now, fixed a0d36f0.
 - diff-bug #7: the launcher blames the connection for a bad pin — follow-up, parked row "Name a bad pin in launcher errors".
-- diff-bug #8: "an earlier day" is ambiguous east of UTC — fix now.
+- diff-bug #8: "an earlier day" is ambiguous east of UTC — fix now, fixed a0d36f0.
 - diff-bug #9: the short forms at the README's top and `FROM` note drop "earlier day" — reject, style: both link to the section that states it.
 - diff-bug #10: the literal date tag has no prompt to choose a date and no later check — reject, false: a pin that stays put is the point, and the tag stays valid.
-- diff-bug #11: `DESIGN.md:101` cites D-006 for the digest claim, which D-006 does not cover — fix now.
+- diff-bug #11: `DESIGN.md:101` cites D-006 for the digest claim, which D-006 does not cover — fix now, fixed a0d36f0.
 - diff-bug #12: Option 2 teaches `up --build` with no pointer to the warning — follow-up, parked row "Tighten the README's pinning text".
 - diff-bug #13: date tags are not a full record of builds — follow-up, parked row "Tighten the README's pinning text".
 - diff-bug #14: CmdStan is listed as moving on release, against GP3 — follow-up, parked row "Tighten the README's pinning text".
@@ -105,7 +105,8 @@ The README and design file say truthfully which Docker tags can move, so a user 
 - blame-history #3: same as diff-bug #4 — follow-up, row "Prune untagged manifests from dispatches".
 - blame-history #4: `noble-2026-11-02` not checked offline — reject, false: AC5 read HTTP 200.
 - blame-history #5: rstudio2u still says "immutable" — follow-up, row "Stop calling rstudio2u tags immutable".
-- prior-review #1: the pin paragraph does not point to Keeping installed packages — fix now, with diff-bug #2.
+- prior-review #1: the pin paragraph does not point to Keeping installed packages — fix now, with diff-bug #2, fixed a0d36f0.
+- After the fixes (2026-11-05): AC1, AC5's pin test, AC6, and AC7 reran clean, `cairn_validate.py` exit 0. A dry run on a tag that does not exist shows the pull failing and `up -d` building under that tag's name. No snapshot files changed. No PR conversation yet.
 - prior-review #2: `CLAUDE.md`'s dev command uses `up --build` — reject, false: that command builds the local tree and involves no pin.
 - prior-review #3: the Compose instructions are untested — reject, false: dry runs on a tag pin and a bad tag are recorded.
 - ripple #1: `cairn/ROADMAP.md:19` describes the old text — reject, false: hygiene graduates that row.
