@@ -1,6 +1,6 @@
 # M013: Port the CRLF guard
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -46,7 +46,7 @@ Make CI fail a pull request that stores a Windows launcher with LF line endings.
 - [x] T3: Add the guard to the `script-tests` run list in `.github/workflows/pr-ci.yml:58`.
 - [x] T4: Add `.github/workflows/launchers.yml`, with `permissions` and `concurrency` as in `lint.yml` and the same `actions/checkout` pin. State in its header why it is separate from `pr-ci.yml`: a launcher-only change does not need an image build.
 - [x] T5: Rewrite the `.gitattributes` comment at lines 3 to 7 with the new path and a reason that a run showed: under `-text`, git converts no bytes on checkout or in `git archive`, so only CRLF in the blob ships as CRLF.
-- [ ] T6: Control run. Push the milestone branch with `m013-*` temporarily added to `launchers.yml`'s `branches`. Cut a control branch with one LF-only line in `stop_windows.bat`, and open a pull request into the milestone branch. Record the failed `line-endings` check, close the pull request unmerged, and delete the control branch. Remove the temporary filter in its own commit before review.
+- [x] T6: Control run. Push the milestone branch with `m013-*` temporarily added to `launchers.yml`'s `branches`. Cut a control branch with one LF-only line in `stop_windows.bat`, and open a pull request into the milestone branch. Record the failed `line-endings` check, close the pull request unmerged, and delete the control branch. Remove the temporary filter in its own commit before review.
 - [x] T7: In `cairn/DESIGN.md`, narrow the Known issues entry at line 246 to the launcher tests still not ported, and name `launchers.yml` and the guard in the pre-merge checks bullet at line 78.
 
 ## Work log
@@ -66,6 +66,9 @@ Make CI fail a pull request that stores a Windows launcher with LF line endings.
 - 2026-11-05: T1: ported the guard to `.github/tests/`, logic unchanged. It passes on `start_windows.bat` and `stop_windows.bat`, and shellcheck 0.11.0 at `-S info` in a container is clean.
 - 2026-11-05: T2: AC2's five cases in scratch repos each gave the wanted exit: all-LF blob, one LF-only line, and LF blob with CRLF working tree exit 1 and name `x.bat`; no tracked `.bat` exits 1 with the "no tracked" line; CRLF blob with LF working tree exits 0.
 - 2026-11-05: T3, T4, T5, T7: added the guard to `script-tests`, added `launchers.yml`, rewrote the `.gitattributes` comment from the local `git archive` run, and narrowed the DESIGN.md Known issues entry. Their tasks ran out of plan order, before T6, so T6 tests the final workflow.
+- 2026-11-05: T6: control PR #27 held one LF-only line in `stop_windows.bat`. Its only check, `line-endings` (run 42044410120), failed in 3s with "FAIL: stop_windows.bat — blob has 1 LF-only line(s) of 12" while `start_windows.bat` printed `ok:`. Closed unmerged, control branch deleted, temporary `m013-*` filter removed.
+- 2026-11-05: implementation choice: the control's edit was made in a scratch clone with `sed`, so this checkout's launcher never changed.
+- 2026-11-05: claim audit: not owed — internal tier.
 
 ## Decisions
 

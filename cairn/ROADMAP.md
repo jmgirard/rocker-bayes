@@ -9,7 +9,7 @@ _Last hygiene check: 2026-11-05 (M012 done: graduated "Alert on a failed docker.
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M013 | Port the CRLF guard | in-progress | — | high | milestones/M013-port-crlf-guard.md |
+| M013 | Port the CRLF guard | review | — | high | milestones/M013-port-crlf-guard.md |
 | M012 | Alert on a failed docker.yml push build | done | — | high | milestones/archive/M012-alert-failed-push-build.md |
 | M011 | Fix the package persistence claim | done | — | high | milestones/archive/M011-package-persistence-claim.md |
 | M010 | Give old home volumes the new CmdStan | done | — | high | milestones/archive/M010-cmdstan-out-of-home.md |
