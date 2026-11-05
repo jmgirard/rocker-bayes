@@ -77,6 +77,7 @@ The README says truthfully where installed R packages live, when they are lost, 
 - 2026-11-05: claim audit dispositions: narrowed to "by default" in the note and section, narrowed "everything else" to changes you make, added the same-image and same-settings condition to stop and start, limited the published-image sentence to the start files, tied the update FAQ's loss to the next `up`, and qualified "Thanks to bspm". No change for the bind-mount case, because that text already says to keep work in the mounted folder, and none for the line near the top about binary installation. One re-read done; its one finding is fixed with no further pass.
 - 2026-11-05: review return 1: AC2 fails as written, because the README states the stop-and-start outcome only for the launcher pair, not for the Compose setup (diff-bug #2). Fix with the fix-now findings in the Review section's pass 1.
 - 2026-11-05: amendment routed: AC2 — "everything outside `/home/rstudio`" is false, because the image's own contents return in each new container (diff-bug #3).
+- 2026-11-05: review return text fixes applied (checkpoint): stop and start rule, pinned and offline wording, labeled list, bind-mount note, Option 2 and apt links, DESIGN "by default". AC2's amended wording awaits its reader, and the bare Compose run and RStudio check are not done yet.
 
 ## Decisions
 

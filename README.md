@@ -134,7 +134,9 @@ be installed and running.
     docker compose up --build -d
     ```
 4. Navigate to <http://localhost:8787> (no username or password needed)
-5. Whenever you use `install.packages()` or `update.packages()`, it will use bspm
+5. Whenever you use `install.packages()` or `update.packages()`, it will use bspm.
+   To keep those packages, see
+   [Keeping installed packages](#keeping-installed-packages).
 6. When done, open Docker Desktop and end the container
 7. Next time, you don't need to run `git clone...` again
 
@@ -169,7 +171,8 @@ compiling.
   [Keeping installed packages](#keeping-installed-packages).
 - If a package needs a system library, open the RStudio **Terminal** and
   `sudo apt install <libfoo-dev>` (rarely needed — bspm resolves most
-  dependencies for you).
+  dependencies for you). To keep that library, see
+  [Keeping installed packages](#keeping-installed-packages).
 
 **Baking packages into your own image (recommended for a course or lab):**
 
@@ -198,16 +201,18 @@ The home volume holds only `/home/rstudio`. Any change that you make outside tha
 folder exists only as long as the container does. By default, this includes the R
 packages you install. It also includes the libraries from `sudo apt install`.
 
-In the Compose setup, if you stop the container with a `stop_...` file and a
-`start_...` file starts the same image with the same settings, those items stay.
-If the start file downloads a newer image, Compose replaces the container. Each
-time Compose replaces the container, those items are lost. The files in your home
-volume remain. For example, these actions replace the container:
+In the Compose setup, if you stop the container and start the same container
+again, those items stay. The `docker compose stop` and `docker compose start`
+commands do this. So do the `stop_...` and `start_...` files, if the image and
+settings did not change. Each time Compose replaces the container, those items
+are lost. The files in your home volume remain. For example, these actions replace
+the container:
 
 - You run `docker compose down`, then `docker compose up -d`.
-- A newer image arrives. The start files download the newest image each time they
-  run, and so does `docker compose pull` followed by `docker compose up -d`. The
-  weekly rebuild publishes a newer image, so this can happen on any start.
+- A newer image arrives. Each time they run, the start files try to download the
+  image that `docker-compose.yml` names. `docker compose pull` followed by
+  `docker compose up -d` does the same. As shipped, that file names `latest`, and
+  the weekly rebuild moves that tag, so this can happen on any start.
 - You change `RS_PORT`.
 
 To keep packages with the start files or Compose, save a list. Put your install
@@ -215,15 +220,19 @@ commands in a file in your home directory, such as `~/my_packages.R`. Include a
 `sudo apt install` line for each system library that you need:
 
 ```r
+# A system library, only if you need one
 system("sudo apt install -y libfftw3-dev")
+# Your R packages
 install.packages(c("glmmTMB", "mice", "metafor"))
 ```
 
 After Compose replaces the container, run `source("~/my_packages.R")` in the
-RStudio console.
+RStudio console. If you replaced the home volume with a bind mount, keep the list
+in the mounted folder.
 
 To keep packages with `docker run`, bake them into your own image with the
-Dockerfile above. The start files use the published image, not yours.
+Dockerfile above. As shipped, `docker-compose.yml` names the published image, not
+yours.
 
 ## Reproducibility
 

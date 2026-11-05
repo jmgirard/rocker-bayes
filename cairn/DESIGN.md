@@ -218,8 +218,8 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   Dockerfile.
 - Home directory persists in the `rstudio_home` named volume, pre-populated
   from the image on first run.
-- Packages a user installs live outside that volume: `install.packages()`
-  puts bspm binaries in `/usr/lib/R/site-library` and source builds in
+- By default, packages a user installs live outside that volume:
+  `install.packages()` puts bspm binaries in `/usr/lib/R/site-library` and source builds in
   `/usr/local/lib/R/site-library`. They and `sudo apt install` libraries are
   lost when Compose replaces the container, as the README states.
 - CmdStan lives in `/opt/cmdstan`, outside the home volume. The install
