@@ -59,6 +59,9 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   pass shows a package that arrived as an apt binary during that run.
   Its CmdStan phase runs stanc before the C++ build and prints a separate
   FAIL line for a program stanc rejects and for a failed C++ build.
+  The same phase then builds and samples a threaded model as `rstudio`.
+  The image ships no `main_threads.o`, so that build writes one into the
+  CmdStan tree and fails when `rstudio` cannot write there (M015).
   Its old-home phase boots a second container whose home volume holds a
   stale `~/.cmdstan`, and fails unless cmdstanr, reading `CMDSTAN` from
   `Renviron.site` alone, reports the image's CmdStan.
