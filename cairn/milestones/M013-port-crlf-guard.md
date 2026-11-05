@@ -21,12 +21,12 @@ Make CI fail a pull request that stores a Windows launcher with LF line endings.
 
 ## Acceptance criteria
 
-- [ ] AC1: `bash .github/tests/test_launcher_line_endings.sh`, run in this repo, exits 0 and prints an `ok:` line for each path that `git ls-files '*.bat'` lists.
-- [ ] AC2: In a throwaway git repo holding a copy of the guard at the same relative path, the guard exits 1 and prints a `FAIL:` line naming the file when a tracked `.bat` blob has all LF lines, when it has one LF-only line among CRLF lines, and when the blob is LF while the working-tree file is CRLF. It exits 1 with a `FAIL:` line when no `.bat` is tracked. It exits 0 when the blob is CRLF while the working-tree file is LF.
+- [x] AC1: `bash .github/tests/test_launcher_line_endings.sh`, run in this repo, exits 0 and prints an `ok:` line for each path that `git ls-files '*.bat'` lists.
+- [x] AC2: In a throwaway git repo holding a copy of the guard at the same relative path, the guard exits 1 and prints a `FAIL:` line naming the file when a tracked `.bat` blob has all LF lines, when it has one LF-only line among CRLF lines, and when the blob is LF while the working-tree file is CRLF. It exits 1 with a `FAIL:` line when no `.bat` is tracked. It exits 0 when the blob is CRLF while the working-tree file is LF.
 - [ ] AC3: `.github/workflows/launchers.yml` triggers on pull requests to `main` with `paths` naming `**.bat`, `.gitattributes`, the guard, and the workflow file. Its `line-endings` job runs the guard in a step that does not mask the guard's exit status (no `|| true`, no `continue-on-error`). The milestone's own pull request gets a passing `line-endings` check.
-- [ ] AC4: The `script-tests` job of `.github/workflows/pr-ci.yml` runs the guard, so that workflow still runs every suite in `.github/tests/`: the `test_*.sh` names from `ls .github/tests/` each appear in that job.
-- [ ] AC5: `.gitattributes` names the guard at `.github/tests/test_launcher_line_endings.sh`, `grep -n 'scripts/tests' .gitattributes` finds nothing, and its comment no longer says that `git archive` applies no line-ending conversion.
-- [ ] AC6: `cairn/DESIGN.md`'s Known issues entry no longer says that the CRLF guard is unverified or that the cited file does not exist, and still says that the other launcher tests were not ported. Its pre-merge checks bullet names `launchers.yml`.
+- [x] AC4: The `script-tests` job of `.github/workflows/pr-ci.yml` runs the guard, so that workflow still runs every suite in `.github/tests/`: the `test_*.sh` names from `ls .github/tests/` each appear in that job.
+- [x] AC5: `.gitattributes` names the guard at `.github/tests/test_launcher_line_endings.sh`, `grep -n 'scripts/tests' .gitattributes` finds nothing, and its comment no longer says that `git archive` applies no line-ending conversion.
+- [x] AC6: `cairn/DESIGN.md`'s Known issues entry no longer says that the CRLF guard is unverified or that the cited file does not exist, and still says that the other launcher tests were not ported. Its pre-merge checks bullet names `launchers.yml`.
 - [ ] AC7: The `Shell lint` check passes on the milestone's pull request, and `.github/tests/test_launcher_line_endings.sh` is in the list that check enumerates (`git ls-files '*.sh' '*.command'`).
 
 ## Coverage
@@ -73,3 +73,15 @@ Make CI fail a pull request that stores a Windows launcher with LF line endings.
 ## Decisions
 
 ## Review
+
+Evidence below was run at branch head 15d7ec0 on 2026-11-05, with `origin/main` not ahead of the branch.
+
+- AC1: the guard exits 0 and prints `ok:` for `start_windows.bat` (218 lines) and `stop_windows.bat` (12 lines), the two paths `git ls-files '*.bat'` lists.
+- AC2: in scratch repos with a copy of the guard, all-LF blob, one LF-only line, and LF blob under a CRLF working tree each exit 1 with `FAIL: x.bat`; no tracked `.bat` exits 1 with `FAIL: no tracked *.bat files found`; CRLF blob under an LF working tree exits 0.
+- AC3 (file part): `launchers.yml` triggers on `pull_request` to `main` with the four named paths, `line-endings` runs the guard, and a search finds no `|| true` or `continue-on-error`. Control PR #27 (T6) failed this job on one LF-only line. The own-PR check is pending until the PR opens at step 8, and its box stays unticked until then.
+- AC4: all 9 `test_*.sh` names from `ls .github/tests/` appear in the `script-tests` job.
+- AC5: `.gitattributes` names `.github/tests/test_launcher_line_endings.sh`, `grep -n 'scripts/tests'` finds nothing, and the comment now says git converts no bytes under `-text`.
+- AC6: the Known issues entry reads "Launcher tests other than the CRLF guard were not ported from rstudio2u", and neither "unverified" claim about the guard nor the missing-file claim remains. The pre-merge checks bullet names `launchers.yml`.
+- AC7 (list part): the guard is in `git ls-files '*.sh' '*.command'`, and shellcheck 0.11.0 at `-S info` in a container is clean. The `Shell lint` check is pending until the PR opens, and its box stays unticked until then.
+- Gate, cairn: `cairn_validate` passes. No principle text changed, so `cairn_impact` is skipped.
+- Gate, toolchain: `hadolint Dockerfile` is clean. `git diff origin/main` shows no change to `Dockerfile`, `scripts/`, or `.dockerignore`, so the image inputs match main, whose last `docker.yml` push run (3917506) succeeded. No local `docker build` ran, because `pr-ci.yml` builds and boots the image on this PR and the merge waits on it. The base tag is explicit, `.dockerignore` is present, the Dockerfile holds no secrets, and the changelog slot is none.
