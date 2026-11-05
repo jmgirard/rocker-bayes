@@ -134,3 +134,23 @@ the publish job does not do.
 **Consequences:** The publish job does not change. Evidence that reopens this: the
 project decides to freeze tags at first publish, as the candidate row "Freeze the
 tags at first publish" describes.
+
+### D-007 (2026-11-05): Triage drops two candidate rows as not worth keeping
+
+**Context:** A `/cairn-triage` pass weighed each ROADMAP candidate and each
+Known issues entry against the code, rstudio2u's default branch, and GitHub's
+branch settings.
+
+**Decision:** These rows are dropped because the work is not worth doing.
+
+- "Validate dependabot.yml in CI checks" would schema-validate
+  `.github/dependabot.yml` in CI. A config error there already shows on GitHub's
+  Dependabot page, and the file has changed only once, when it was created.
+- "Widen the launcher guard's triggers" would make the launcher guard and
+  `launchers.yml` match `*.BAT` in any case, run on a pull request retargeted to
+  `main` with no new push, and match a nested `.gitattributes`. None of those
+  files exists, only the maintainer adds launcher files, and no user sees the
+  guard, so its "user reports it" condition could never hold.
+
+**Consequences:** This entry supersedes no entry. A filed finding that matches
+one of these rows cites this entry. Superseding this entry reopens the row.

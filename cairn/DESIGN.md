@@ -271,3 +271,12 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   between the two calls leaves one variant tagged and the other not, with the
   run red. Two registry calls cannot be made atomic, so this is accepted rather
   than fixed (M001 review).
+- A manual run of `docker.yml` can change the failure issue in ways a
+  scheduled run would not. A branch dispatch with `notify` and without
+  `test_mode` skips `publish` and opens an issue. A green `notify` dispatch, or
+  a manual rerun of a scheduled run, closes a real issue whose text says only a
+  scheduled run closes it. A `test_mode` dispatch moves no tag yet closes the
+  issue. A by-hand `--failed` rerun's reuse of publish's `verdict` output has
+  no drill. Only the maintainer starts these runs, so this is accepted rather
+  than fixed (routed from candidates 2026-11-05; added 2026-09-13 — M003 review
+  O3, O5, N4, M012 review diff-bug #4, #8).
