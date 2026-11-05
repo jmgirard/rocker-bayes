@@ -90,7 +90,7 @@ check.
       own FAIL line naming both values, and add the version to the phase 3
       PASS line (line 420). Keep R comments inside the single-quoted
       `Rscript -e` free of apostrophes.
-- [ ] T3: Build `rocker-bayes:dev`, run AC1, AC2 (a, b), and AC3 (a, b), and
+- [x] T3: Build `rocker-bayes:dev`, run AC1, AC2 (a, b), and AC3 (a, b), and
       run shellcheck 0.11.0 through its image on the script. Put the copies
       for AC2 (b) and AC3 (a) in a directory inside the checkout, because
       Docker Desktop does not share `/tmp`, and remove them after.
@@ -111,6 +111,7 @@ check.
 - 2026-11-05: implement started on branch m017-cmdstan-version-check.
 - 2026-11-05: T1 done: the script reads the expected version before the Stan-file check, from `SMOKE_CMDSTAN_VERSION` or the Dockerfile ARG via the `test_cmdstan_pin.sh` sed pattern, and fails on a missing Dockerfile or a non-`x.y.z` value; header lists the variable. Shellcheck 0.11.0 clean; `SMOKE_CMDSTAN_VERSION=2.40` printed the not-x.y.z FAIL line.
 - 2026-11-05: T2 done: phase 3 captures the first R block's output, parses and trims the `cmdstan version:` line in bash, and fails on an empty value or a mismatch with a line naming both versions and the source; the PASS line names the version. The output now prints after the block ends rather than as it runs. Shellcheck 0.11.0 clean.
+- 2026-11-05: T3 done: `docker build -t rocker-bayes:dev .` exit 0. AC1 run exit 0, phase 3 PASS names CmdStan 2.40.0 and the Dockerfile pin. AC2 (a) env 2.39.0 and (b) a `.github/` copy beside a Dockerfile copy pinned 2.39.0 each exit 1 with "cmdstanr reports CmdStan 2.40.0, but <source> expects 2.39.0" and no phase 3 PASS. AC3 (a) no Dockerfile and (b) env `2.40` each exit 1 with their FAIL line and no `==> booting`. Copies lived in `.m017-tmp/` in the checkout, removed after. cmdstanr's `cmdstan_version()` returns the value `read_cmdstan_version()` parses from the tree's `makefile` (read in the image).
 
 ## Decisions
 
