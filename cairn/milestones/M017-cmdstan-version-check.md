@@ -1,13 +1,13 @@
 # M017: Check CmdStan matches the version tag
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** low
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP3, GP8, IP4
 - **Resolves:** —
 - **Surface tier:** user-facing — a publish gate whose failure holds back the tags users pull
-- **Branch/PR:** —
+- **Branch/PR:** m017-cmdstan-version-check
 
 ## Goal
 
@@ -80,7 +80,7 @@ check.
 
 ## Tasks
 
-- [ ] T1: In `.github/smoke-test.sh`, read the expected version before the
+- [x] T1: In `.github/smoke-test.sh`, read the expected version before the
       Stan-file check (lines 67-68): env value, else the Dockerfile at
       `${SCRIPT_DIR}/../Dockerfile`; fail on a missing or non-`x.y.z` value
       with a FAIL line naming the cause. List `SMOKE_CMDSTAN_VERSION` in the
@@ -108,6 +108,8 @@ check.
 - 2026-11-05: criteria audit (full mode, fresh Opus reader): 8 findings. Fixed: AC4 failed as written (phase 4 reads `CMDSTAN_VERSION` at line 502) and checked a grep, so it now states the phase 3 property and is read from the block; AC3 used the cwd and hit the Stan-file FAIL first, so the pin read moves before that check and the marker is `==> booting`; AC2 gained a Dockerfile-path mismatch and AC3 a non-`x.y.z` env value; AC5 now covers DESIGN.md; AC6 names the shellcheck image and drops hadolint (Dockerfile unchanged); the parser and pre-release limits are in Scope; T2 compares in bash on trimmed output. No finding on AC1 beyond port 8787 being free, now stated.
 - 2026-11-05: no test-mode dispatch of docker.yml: the script runs from the same checkout layout in pr-ci.yml, and a dispatch pushes four untagged manifests to Docker Hub.
 - 2026-11-05: no offline suite added; the control runs in AC2 and AC3 show the check can fail. No changelog (D-002: release notes live in the GitHub release, and this changes no recipe).
+- 2026-11-05: implement started on branch m017-cmdstan-version-check.
+- 2026-11-05: T1 done: the script reads the expected version before the Stan-file check, from `SMOKE_CMDSTAN_VERSION` or the Dockerfile ARG via the `test_cmdstan_pin.sh` sed pattern, and fails on a missing Dockerfile or a non-`x.y.z` value; header lists the variable. Shellcheck 0.11.0 clean; `SMOKE_CMDSTAN_VERSION=2.40` printed the not-x.y.z FAIL line.
 
 ## Decisions
 

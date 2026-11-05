@@ -8,7 +8,12 @@
 #   2. bspm binary - a CRAN package the image does not already carry installs,
 #                    loads, and lands as an apt r-cran-* binary rather than a
 #                    silent source compile.
-#   3. cmdstan     - cmdstanr reports a CmdStan path and version, and a model
+#   3. cmdstan     - cmdstanr reports a CmdStan path and a version equal to the
+#                    expected one (SMOKE_CMDSTAN_VERSION, else the Dockerfile
+#                    pin), and fails on its own FAIL line when they differ.
+#                    The version comes from cmdstan_version(), which reads the
+#                    installed tree, not from the image's CMDSTAN_VERSION
+#                    variable, which the same build arg sets. Then a model
 #                    whose posterior mean is known in closed form compiles,
 #                    samples, and returns that mean. stanc runs before the C++
 #                    build, so a program stanc rejects and a broken C++
@@ -40,6 +45,11 @@
 #                    bundled .github/smoke-fixtures/bernoulli.stan)
 #   SMOKE_THETA_REF  analytic posterior mean to compare against (default
 #                    0.4019608, the mean for the bundled fixture data)
+#   SMOKE_CMDSTAN_VERSION
+#                    CmdStan version phase 3 expects, as x.y.z (default the
+#                    ARG CMDSTAN_VERSION pin of the Dockerfile in the parent
+#                    of this script's directory); set it for an image built
+#                    with another --build-arg CMDSTAN_VERSION
 #
 set -euo pipefail
 
@@ -63,6 +73,28 @@ OLD_NAME="${NAME}-oldhome"
 HOME_VOL="${NAME}-home"
 HOME_VOL_MADE=0
 SMOKE_OK=0
+
+# The CmdStan version phase 3 expects. CI builds with the Dockerfile pin and
+# tags with it, and runs this script from the same checkout, so the Dockerfile
+# beside .github/ is the pin the image was built from. The sed pattern is the
+# one .github/tests/test_cmdstan_pin.sh uses. A set value that is not x.y.z
+# fails here and never falls back to the Dockerfile.
+if [ -n "${SMOKE_CMDSTAN_VERSION:-}" ]; then
+  WANT_CMDSTAN="$SMOKE_CMDSTAN_VERSION"
+  want_from="SMOKE_CMDSTAN_VERSION"
+else
+  dockerfile="${SCRIPT_DIR}/../Dockerfile"
+  if [ ! -f "$dockerfile" ]; then
+    echo "FAIL: phase 3 (cmdstan) - could not read the expected CmdStan version: no Dockerfile at $dockerfile; set SMOKE_CMDSTAN_VERSION"
+    exit 1
+  fi
+  WANT_CMDSTAN="$(sed -n 's/^ARG CMDSTAN_VERSION="\([^"]*\)".*/\1/p' "$dockerfile")"
+  want_from="the Dockerfile ARG pin"
+fi
+if ! [[ "$WANT_CMDSTAN" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "FAIL: phase 3 (cmdstan) - the expected CmdStan version from ${want_from} is not x.y.z (got '${WANT_CMDSTAN}')"
+  exit 1
+fi
 
 if [ ! -f "$STAN_FILE" ]; then
   echo "FAIL: phase 3 (cmdstan) - Stan program not found: $STAN_FILE"
