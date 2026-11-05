@@ -19,9 +19,13 @@ launcher_interactive() {
 }
 
 # Hold the window open so a double-clicking student can read the message before
-# it vanishes. Callers print their own blank line first.
+# it vanishes. Callers print their own blank line first. Under the test seam it
+# prints a marker instead, so a scenario can see that the launcher got here.
 launcher_pause() {
-    launcher_interactive || return 0
+    if ! launcher_interactive; then
+        echo "[test seam] key wait skipped"
+        return 0
+    fi
     read -n 1 -s -r -p "Press any key to close..."
 }
 
@@ -49,6 +53,24 @@ launcher_warn_offline() {
     echo "   Starting the copy already on this computer instead. To get the"
     echo "   latest version, connect to the internet and run this again later."
     echo ""
+}
+
+# Repeat the warning after the running banner, so a student who looks at the
+# window once the server is ready can read it. The server is up by now, so it no
+# longer says "starting".
+launcher_remind_offline() {
+    echo "⚠️  Reminder: the update was skipped, so this is the copy already on this"
+    echo "   computer. To get the latest version, connect to the internet and run"
+    echo "   this again later."
+    echo ""
+}
+
+# Hold the window so the reminder can be read. A student may otherwise think
+# that the server needs this window, so say that it does not.
+launcher_hold_offline() {
+    echo "RStudio keeps running after you close this window."
+    echo ""
+    launcher_pause
 }
 
 # The port the user asked for, resolved the way Compose resolves it: the RS_PORT
@@ -142,9 +164,10 @@ launcher_bound_port() {
     out=$(docker compose port bayes 8787 2>/dev/null) || return 1
     port=${out##*:}
     port=${port//[!0-9]/}
-    # `docker compose port` prints :0 and exits 0 when nothing is published for
-    # that container port (e.g. an override that drops `ports`). Announcing
-    # localhost:0 would be worse than falling back.
+    # When nothing is published for that container port (e.g. an override that
+    # drops `ports`), Compose 5.6.1 exits 1 with "no port 8787/tcp", which the
+    # `|| return 1` above handles. This check covers a Compose that prints :0 and
+    # exits 0 instead: announcing localhost:0 would be worse than falling back.
     launcher_port_ok "$port" || return 1
     printf '%s' "$port"
 }
