@@ -60,7 +60,11 @@ _Architecture as it **is**. Status lives in ROADMAP.md; tasks in milestone files
   The smoke test's bspm phase fails when dpkg, or R's library path in the
   install session, already holds its probe package before the install, so a
   pass shows a package that arrived as an apt binary during that run.
-  Its CmdStan phase runs stanc before the C++ build and prints a separate
+  Its CmdStan phase first fails when cmdstanr's CmdStan version differs from
+  the Dockerfile pin, or from `SMOKE_CMDSTAN_VERSION` when that is set, and
+  the script stops before it boots a container when that expected version is
+  missing or not `x.y.z` (M017).
+  The phase runs stanc before the C++ build and prints a separate
   FAIL line for a program stanc rejects and for a failed C++ build.
   The same phase then builds and samples a threaded model as `rstudio`.
   The image ships no `main_threads.o`, so that build writes one into the
