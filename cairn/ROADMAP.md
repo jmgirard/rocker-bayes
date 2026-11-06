@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-11-05 (triage: dropped "Validate dependabot.yml in CI checks" and "Widen the launcher guard's triggers" as not worth keeping, D-007 written; routed "Fix notify on cancels and dispatches" to Known issues; re-rated "Make alert scripts fail loudly" low → parked with condition "promote when an alert goes missing or opens twice" and "Stop false gap alerts from keepalive" normal → low; validate green)_
+_Last hygiene check: 2026-11-05 (M017 review: graduated "Check CmdStan matches the version tag", added parked "Vary the stale CmdStan in smoke phase 4", pruned the M014 row; validate green)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-11-05 (triage: dropped "Validate dependabot.yml in CI 
 |---|---|---|---|---|---|
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
-| M017 | Check CmdStan matches the version tag | review | — | low | milestones/M017-cmdstan-version-check.md |
+| M017 | Check CmdStan matches the version tag | done | — | low | milestones/archive/M017-cmdstan-version-check.md |
 | M016 | Resync the launchers from rstudio2u | done | — | normal | milestones/archive/M016-resync-launchers.md |
 | M015 | Smoke a threaded CmdStan build in CI | done | — | normal | milestones/archive/M015-threaded-cmdstan-smoke.md |
-| M014 | Stop calling the CmdStan tag immutable | done | — | normal | milestones/archive/M014-cmdstan-tag-claim.md |
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
 - Correct the claim in rstudio2u too: rstudio2u's README line 105 and its `docker-compose.yml` comment say that installed R packages persist in the home volume, the claim M011 corrects here. The `stop_*` launcher messages, synced from that repo, say "resume where you left off", and a start launcher can bring a newer image that drops installed packages. Normal rung because the same users are misled there — added 2026-11-05 — M011 plan, audit finding 7
@@ -21,7 +20,6 @@ _Last hygiene check: 2026-11-05 (triage: dropped "Validate dependabot.yml in CI 
 - [low] Stop false gap alerts from keepalive: A `keepalive` failure alone fails the scheduled run, and `rebuild-gap.yml` counts only green scheduled runs that moved the tags (`last-success.sh`), so a deleted deploy key raises a false "no successful rebuild" alert on the second week while tags move. The 50-day threshold leaves one weekly chance before GitHub's 60-day cutoff — added 2026-09-13 — M003 review N3, O7, O8, O6, split 2026-10-20
 - [low] Clear the README's plain-English hits: The Simple English lint hook reports about 33 hits in README text that M014 did not write, such as `e.g.`, semicolons, `may`, and long sentences. Run `evals/ste_lint.py` from the SimpleEnglish repo for the list. Low rung because the text is correct and the hits are about style — added 2026-11-05 — M014 implement
 - [low] Catch launcher drift from rstudio2u: Nothing checks that the seven launcher files still match rstudio2u's apart from names, and they drifted before M016. A check could compare them with rstudio2u's blobs at a pinned commit through M016's name map. Low rung because a drift costs users a fix, not data — added 2026-11-05 — M016 plan
-- [low] Check CmdStan matches the version tag: Nothing asserts that the CmdStan inside a built image is the version its `<variant>-cmdstan<v>` tag names. Smoke phase 3 prints `cmdstan_version()` and compares it with nothing. Compare it with the Dockerfile pin passed in from CI, not with the image's own `CMDSTAN_VERSION` ENV, which comes from the same build arg — added 2026-10-20 — M008 plan gate — started M017
 - [low] Probe the host port in smoke phase 1: Phase 1 never touches the published host port when the image declares a HEALTHCHECK, because the healthcheck requests `localhost:8787` from inside the container. Add a host-side probe — added 2026-09-12 — M001 review F18
 - [low] Sync README to the Docker Hub page: Docker Hub description sync: a workflow that copies README.md to the Docker Hub page on push to main. Needs a Docker Hub token with read, write and delete scope — added 2026-09-11 — rstudio2u .github/workflows/dockerhub-description.yml
 - [low] Check the renv and bspm speed claim: README's Reproducibility section says `renv::restore()` is quick "since bspm still serves binaries". bspm hooks `install.packages()`, and renv may use its own installer. No one has run it. Run it and correct the text if it is false. Low rung because the failure is slow installs, not a lost package — added 2026-11-05 — M011 plan
