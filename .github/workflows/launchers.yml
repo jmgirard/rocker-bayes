@@ -1,16 +1,20 @@
 name: Launchers
 
 # Runs the CRLF-in-blob guard on pull requests that can change what a Windows
-# launcher ships as. Kept separate from pr-ci.yml, whose paths filter starts an
+# launcher ships as, and the stop-message guard on pull requests that can change
+# a stop launcher. Kept separate from pr-ci.yml, whose paths filter starts an
 # image build, because a launcher-only change does not need one. pr-ci.yml runs
-# this guard too, with the other suites in .github/tests/.
+# both guards too, with the other suites in .github/tests/.
 on:
   pull_request:
     branches: [main]
     paths:
       - "**.bat"
       - ".gitattributes"
+      - "stop_linux.sh"
+      - "stop_mac.command"
       - ".github/tests/test_launcher_line_endings.sh"
+      - ".github/tests/test_stop_launcher_text.sh"
       - ".github/workflows/launchers.yml"
 
 permissions:
@@ -33,3 +37,6 @@ jobs:
 
       - name: Launcher CRLF-in-blob guard
         run: bash ./.github/tests/test_launcher_line_endings.sh
+
+      - name: Stop launcher message guard
+        run: bash ./.github/tests/test_stop_launcher_text.sh
